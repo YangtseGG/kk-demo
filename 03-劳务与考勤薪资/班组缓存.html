@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>班组缓存</title>
+
+<style>
+:root {
+    --primary: #1677ff;
+    --bg: #f5f6f8;
+    --card: #ffffff;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Roboto", sans-serif;
+    background: var(--bg);
+}
+
+.header {
+    position: sticky;
+    top: 0;
+    background: var(--primary);
+    color: #fff;
+    padding: 14px 16px;
+    font-size: 17px;
+    font-weight: 600;
+}
+
+.search {
+    margin: 12px 16px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+    background: #fff;
+    font-size: 14px;
+}
+
+.list {
+    padding: 0 16px 110px;
+}
+
+.team-card {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 10px;
+}
+
+.team-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.team-name {
+    font-size: 15px;
+    font-weight: 500;
+}
+
+.team-count {
+    font-size: 12px;
+    color: #888;
+    margin-top: 4px;
+}
+
+.tag {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-left: 6px;
+}
+
+.cached { background: #e8f5e9; color: #2e7d32; }
+.caching { background: #e6f4ff; color: #1677ff; }
+.uncached { background: #fff3e0; color: #ef6c00; }
+
+.progress {
+    margin-top: 10px;
+    height: 6px;
+    background: #f0f0f0;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-inner {
+    height: 100%;
+    width: 0%;
+    background: var(--primary);
+    transition: width 0.3s;
+}
+
+.action-btn {
+    margin-top: 10px;
+    font-size: 13px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+}
+
+.cache-btn {
+    background: var(--primary);
+    color: #fff;
+}
+
+.delete-btn {
+    background: none;
+    color: #ff4d4f;
+    border: 1px solid #ffccc7;
+}
+
+.bottom-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border-top: 1px solid #ddd;
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.btn {
+    padding: 10px 18px;
+    border-radius: 10px;
+    border: none;
+    font-size: 14px;
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: #fff;
+}
+
+.status-text {
+    font-size: 13px;
+    color: #666;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">班组人员缓存</div>
+<input class="search" placeholder="搜索班组" oninput="filterList(this.value)">
+
+<div class="list" id="teamList"></div>
+
+<div class="bottom-bar">
+    <div class="status-text">已缓存 <b id="cachedCount">0</b> 个班组</div>
+    <button class="btn btn-primary" onclick="cacheAll()">全部缓存</button>
+</div>
+
+<script>
+let teams = [
+    { id: 1, name: '焊接一班', count: 24, cached: true, progress: 0 },
+    { id: 2, name: '焊接二班', count: 21, cached: false, progress: 0 },
+    { id: 3, name: '装配一组', count: 30, cached: false, progress: 0 },
+    { id: 4, name: '装配二组', count: 28, cached: true, progress: 0 },
+    { id: 5, name: '质检班组', count: 12, cached: false, progress: 0 }
+];
+
+let selected = new Set();
+
+function render() {
+    document.getElementById('teamList').innerHTML = teams.map(t => `
+        <div class="team-card">
+            <div class="team-top">
+                <div>
+                    <div>
+                        <span class="team-name">${t.name}</span>
+                        <span class="tag ${t.cached?'cached':t.progress>0?'caching':'uncached'}">
+                            ${t.cached?'已缓存':t.progress>0?'缓存中':'未缓存'}
+                        </span>
+                    </div>
+                    <div class="team-count">${t.count} 人</div>
+                </div>
+
+                <input type="checkbox"
+                    ${t.cached ? 'disabled' : ''}
+                    ${selected.has(t.id) ? 'checked' : ''}
+                    onchange="toggleSelect(${t.id}, this.checked)">
+            </div>
+
+            ${t.progress>0 ? `<div class="progress"><div class="progress-inner" style="width:${t.progress}%"></div></div>` : ''}
+
+            ${!t.cached && !t.progress ?
+                `<button class="action-btn cache-btn" onclick="cacheOne(${t.id})">缓存</button>` :
+                t.cached ?
+                `<button class="action-btn delete-btn" onclick="deleteCache(${t.id})">删除缓存</button>` : ''
+            }
+        </div>
+    `).join('');
+
+    document.getElementById('cachedCount').innerText =
+        teams.filter(t => t.cached).length;
+}
+
+function toggleSelect(id, checked) {
+    checked ? selected.add(id) : selected.delete(id);
+}
+
+function cacheOne(id) {
+    const t = teams.find(t => t.id === id);
+    if (!t || t.cached || t.progress > 0) return;
+
+    t.progress = 0;
+    const timer = setInterval(() => {
+        t.progress += 10;
+        if (t.progress >= 100) {
+            clearInterval(timer);
+            t.cached = true;
+            t.progress = 0;
+            render();
+        } else {
+            render();
+        }
+    }, 200);
+}
+
+function cacheAll() {
+    teams.forEach(t => {
+        if (!t.cached && t.progress === 0) {
+            cacheOne(t.id);
+        }
+    });
+}
+
+function deleteCache(id) {
+    const t = teams.find(t => t.id === id);
+    if (t) {
+        t.cached = false;
+        t.progress = 0;
+        render();
+    }
+}
+
+function filterList(kw) {
+    kw = kw.toLowerCase();
+    document.querySelectorAll('.team-card').forEach(card => {
+        card.style.display = card.innerText.toLowerCase().includes(kw) ? '' : 'none';
+    });
+}
+
+render();
+</script>
+
+</body>
+</html>

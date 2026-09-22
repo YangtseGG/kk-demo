@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智慧工地系统 - 施工样板验收</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+        
+        :root {
+            --primary: #1a73e8;
+            --primary-dark: #0d47a1;
+            --secondary: #f5f5f5;
+            --success: #4caf50;
+            --warning: #ff9800;
+            --danger: #f44336;
+            --text: #333;
+            --text-light: #666;
+            --border: #ddd;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        body {
+            background-color: #f8f9fa;
+            color: var(--text);
+        }
+        
+        .container {
+            display: flex;
+            min-height: 100vh;
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+        
+        /* 侧边栏样式 */
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, var(--primary-dark), var(--primary));
+            color: white;
+            padding: 20px 0;
+            box-shadow: var(--shadow);
+            z-index: 100;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            padding: 0 20px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .logo img {
+            width: 40px;
+            height: 40px;
+            margin-right: 10px;
+        }
+        
+        .logo h1 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        .nav-menu {
+            margin-top: 20px;
+        }
+        
+        .nav-item {
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .nav-item:hover, .nav-item.active {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .nav-item i {
+            margin-right: 10px;
+            font-size: 18px;
+        }
+        
+        /* 主内容区样式 */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .header {
+            background-color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow);
+            z-index: 10;
+        }
+        
+        .page-title h2 {
+            font-size: 22px;
+            font-weight: 600;
+        }
+        
+        .page-title p {
+            color: var(--text-light);
+            font-size: 14px;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+        }
+        
+        .user-info img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+            object-fit: cover;
+        }
+        
+        .user-details {
+            margin-right: 20px;
+            text-align: right;
+        }
+        
+        .user-details .name {
+            font-weight: 600;
+        }
+        
+        .user-details .role {
+            font-size: 13px;
+            color: var(--text-light);
+        }
+        
+        /* 内容区样式 */
+        .content {
+            flex: 1;
+            padding: 25px;
+            overflow: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+        
+        .card-header {
+            padding: 18px 25px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .card-body {
+            padding: 25px;
+        }
+        
+        /* 分部分项树样式 */
+        .tree-container {
+            display: flex;
+            height: 500px;
+            gap: 20px;
+        }
+        
+        .tree-section {
+            flex: 1;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: white;
+        }
+        
+        .tree-header {
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-bottom: 1px solid var(--border);
+            font-weight: 600;
+        }
+        
+        .tree-content {
+            height: calc(100% - 50px);
+            overflow: auto;
+            padding: 10px;
+        }
+        
+        .tree {
+            list-style: none;
+        }
+        
+        .tree-node {
+            padding: 8px 0;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .tree-node-content {
+            display: flex;
+            align-items: center;
+            padding: 8px 15px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        
+        .tree-node-content:hover {
+            background-color: rgba(26, 115, 232, 0.1);
+        }
+        
+        .tree-node-content.selected {
+            background-color: rgba(26, 115, 232, 0.15);
+            color: var(--primary);
+            font-weight: 500;
+        }
+        
+        .tree-node-icon {
+            margin-right: 10px;
+            color: var(--primary);
+        }
+        
+        .tree-node-children {
+            padding-left: 30px;
+            display: none;
+        }
+        
+        .tree-node.expanded > .tree-node-children {
+            display: block;
+        }
+        
+        .toggle-icon {
+            margin-right: 8px;
+            cursor: pointer;
+            color: var(--text-light);
+            font-size: 14px;
+        }
+        
+        /* 验收条目样式 */
+        .inspection-section {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .inspection-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .inspection-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .selected-node {
+            color: var(--primary);
+            font-weight: 500;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn i {
+            margin-right: 6px;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+        }
+        
+        .btn-outline:hover {
+            background-color: rgba(26, 115, 232, 0.1);
+        }
+        
+        .inspection-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        .inspection-table th {
+            background-color: #f5f7fa;
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .inspection-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .inspection-table tr:hover td {
+            background-color: #f9f9f9;
+        }
+        
+        .action-cell {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .action-btn {
+            padding: 6px;
+            border-radius: 4px;
+            cursor: pointer;
+            color: var(--text-light);
+            transition: all 0.2s;
+        }
+        
+        .action-btn:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+        
+        .edit-btn:hover {
+            color: var(--primary);
+        }
+        
+        .delete-btn:hover {
+            color: var(--danger);
+        }
+        
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status-draft {
+            background-color: #e0e0e0;
+            color: var(--text);
+        }
+        
+        .status-pending {
+            background-color: #fff8e1;
+            color: #ff8f00;
+        }
+        
+        .status-approved {
+            background-color: #e8f5e9;
+            color: var(--success);
+        }
+        
+        .status-rejected {
+            background-color: #ffebee;
+            color: var(--danger);
+        }
+        
+        /* 表单样式 */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 15px;
+            transition: border-color 0.2s;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+        }
+        
+        textarea.form-control {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .form-col {
+            flex: 1;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+        }
+        
+        .checkbox-group input {
+            margin-right: 8px;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 1200px) {
+            .tree-container {
+                flex-direction: column;
+                height: auto;
+            }
+            
+            .tree-section {
+                height: 350px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: auto;
+            }
+            
+            .header {
+                padding: 12px 20px;
+            }
+            
+            .content {
+                padding: 15px;
+            }
+            
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 侧边导航 -->
+        <div class="sidebar">
+            <div class="logo">
+                <img src="https://cdn-icons-png.flaticon.com/512/3063/3063172.png" alt="智慧工地系统">
+                <h1>智慧工地系统</h1>
+            </div>
+            
+            <div class="nav-menu">
+                <div class="nav-item">
+                    <i class="fas fa-home"></i>
+                    <span>系统首页</span>
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-tasks"></i>
+                    <span>项目管理</span>
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-users"></i>
+                    <span>人员管理</span>
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-hard-hat"></i>
+                    <span>安全管理</span>
+                </div>
+                <div class="nav-item active">
+                    <i class="fas fa-clipboard-check"></i>
+                    <span>质量验收</span>
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-chart-line"></i>
+                    <span>进度管理</span>
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-video"></i>
+                    <span>视频监控</span>
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-cog"></i>
+                    <span>系统设置</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <!-- 顶部导航 -->
+            <div class="header">
+                <div class="page-title">
+                    <h2>施工样板验收管理</h2>
+                    <p>基于分部分项工程的验收标准管理</p>
+                </div>
+                
+                <div class="user-info">
+                    <div class="user-details">
+                        <div class="name">张工</div>
+                        <div class="role">项目经理</div>
+                    </div>
+                    <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="用户头像">
+                </div>
+            </div>
+            
+            <!-- 内容区 -->
+            <div class="content">
+                <!-- 项目信息卡片 -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">项目信息</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-row">
+                            <div class="form-col">
+                                <div class="form-group">
+                                    <label class="form-label">项目名称</label>
+                                    <input type="text" class="form-control" value="未来科技城A区建设项目" readonly>
+                                </div>
+                            </div>
+                            <div class="form-col">
+                                <div class="form-group">
+                                    <label class="form-label">项目编号</label>
+                                    <input type="text" class="form-control" value="WT-2023-001" readonly>
+                                </div>
+                            </div>
+                            <div class="form-col">
+                                <div class="form-group">
+                                    <label class="form-label">当前阶段</label>
+                                    <input type="text" class="form-control" value="主体结构施工" readonly>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 分部分项树和验收条目 -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">分部分项验收管理</div>
+                        <div>
+                            <button class="btn btn-outline">
+                                <i class="fas fa-sync-alt"></i> 刷新数据
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="tree-container">
+                            <!-- 分部分项树 -->
+                            <div class="tree-section">
+                                <div class="tree-header">分部分项工程</div>
+                                <div class="tree-content">
+                                    <ul class="tree">
+                                        <li class="tree-node">
+                                            <div class="tree-node-content">
+                                                <span class="toggle-icon"><i class="fas fa-caret-right"></i></span>
+                                                <span class="tree-node-icon"><i class="fas fa-building"></i></span>
+                                                <span>地基与基础工程</span>
+                                            </div>
+                                            <ul class="tree-node-children">
+                                                <li class="tree-node">
+                                                    <div class="tree-node-content">
+                                                        <span class="toggle-icon"><i class="fas fa-caret-right"></i></span>
+                                                        <span class="tree-node-icon"><i class="fas fa-layer-group"></i></span>
+                                                        <span>土方工程</span>
+                                                    </div>
+                                                    <ul class="tree-node-children">
+                                                        <li class="tree-node">
+                                                            <div class="tree-node-content">
+                                                                <span class="tree-node-icon"><i class="fas fa-file-alt"></i></span>
+                                                                <span>基坑开挖</span>
+                                                            </div>
+                                                        </li>
+                                                        <li class="tree-node">
+                                                            <div class="tree-node-content">
+                                                                <span class="tree-node-icon"><i class="fas fa-file-alt"></i></span>
+                                                                <span>土方回填</span>
+                                                            </div>
+                                                        </li>
+                                                    </ul>
+                                                </li>
+                                                <li class="tree-node">
+                                                    <div class="tree-node-content">
+                                                        <span class="toggle-icon"><i class="fas fa-caret-right"></i></span>
+                                                        <span class="tree-node-icon"><i class="fas fa-layer-group"></i></span>
+                                                        <span>桩基工程</span>
+                                                    </div>
+                                                    <ul class="tree-node-children">
+                                                        <li class="tree-node">
+                                                            <div class="tree-node-content">
+                                                                <span class="tree-node-icon"><i class="fas fa-file-alt"></i></span>
+                                                                <span>预制桩施工</span>
+                                                            </div>
+                                                        </li>
+                                                        <li class="tree-node">
+                                                            <div class="tree-node-content">
+                                                                <span class="tree-node-icon"><i class="fas fa-file-alt"></i></span>
+                                                                <span>灌注桩施工</span>
+                                                            </div>
+                                                        </li>
+                                                    </ul>
+                                                </li>
+                                            </ul>
+                                        </li>
+                                        <li class="tree-node">
+                                            <div class="tree-node-content">
+                                                <span class="toggle-icon"><i class="fas fa-caret-right"></i></span>
+                                                <span class="tree-node-icon"><i class="fas fa-building"></i></span>
+                                                <span>主体结构工程</span>
+                                            </div>
+                                            <ul class="tree-node-children">
+                                                <li class="tree-node">
+                                                    <div class="tree-node-content">
+                                                        <span class="toggle-icon"><i class="fas fa-caret-right"></i></span>
+                                                        <span class="tree-node-icon"><i class="fas fa-layer-group"></i></span>
+                                                        <span>混凝土结构</span>
+                                                    </div>
+                                                    <ul class="tree-node-children">
+                                                        <li class="tree-node">
+                                                            <div class="tree-node-content selected">
+                                                                <span class="tree-node-icon"><i class="fas fa-file-alt"></i></span>
+                                                                <span>模板工程</span>
+                                                            </div>
+                                                        </li>
+                                                        <li class="tree-node">
+                                                            <div class="tree-node-content">
+                                                                <span class="tree-node-icon"><i class="fas fa-file-alt"></i></span>
+                                                                <span>钢筋工程</span>
+                                                            </div>
+                                                        </li>
+                                                        <li class="tree-node">
+                                                            <div class="tree-node-content">
+                                                                <span class="tree-node-icon"><i class="fas fa-file-alt"></i></span>
+                                                                <span>混凝土工程</span>
+                                                            </div>
+                                                        </li>
+                                                    </ul>
+                                                </li>
+                                                <li class="tree-node">
+                                                    <div class="tree-node-content">
+                                                        <span class="toggle-icon"><i class="fas fa-caret-right"></i></span>
+                                                        <span class="tree-node-icon"><i class="fas fa-layer-group"></i></span>
+                                                        <span>砌体结构</span>
+                                                    </div>
+                                                    <ul class="tree-node-children">
+                                                        <li class="tree-node">
+                                                            <div class="tree-node-content">
+                                                                <span class="tree-node-icon"><i class="fas fa-file-alt"></i></span>
+                                                                <span>砖砌体工程</span>
+                                                            </div>
+                                                        </li>
+                                                    </ul>
+                                                </li>
+                                            </ul>
+                                        </li>
+                                        <li class="tree-node">
+                                            <div class="tree-node-content">
+                                                <span class="toggle-icon"><i class="fas fa-caret-right"></i></span>
+                                                <span class="tree-node-icon"><i class="fas fa-building"></i></span>
+                                                <span>建筑装饰装修</span>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <!-- 验收条目管理 -->
+                            <div class="inspection-section">
+                                <div class="inspection-header">
+                                    <div>
+                                        <span class="inspection-title">验收条目管理</span>
+                                        <span> - 当前分部分项: <span class="selected-node">主体结构工程 > 混凝土结构 > 模板工程</span></span>
+                                    </div>
+                                    <button class="btn btn-primary">
+                                        <i class="fas fa-plus"></i> 添加验收条目
+                                    </button>
+                                </div>
+                                
+                                <table class="inspection-table">
+                                    <thead>
+                                        <tr>
+                                            <th width="5%">序号</th>
+                                            <th width="25%">验收内容</th>
+                                            <th width="35%">验收标准</th>
+                                            <th width="15%">状态</th>
+                                            <th width="20%">操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>1</td>
+                                            <td>模板安装位置</td>
+                                            <td>模板安装位置准确，轴线偏差≤5mm</td>
+                                            <td><span class="status-badge status-approved">已验收</span></td>
+                                            <td class="action-cell">
+                                                <div class="action-btn edit-btn">
+                                                    <i class="fas fa-edit"></i>
+                                                </div>
+                                                <div class="action-btn delete-btn">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>2</td>
+                                            <td>模板垂直度</td>
+                                            <td>垂直度偏差≤3mm/2m</td>
+                                            <td><span class="status-badge status-pending">待验收</span></td>
+                                            <td class="action-cell">
+                                                <div class="action-btn edit-btn">
+                                                    <i class="fas fa-edit"></i>
+                                                </div>
+                                                <div class="action-btn delete-btn">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>3</td>
+                                            <td>模板支撑系统</td>
+                                            <td>支撑系统稳固，无松动现象，间距符合方案要求</td>
+                                            <td><span class="status-badge status-rejected">未通过</span></td>
+                                            <td class="action-cell">
+                                                <div class="action-btn edit-btn">
+                                                    <i class="fas fa-edit"></i>
+                                                </div>
+                                                <div class="action-btn delete-btn">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>4</td>
+                                            <td>模板表面质量</td>
+                                            <td>模板表面平整、清洁，无破损、变形</td>
+                                            <td><span class="status-badge status-draft">草稿</span></td>
+                                            <td class="action-cell">
+                                                <div class="action-btn edit-btn">
+                                                    <i class="fas fa-edit"></i>
+                                                </div>
+                                                <div class="action-btn delete-btn">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>5</td>
+                                            <td>模板接缝处理</td>
+                                            <td>接缝严密，无漏浆现象</td>
+                                            <td><span class="status-badge status-approved">已验收</span></td>
+                                            <td class="action-cell">
+                                                <div class="action-btn edit-btn">
+                                                    <i class="fas fa-edit"></i>
+                                                </div>
+                                                <div class="action-btn delete-btn">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                
+                                <!-- 验收条目表单 -->
+                                <div class="card" style="margin-top: 25px;">
+                                    <div class="card-header">
+                                        <div class="card-title">添加/编辑验收条目</div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="form-group">
+                                            <label class="form-label">验收内容</label>
+                                            <input type="text" class="form-control" placeholder="请输入验收内容">
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label">验收标准</label>
+                                            <textarea class="form-control" placeholder="请输入详细的验收标准"></textarea>
+                                        </div>
+                                        <div class="form-row">
+                                            <div class="form-col">
+                                                <div class="form-group">
+                                                    <label class="form-label">验收类型</label>
+                                                    <select class="form-control">
+                                                        <option>主控项目</option>
+                                                        <option>一般项目</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="form-col">
+                                                <div class="form-group">
+                                                    <label class="form-label">验收方法</label>
+                                                    <select class="form-control">
+                                                        <option>观察检查</option>
+                                                        <option>量测检查</option>
+                                                        <option>试验检查</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <div class="checkbox-group">
+                                                <input type="checkbox" id="required-check">
+                                                <label for="required-check">是否为必验项目</label>
+                                            </div>
+                                        </div>
+                                        <div style="display: flex; justify-content: flex-end; gap: 15px; margin-top: 20px;">
+                                            <button class="btn btn-outline">取消</button>
+                                            <button class="btn btn-primary">保存验收条目</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 树形结构展开/折叠功能
+        document.querySelectorAll('.toggle-icon').forEach(icon => {
+            icon.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const node = this.closest('.tree-node');
+                const children = node.querySelector('.tree-node-children');
+                
+                if (children) {
+                    const isExpanded = node.classList.contains('expanded');
+                    if (isExpanded) {
+                        node.classList.remove('expanded');
+                        this.innerHTML = '<i class="fas fa-caret-right"></i>';
+                    } else {
+                        node.classList.add('expanded');
+                        this.innerHTML = '<i class="fas fa-caret-down"></i>';
+                    }
+                }
+            });
+        });
+        
+        // 树节点选择功能
+        document.querySelectorAll('.tree-node-content').forEach(node => {
+            node.addEventListener('click', function() {
+                // 移除所有选中状态
+                document.querySelectorAll('.tree-node-content').forEach(el => {
+                    el.classList.remove('selected');
+                });
+                
+                // 添加当前选中状态
+                this.classList.add('selected');
+                
+                // 更新当前选中的分部分项显示
+                const nodeText = this.querySelector('span:last-child').textContent;
+                document.querySelector('.selected-node').textContent = nodeText;
+            });
+        });
+        
+        // 编辑按钮点击事件
+        document.querySelectorAll('.edit-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                alert('编辑功能待实现');
+            });
+        });
+        
+        // 删除按钮点击事件
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (confirm('确定要删除此验收条目吗？')) {
+                    const row = this.closest('tr');
+                    row.style.opacity = '0.5';
+                    setTimeout(() => {
+                        row.remove();
+                    }, 300);
+                }
+            });
+        });
+        
+        // 添加验收条目按钮
+        document.querySelector('.btn-primary').addEventListener('click', function() {
+            alert('添加新验收条目功能待实现');
+        });
+    </script>
+</body>
+</html>

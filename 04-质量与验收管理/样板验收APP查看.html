@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>施工样板范例库</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        :root {
+            --primary: #1a73e8;
+            --primary-light: #e8f0fe;
+            --success: #4caf50;
+            --warning: #ff9800;
+            --danger: #f44336;
+            --text: #333;
+            --text-light: #666;
+            --text-lighter: #999;
+            --border: #e0e0e0;
+            --bg: #f5f7fa;
+            --card-bg: #ffffff;
+            --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-size: 16px;
+            line-height: 1.5;
+            overflow-x: hidden;
+            padding-bottom: 80px;
+        }
+        
+        /* 顶部导航 */
+        .app-header {
+            position: sticky;
+            top: 0;
+            background: linear-gradient(135deg, var(--primary), #0d47a1);
+            color: white;
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+        }
+        
+        .back-btn {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        /* 页面容器 */
+        .page-container {
+            display: none;
+            padding: 15px;
+        }
+        
+        .page-container.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* 搜索栏 */
+        .search-container {
+            margin-bottom: 15px;
+        }
+        
+        .search-box {
+            display: flex;
+            align-items: center;
+            background-color: var(--card-bg);
+            border-radius: 25px;
+            padding: 10px 15px;
+            box-shadow: var(--card-shadow);
+        }
+        
+        .search-box i {
+            color: var(--text-lighter);
+            margin-right: 10px;
+        }
+        
+        .search-box input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            font-size: 16px;
+            outline: none;
+        }
+        
+        /* 筛选标签 */
+        .filter-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .filter-tag {
+            padding: 8px 15px;
+            background-color: var(--card-bg);
+            border-radius: 20px;
+            font-size: 14px;
+            box-shadow: var(--card-shadow);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .filter-tag.active {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        /* 范例列表 */
+        .example-list {
+            display: grid;
+            gap: 15px;
+        }
+        
+        .example-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+            transition: all 0.3s;
+        }
+        
+        .example-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-image {
+            position: relative;
+            height: 180px;
+            overflow: hidden;
+        }
+        
+        .card-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s;
+        }
+        
+        .card-status {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: var(--success);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .card-content {
+            padding: 15px;
+        }
+        
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .card-subtitle {
+            color: var(--text-light);
+            font-size: 14px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .card-subtitle i {
+            margin-right: 5px;
+            color: var(--primary);
+        }
+        
+        .card-details {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: var(--text-lighter);
+            margin-top: 10px;
+        }
+        
+        .card-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        
+        .card-tag {
+            padding: 4px 10px;
+            background-color: var(--primary-light);
+            color: var(--primary);
+            border-radius: 15px;
+            font-size: 12px;
+        }
+        
+        /* 详情页 */
+        .detail-header {
+            position: relative;
+            height: 250px;
+            overflow: hidden;
+            margin: -15px -15px 0;
+        }
+        
+        .detail-header img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .detail-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0,0,0,0.7));
+            padding: 20px 15px;
+            color: white;
+        }
+        
+        .detail-title {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .detail-subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        
+        .detail-meta {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        
+        .detail-content {
+            padding: 20px 0;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .section-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: var(--card-shadow);
+        }
+        
+        .standard-item {
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .standard-item:last-child {
+            border-bottom: none;
+        }
+        
+        .standard-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .standard-title i {
+            margin-right: 8px;
+            color: var(--primary);
+        }
+        
+        .standard-desc {
+            color: var(--text-light);
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        .standard-images {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+        }
+        
+        .standard-image {
+            width: 100px;
+            height: 100px;
+            border-radius: 8px;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+        
+        /* 标准项详情页 */
+        .standard-detail-header {
+            position: relative;
+            height: 200px;
+            overflow: hidden;
+            margin: -15px -15px 0;
+        }
+        
+        .standard-detail-header img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .standard-detail-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin: 20px 0 15px;
+        }
+        
+        .standard-detail-content {
+            padding: 15px 0;
+        }
+        
+        .detail-item {
+            margin-bottom: 20px;
+        }
+        
+        .detail-label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-light);
+        }
+        
+        .detail-value {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            padding: 12px 15px;
+            box-shadow: var(--card-shadow);
+        }
+        
+        .image-gallery {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .gallery-image {
+            width: 100%;
+            height: 150px;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+        
+        /* 底部操作栏 */
+        .bottom-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: var(--card-bg);
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+        
+        .bottom-btn {
+            flex: 1;
+            padding: 14px;
+            border-radius: 8px;
+            font-weight: 500;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn-prev {
+            background-color: #f0f0f0;
+            color: var(--text);
+            margin-right: 10px;
+        }
+        
+        .btn-next {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        /* 响应式调整 */
+        @media (min-width: 768px) {
+            .example-list {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .image-gallery {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航 -->
+    <div class="app-header">
+        <div class="header-left">
+            <div class="back-btn" id="back-btn">
+                <i class="fas fa-arrow-left"></i>
+            </div>
+            <div class="header-title" id="header-title">施工样板范例库</div>
+        </div>
+    </div>
+    
+    <!-- 列表页 -->
+    <div class="page-container active" id="list-page">
+        <!-- 搜索栏 -->
+        <div class="search-container">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="搜索分部分项、工程部位或关键词">
+            </div>
+        </div>
+        
+        <!-- 筛选标签 -->
+        <div class="filter-tags">
+            <div class="filter-tag active">全部</div>
+            <div class="filter-tag">混凝土结构</div>
+            <div class="filter-tag">砌体工程</div>
+            <div class="filter-tag">模板工程</div>
+            <div class="filter-tag">钢筋工程</div>
+            <div class="filter-tag">防水工程</div>
+        </div>
+        
+        <!-- 范例列表 -->
+        <div class="example-list">
+            <!-- 范例卡片 1 -->
+            <div class="example-card" data-id="1">
+                <div class="card-image">
+                    <img src="https://images.unsplash.com/photo-1507207611509-ec012433ff52?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&h=400&w=600" alt="模板工程">
+                    <div class="card-status">已验收</div>
+                </div>
+                <div class="card-content">
+                    <div class="card-title">
+                        <span>模板安装工程</span>
+                        <span><i class="fas fa-star" style="color: #FFD700;"></i> 4.8</span>
+                    </div>
+                    <div class="card-subtitle">
+                        <i class="fas fa-map-marker-alt"></i> 3号楼2层A区
+                    </div>
+                    <p>模板安装位置准确，支撑系统稳固，接缝严密无漏浆现象</p>
+                    <div class="card-tags">
+                        <div class="card-tag">模板工程</div>
+                        <div class="card-tag">主体结构</div>
+                    </div>
+                    <div class="card-details">
+                        <span><i class="fas fa-user"></i> 张工</span>
+                        <span><i class="fas fa-calendar"></i> 2023-10-15</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 范例卡片 2 -->
+            <div class="example-card" data-id="2">
+                <div class="card-image">
+                    <img src="https://images.unsplash.com/photo-1541888946425-d81bb19240f5?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&h=400&w=600" alt="钢筋绑扎">
+                    <div class="card-status">已验收</div>
+                </div>
+                <div class="card-content">
+                    <div class="card-title">
+                        <span>钢筋绑扎工程</span>
+                        <span><i class="fas fa-star" style="color: #FFD700;"></i> 4.9</span>
+                    </div>
+                    <div class="card-subtitle">
+                        <i class="fas fa-map-marker-alt"></i> 2号楼1层B区
+                    </div>
+                    <p>钢筋规格、间距符合设计要求，绑扎牢固，保护层厚度控制精确</p>
+                    <div class="card-tags">
+                        <div class="card-tag">钢筋工程</div>
+                        <div class="card-tag">主体结构</div>
+                    </div>
+                    <div class="card-details">
+                        <span><i class="fas fa-user"></i> 李工</span>
+                        <span><i class="fas fa-calendar"></i> 2023-10-10</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 范例卡片 3 -->
+            <div class="example-card" data-id="3">
+                <div class="card-image">
+                    <img src="https://images.unsplash.com/photo-1581091226033-d5c48150dbaa?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&h=400&w=600" alt="混凝土浇筑">
+                    <div class="card-status">已验收</div>
+                </div>
+                <div class="card-content">
+                    <div class="card-title">
+                        <span>混凝土浇筑工程</span>
+                        <span><i class="fas fa-star" style="color: #FFD700;"></i> 4.7</span>
+                    </div>
+                    <div class="card-subtitle">
+                        <i class="fas fa-map-marker-alt"></i> 1号楼3层C区
+                    </div>
+                    <p>混凝土振捣密实，表面平整无裂缝，养护措施到位</p>
+                    <div class="card-tags">
+                        <div class="card-tag">混凝土工程</div>
+                        <div class="card-tag">主体结构</div>
+                    </div>
+                    <div class="card-details">
+                        <span><i class="fas fa-user"></i> 王工</span>
+                        <span><i class="fas fa-calendar"></i> 2023-10-05</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 详情页 -->
+    <div class="page-container" id="detail-page">
+        <div class="detail-header">
+            <img src="https://images.unsplash.com/photo-1507207611509-ec012433ff52?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&h=600&w=900" alt="模板工程">
+            <div class="detail-overlay">
+                <div class="detail-title">模板安装工程</div>
+                <div class="detail-subtitle">主体结构工程 > 混凝土结构 > 模板工程</div>
+                <div class="detail-meta">
+                    <span><i class="fas fa-user"></i> 张工</span>
+                    <span><i class="fas fa-calendar"></i> 2023-10-15</span>
+                    <span><i class="fas fa-map-marker-alt"></i> 3号楼2层A区</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="detail-content">
+            <div class="section-title">工程概述</div>
+            <div class="section-card">
+                <p>本工程采用优质木模板，支撑系统采用钢管脚手架，严格按照施工方案要求进行安装。模板安装位置准确，支撑系统稳固，接缝严密无漏浆现象，符合国家相关规范要求。</p>
+            </div>
+            
+            <div class="section-title">验收标准项</div>
+            <div class="section-card">
+                <div class="standard-item" data-id="1">
+                    <div class="standard-title">
+                        <i class="fas fa-check-circle"></i> 模板安装位置
+                    </div>
+                    <div class="standard-desc">
+                        模板安装位置准确，轴线偏差≤5mm
+                    </div>
+                    <div class="standard-images">
+                        <img src="https://images.unsplash.com/photo-1524168997-21348071d4d2?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&h=200&w=300" alt="模板位置" class="standard-image">
+                        <img src="https://images.unsplash.com/photo-1503387762-592deb58ef4e?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&h=200&w=300" alt="模板位置" class="standard-image">
+                    </div>
+                </div>
+                
+                <div class="standard-item" data-id="2">
+                    <div class="standard-title">
+                        <i class="fas fa-check-circle"></i> 模板垂直度
+                    </div>
+                    <div class="standard-desc">
+                        垂直度偏差≤3mm/2m
+                    </div>
+                    <div class="standard-images">
+                        <img src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&h=200&w=300" alt="模板垂直度" class="standard-image">
+                    </div>
+                </div>
+                
+                <div class="standard-item" data-id="3">
+                    <div class="standard-title">
+                        <i class="fas fa-check-circle"></i> 模板支撑系统
+                    </div>
+                    <div class="standard-desc">
+                        支撑系统稳固，无松动现象，间距符合方案要求
+                    </div>
+                    <div class="standard-images">
+                        <img src="https://images.unsplash.com/photo-1581091226033-d5c48150dbaa?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&h=200&w=300" alt="支撑系统" class="standard-image">
+                        <img src="https://images.unsplash.com/photo-1541888946425-d81bb19240f5?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&h=200&w=300" alt="支撑系统" class="standard-image">
+                    </div>
+                </div>
+                
+                <div class="standard-item" data-id="4">
+                    <div class="standard-title">
+                        <i class="fas fa-check-circle"></i> 模板表面质量
+                    </div>
+                    <div class="standard-desc">
+                        模板表面平整、清洁，无破损、变形
+                    </div>
+                    <div class="standard-images">
+                        <img src="https://images.unsplash.com/photo-1517646287270-a5a9ca602e5c?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&h=200&w=300" alt="模板表面" class="standard-image">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section-title">验收记录</div>
+            <div class="section-card">
+                <div class="detail-item">
+                    <div class="detail-label">验收结果</div>
+                    <div class="detail-value" style="color: var(--success); font-weight: 600;">
+                        通过
+                    </div>
+                </div>
+                
+                <div class="detail-item">
+                    <div class="detail-label">验收意见</div>
+                    <div class="detail-value">
+                        模板安装位置准确，支撑系统稳固，接缝严密无漏浆现象，符合设计及规范要求。
+                    </div>
+                </div>
+                
+                <div class="detail-item">
+                    <div class="detail-label">验收人员</div>
+                    <div class="detail-value">
+                        张工（项目经理）、李工（监理）、王工（质检员）
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 标准项详情页 -->
+    <div class="page-container" id="standard-detail-page">
+        <div class="standard-detail-header">
+            <img src="https://images.unsplash.com/photo-1524168997-21348071d4d2?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&h=600&w=900" alt="模板位置">
+        </div>
+        
+        <div class="detail-content">
+            <div class="standard-detail-title">模板安装位置</div>
+            
+            <div class="section-card">
+                <div class="detail-item">
+                    <div class="detail-label">验收标准</div>
+                    <div class="detail-value">
+                        模板安装位置准确，轴线偏差≤5mm
+                    </div>
+                </div>
+                
+                <div class="detail-item">
+                    <div class="detail-label">实际测量值</div>
+                    <div class="detail-value">
+                        轴线偏差：3mm（符合要求）
+                    </div>
+                </div>
+                
+                <div class="detail-item">
+                    <div class="detail-label">验收说明</div>
+                    <div class="detail-value">
+                        使用全站仪进行测量，模板安装位置准确，轴线偏差在允许范围内，符合设计要求。
+                    </div>
+                </div>
+                
+                <div class="detail-item">
+                    <div class="detail-label">相关图片</div>
+                    <div class="image-gallery">
+                        <img src="https://images.unsplash.com/photo-1524168997-21348071d4d2?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&h=300&w=400" alt="模板位置" class="gallery-image">
+                        <img src="https://images.unsplash.com/photo-1503387762-592deb58ef4e?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&h=300&w=400" alt="模板位置" class="gallery-image">
+                        <img src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&h=300&w=400" alt="模板位置" class="gallery-image">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 页面切换控制
+        const pages = {
+            list: document.getElementById('list-page'),
+            detail: document.getElementById('detail-page'),
+            standardDetail: document.getElementById('standard-detail-page')
+        };
+        
+        const headerTitle = document.getElementById('header-title');
+        const backBtn = document.getElementById('back-btn');
+        
+        // 当前页面状态
+        let currentPage = 'list';
+        let historyStack = [];
+        
+        // 显示指定页面
+        function showPage(pageName, title) {
+            // 隐藏所有页面
+            Object.values(pages).forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // 显示目标页面
+            pages[pageName].classList.add('active');
+            
+            // 更新标题
+            if (title) {
+                headerTitle.textContent = title;
+            }
+            
+            // 更新历史记录
+            historyStack.push(currentPage);
+            currentPage = pageName;
+        }
+        
+        // 返回上一页
+        function goBack() {
+            if (historyStack.length > 0) {
+                const prevPage = historyStack.pop();
+                Object.values(pages).forEach(page => {
+                    page.classList.remove('active');
+                });
+                pages[prevPage].classList.add('active');
+                currentPage = prevPage;
+                
+                // 更新标题
+                if (prevPage === 'list') {
+                    headerTitle.textContent = '施工样板范例库';
+                }
+            }
+        }
+        
+        // 列表项点击事件
+        document.querySelectorAll('.example-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const id = this.getAttribute('data-id');
+                showPage('detail', '模板安装工程');
+            });
+        });
+        
+        // 标准项点击事件
+        document.querySelectorAll('.standard-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const id = this.getAttribute('data-id');
+                showPage('standardDetail', '模板安装位置');
+            });
+        });
+        
+        // 返回按钮点击事件
+        backBtn.addEventListener('click', goBack);
+        
+        // 初始化页面
+        showPage('list');
+    </script>
+</body>
+</html>

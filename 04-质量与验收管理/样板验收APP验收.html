@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>智慧工地 - 施工样板验收</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        :root {
+            --primary: #1a73e8;
+            --primary-dark: #0d47a1;
+            --success: #4caf50;
+            --warning: #ff9800;
+            --danger: #f44336;
+            --text: #333;
+            --text-light: #666;
+            --border: #e0e0e0;
+            --bg: #f5f7fa;
+            --card-bg: #ffffff;
+            --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+        
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-size: 16px;
+            line-height: 1.5;
+            overflow-x: hidden;
+            padding-bottom: 80px;
+        }
+        
+        /* 顶部导航 */
+        .app-header {
+            position: sticky;
+            top: 0;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+        }
+        
+        .back-btn {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .header-right {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .header-icon {
+            font-size: 20px;
+        }
+        
+        /* 项目信息 */
+        .project-info {
+            background-color: var(--card-bg);
+            padding: 15px;
+            margin-bottom: 10px;
+            box-shadow: var(--card-shadow);
+            border-radius: 0 0 12px 12px;
+        }
+        
+        .project-name {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: var(--primary-dark);
+        }
+        
+        .project-details {
+            display: flex;
+            font-size: 14px;
+            color: var(--text-light);
+            gap: 15px;
+        }
+        
+        /* 步骤指示器 */
+        .steps-container {
+            display: flex;
+            justify-content: space-between;
+            padding: 20px 15px;
+            position: relative;
+        }
+        
+        .steps-container::before {
+            content: '';
+            position: absolute;
+            top: 38px;
+            left: 30px;
+            right: 30px;
+            height: 4px;
+            background-color: var(--border);
+            z-index: 1;
+        }
+        
+        .step {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 70px;
+        }
+        
+        .step-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--card-bg);
+            border: 3px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            margin-bottom: 8px;
+            transition: all 0.3s;
+        }
+        
+        .step.active .step-icon {
+            background-color: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+        
+        .step.completed .step-icon {
+            background-color: var(--success);
+            border-color: var(--success);
+            color: white;
+        }
+        
+        .step-text {
+            font-size: 12px;
+            text-align: center;
+            color: var(--text-light);
+        }
+        
+        .step.active .step-text,
+        .step.completed .step-text {
+            color: var(--text);
+            font-weight: 500;
+        }
+        
+        /* 内容卡片 */
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            margin: 10px 15px;
+            overflow: hidden;
+        }
+        
+        .card-header {
+            padding: 15px;
+            border-bottom: 1px solid var(--border);
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .card-title {
+            font-size: 16px;
+            color: var(--text);
+        }
+        
+        .card-body {
+            padding: 15px;
+        }
+        
+        /* 分部分项树 */
+        .tree-node {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .tree-node:last-child {
+            border-bottom: none;
+        }
+        
+        .tree-node-content {
+            display: flex;
+            align-items: center;
+        }
+        
+        .tree-node-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background-color: rgba(26, 115, 232, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            color: var(--primary);
+        }
+        
+        .tree-node-text {
+            flex: 1;
+        }
+        
+        .tree-node-children {
+            padding-left: 36px;
+            display: none;
+        }
+        
+        .tree-node.expanded > .tree-node-children {
+            display: block;
+        }
+        
+        .toggle-icon {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-light);
+        }
+        
+        /* 验收条目 */
+        .inspection-item {
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .inspection-item:last-child {
+            border-bottom: none;
+        }
+        
+        .item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .item-title {
+            font-weight: 600;
+            font-size: 16px;
+        }
+        
+        .item-status {
+            font-size: 12px;
+            padding: 3px 10px;
+            border-radius: 20px;
+        }
+        
+        .status-pending {
+            background-color: #fff8e1;
+            color: #ff8f00;
+        }
+        
+        .status-completed {
+            background-color: #e8f5e9;
+            color: var(--success);
+        }
+        
+        .item-standard {
+            color: var(--text-light);
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        .item-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 8px 15px;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn i {
+            margin-right: 5px;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+        }
+        
+        /* 验收表单 */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 16px;
+            background-color: var(--card-bg);
+        }
+        
+        textarea.form-control {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .radio-group {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .radio-item {
+            flex: 1;
+            text-align: center;
+        }
+        
+        .radio-input {
+            display: none;
+        }
+        
+        .radio-label {
+            display: block;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .radio-input:checked + .radio-label {
+            border-color: var(--primary);
+            background-color: rgba(26, 115, 232, 0.1);
+            color: var(--primary);
+            font-weight: 500;
+        }
+        
+        /* 图片上传 */
+        .image-upload {
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            margin-top: 15px;
+            background-color: rgba(0, 0, 0, 0.02);
+        }
+        
+        .image-upload i {
+            font-size: 40px;
+            color: var(--text-light);
+            margin-bottom: 10px;
+        }
+        
+        .image-upload p {
+            color: var(--text-light);
+            font-size: 14px;
+        }
+        
+        .image-preview {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .preview-item {
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .preview-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .remove-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 24px;
+            height: 24px;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+        
+        /* 底部操作栏 */
+        .bottom-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: var(--card-bg);
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+        
+        .bottom-btn {
+            flex: 1;
+            padding: 14px;
+            border-radius: 8px;
+            font-weight: 500;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn-prev {
+            background-color: #f0f0f0;
+            color: var(--text);
+            margin-right: 10px;
+        }
+        
+        .btn-next {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .btn-submit {
+            background-color: var(--success);
+            color: white;
+            flex: 1;
+        }
+        
+        /* 验收完成 */
+        .result-container {
+            text-align: center;
+            padding: 40px 20px;
+        }
+        
+        .result-icon {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background-color: var(--success);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            margin: 0 auto 20px;
+        }
+        
+        .result-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .result-desc {
+            color: var(--text-light);
+            margin-bottom: 30px;
+        }
+        
+        /* 页面切换效果 */
+        .page {
+            display: none;
+        }
+        
+        .page.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* 响应式调整 */
+        @media (max-width: 480px) {
+            .steps-container {
+                padding: 15px 10px;
+            }
+            
+            .step {
+                width: 60px;
+            }
+            
+            .step-icon {
+                width: 36px;
+                height: 36px;
+                font-size: 16px;
+            }
+            
+            .steps-container::before {
+                top: 34px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航 -->
+    <div class="app-header">
+        <div class="header-left">
+            <div class="back-btn">
+                <i class="fas fa-arrow-left"></i>
+            </div>
+            <div class="header-title">施工样板验收</div>
+        </div>
+        <div class="header-right">
+            <div class="header-icon">
+                <i class="fas fa-bell"></i>
+            </div>
+            <div class="header-icon">
+                <i class="fas fa-user"></i>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 项目信息 -->
+    <div class="project-info">
+        <div class="project-name">未来科技城A区建设项目</div>
+        <div class="project-details">
+            <span>项目经理：张工</span>
+            <span>当前阶段：主体结构施工</span>
+        </div>
+    </div>
+    
+    <!-- 步骤指示器 -->
+    <div class="steps-container">
+        <div class="step completed">
+            <div class="step-icon"><i class="fas fa-check"></i></div>
+            <div class="step-text">选择分部分项</div>
+        </div>
+        <div class="step completed">
+            <div class="step-icon"><i class="fas fa-check"></i></div>
+            <div class="step-text">选择验收条目</div>
+        </div>
+        <div class="step active">
+            <div class="step-icon">3</div>
+            <div class="step-text">现场验收</div>
+        </div>
+        <div class="step">
+            <div class="step-icon">4</div>
+            <div class="step-text">提交验收</div>
+        </div>
+    </div>
+    
+    <!-- 页面1：选择分部分项 -->
+    <div class="page active" id="page1">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">选择分部分项</div>
+            </div>
+            <div class="card-body">
+                <div class="tree-node expanded">
+                    <div class="tree-node-content">
+                        <div class="tree-node-icon"><i class="fas fa-building"></i></div>
+                        <div class="tree-node-text">地基与基础工程</div>
+                        <div class="toggle-icon"><i class="fas fa-chevron-down"></i></div>
+                    </div>
+                    <div class="tree-node-children">
+                        <div class="tree-node">
+                            <div class="tree-node-content">
+                                <div class="tree-node-icon"><i class="fas fa-layer-group"></i></div>
+                                <div class="tree-node-text">土方工程</div>
+                                <div class="toggle-icon"><i class="fas fa-chevron-right"></i></div>
+                            </div>
+                        </div>
+                        <div class="tree-node">
+                            <div class="tree-node-content">
+                                <div class="tree-node-icon"><i class="fas fa-layer-group"></i></div>
+                                <div class="tree-node-text">桩基工程</div>
+                                <div class="toggle-icon"><i class="fas fa-chevron-right"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tree-node expanded">
+                    <div class="tree-node-content">
+                        <div class="tree-node-icon"><i class="fas fa-building"></i></div>
+                        <div class="tree-node-text">主体结构工程</div>
+                        <div class="toggle-icon"><i class="fas fa-chevron-down"></i></div>
+                    </div>
+                    <div class="tree-node-children">
+                        <div class="tree-node expanded">
+                            <div class="tree-node-content">
+                                <div class="tree-node-icon"><i class="fas fa-layer-group"></i></div>
+                                <div class="tree-node-text">混凝土结构</div>
+                                <div class="toggle-icon"><i class="fas fa-chevron-down"></i></div>
+                            </div>
+                            <div class="tree-node-children">
+                                <div class="tree-node">
+                                    <div class="tree-node-content">
+                                        <div class="tree-node-icon"><i class="fas fa-file-alt"></i></div>
+                                        <div class="tree-node-text">模板工程</div>
+                                    </div>
+                                </div>
+                                <div class="tree-node">
+                                    <div class="tree-node-content">
+                                        <div class="tree-node-icon"><i class="fas fa-file-alt"></i></div>
+                                        <div class="tree-node-text">钢筋工程</div>
+                                    </div>
+                                </div>
+                                <div class="tree-node">
+                                    <div class="tree-node-content">
+                                        <div class="tree-node-icon"><i class="fas fa-file-alt"></i></div>
+                                        <div class="tree-node-text">混凝土工程</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tree-node">
+                            <div class="tree-node-content">
+                                <div class="tree-node-icon"><i class="fas fa-layer-group"></i></div>
+                                <div class="tree-node-text">砌体结构</div>
+                                <div class="toggle-icon"><i class="fas fa-chevron-right"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tree-node">
+                    <div class="tree-node-content">
+                        <div class="tree-node-icon"><i class="fas fa-building"></i></div>
+                        <div class="tree-node-text">建筑装饰装修</div>
+                        <div class="toggle-icon"><i class="fas fa-chevron-right"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bottom-bar">
+            <div class="bottom-btn btn-prev">
+                <i class="fas fa-arrow-left"></i> 返回
+            </div>
+            <div class="bottom-btn btn-next">
+                下一步 <i class="fas fa-arrow-right"></i>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 页面2：选择验收条目 -->
+    <div class="page" id="page2">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">验收条目</div>
+                <div class="card-subtitle">主体结构工程 > 混凝土结构 > 模板工程</div>
+            </div>
+            <div class="card-body">
+                <div class="inspection-item">
+                    <div class="item-header">
+                        <div class="item-title">模板安装位置</div>
+                        <div class="item-status status-completed">已验收</div>
+                    </div>
+                    <div class="item-standard">验收标准：模板安装位置准确，轴线偏差≤5mm</div>
+                    <div class="item-actions">
+                        <button class="btn btn-outline">
+                            <i class="fas fa-eye"></i> 查看记录
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="inspection-item">
+                    <div class="item-header">
+                        <div class="item-title">模板垂直度</div>
+                        <div class="item-status status-pending">待验收</div>
+                    </div>
+                    <div class="item-standard">验收标准：垂直度偏差≤3mm/2m</div>
+                    <div class="item-actions">
+                        <button class="btn btn-primary">
+                            <i class="fas fa-clipboard-check"></i> 开始验收
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="inspection-item">
+                    <div class="item-header">
+                        <div class="item-title">模板支撑系统</div>
+                        <div class="item-status status-pending">待验收</div>
+                    </div>
+                    <div class="item-standard">验收标准：支撑系统稳固，无松动现象，间距符合方案要求</div>
+                    <div class="item-actions">
+                        <button class="btn btn-primary">
+                            <i class="fas fa-clipboard-check"></i> 开始验收
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="inspection-item">
+                    <div class="item-header">
+                        <div class="item-title">模板表面质量</div>
+                        <div class="item-status status-pending">待验收</div>
+                    </div>
+                    <div class="item-standard">验收标准：模板表面平整、清洁，无破损、变形</div>
+                    <div class="item-actions">
+                        <button class="btn btn-primary">
+                            <i class="fas fa-clipboard-check"></i> 开始验收
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bottom-bar">
+            <div class="bottom-btn btn-prev">
+                <i class="fas fa-arrow-left"></i> 上一步
+            </div>
+            <div class="bottom-btn btn-next">
+                下一步 <i class="fas fa-arrow-right"></i>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 页面3：现场验收 -->
+    <div class="page" id="page3">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">模板垂直度验收</div>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label class="form-label">验收标准</label>
+                    <div class="form-control" style="background: #f8f9fa; font-style: italic;">
+                        垂直度偏差≤3mm/2m
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">验收结果 <span style="color:var(--danger)">*</span></label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="result" id="result-pass" class="radio-input" checked>
+                            <label for="result-pass" class="radio-label">
+                                <i class="fas fa-check-circle"></i> 通过
+                            </label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="result" id="result-fail" class="radio-input">
+                            <label for="result-fail" class="radio-label">
+                                <i class="fas fa-times-circle"></i> 不通过
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">实际测量值 <span style="color:var(--danger)">*</span></label>
+                    <input type="text" class="form-control" placeholder="请输入测量值（单位：mm）">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">验收说明</label>
+                    <textarea class="form-control" placeholder="请填写验收说明（可选）"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">上传现场照片 <span style="color:var(--danger)">*</span></label>
+                    <div class="image-upload">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <p>点击或拖拽图片到此处上传</p>
+                    </div>
+                    <div class="image-preview">
+                        <div class="preview-item">
+                            <img src="https://images.unsplash.com/photo-1507207611509-ec012433ff52?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&h=200&w=300" alt="现场照片">
+                            <div class="remove-btn">
+                                <i class="fas fa-times"></i>
+                            </div>
+                        </div>
+                        <div class="preview-item">
+                            <img src="https://images.unsplash.com/photo-1524168997-21348071d4d2?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&h=200&w=300" alt="现场照片">
+                            <div class="remove-btn">
+                                <i class="fas fa-times"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bottom-bar">
+            <div class="bottom-btn btn-prev">
+                <i class="fas fa-arrow-left"></i> 上一步
+            </div>
+            <div class="bottom-btn btn-next">
+                下一步 <i class="fas fa-arrow-right"></i>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 页面4：提交验收 -->
+    <div class="page" id="page4">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">验收总结</div>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label class="form-label">整体验收结果</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="final-result" id="final-pass" class="radio-input" checked>
+                            <label for="final-pass" class="radio-label">
+                                <i class="fas fa-check-circle"></i> 通过
+                            </label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="final-result" id="final-fail" class="radio-input">
+                            <label for="final-fail" class="radio-label">
+                                <i class="fas fa-times-circle"></i> 不通过
+                            </label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="final-result" id="final-partial" class="radio-input">
+                            <label for="final-partial" class="radio-label">
+                                <i class="fas fa-exclamation-circle"></i> 部分通过
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">验收意见</label>
+                    <textarea class="form-control" placeholder="请填写整体验收意见"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">验收人员</label>
+                    <input type="text" class="form-control" value="张工（项目经理）" readonly>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">验收时间</label>
+                    <input type="text" class="form-control" value="2023-10-25 14:30" readonly>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">位置信息</label>
+                    <input type="text" class="form-control" value="3号楼2层A区" readonly>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bottom-bar">
+            <div class="bottom-btn btn-prev">
+                <i class="fas fa-arrow-left"></i> 上一步
+            </div>
+            <div class="bottom-btn btn-submit">
+                <i class="fas fa-paper-plane"></i> 提交验收
+            </div>
+        </div>
+    </div>
+    
+    <!-- 页面5：验收完成 -->
+    <div class="page" id="page5">
+        <div class="result-container">
+            <div class="result-icon">
+                <i class="fas fa-check"></i>
+            </div>
+            <div class="result-title">验收完成！</div>
+            <div class="result-desc">模板工程验收已成功提交</div>
+            
+            <div class="card">
+                <div class="card-body">
+                    <div style="text-align: left; margin-bottom: 15px;">
+                        <div style="font-weight: 600; margin-bottom: 5px;">验收编号</div>
+                        <div>YC-202310-028</div>
+                    </div>
+                    
+                    <div style="text-align: left; margin-bottom: 15px;">
+                        <div style="font-weight: 600; margin-bottom: 5px;">验收结果</div>
+                        <div><span style="color: var(--success); font-weight: 500;">通过</span> (4/4 条通过)</div>
+                    </div>
+                    
+                    <div style="text-align: left;">
+                        <div style="font-weight: 600; margin-bottom: 5px;">下一步操作</div>
+                        <div>等待监理单位审核（预计24小时内）</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 15px; margin-top: 30px;">
+                <button class="btn btn-outline" style="flex: 1;">
+                    <i class="fas fa-download"></i> 下载报告
+                </button>
+                <button class="btn btn-primary" style="flex: 1;">
+                    <i class="fas fa-home"></i> 返回首页
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 页面切换控制
+        const pages = document.querySelectorAll('.page');
+        let currentPage = 1;
+        
+        // 显示指定页面
+        function showPage(pageNumber) {
+            pages.forEach(page => {
+                page.classList.remove('active');
+            });
+            document.getElementById(`page${pageNumber}`).classList.add('active');
+            currentPage = pageNumber;
+            
+            // 更新步骤指示器
+            document.querySelectorAll('.step').forEach((step, index) => {
+                step.classList.remove('completed', 'active');
+                if (index + 1 < pageNumber) {
+                    step.classList.add('completed');
+                } else if (index + 1 === pageNumber) {
+                    step.classList.add('active');
+                }
+            });
+        }
+        
+        // 下一步按钮
+        document.querySelectorAll('.btn-next').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (currentPage < 5) {
+                    showPage(currentPage + 1);
+                }
+            });
+        });
+        
+        // 上一步按钮
+        document.querySelectorAll('.btn-prev').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (currentPage > 1) {
+                    showPage(currentPage - 1);
+                }
+            });
+        });
+        
+        // 提交按钮
+        document.querySelector('.btn-submit').addEventListener('click', () => {
+            showPage(5);
+        });
+        
+        // 树节点展开/折叠
+        document.querySelectorAll('.toggle-icon').forEach(icon => {
+            icon.addEventListener('click', function() {
+                const node = this.closest('.tree-node');
+                const children = node.querySelector('.tree-node-children');
+                
+                if (children) {
+                    const isExpanded = node.classList.contains('expanded');
+                    if (isExpanded) {
+                        node.classList.remove('expanded');
+                        this.innerHTML = '<i class="fas fa-chevron-right"></i>';
+                    } else {
+                        node.classList.add('expanded');
+                        this.innerHTML = '<i class="fas fa-chevron-down"></i>';
+                    }
+                }
+            });
+        });
+        
+        // 开始验收按钮
+        document.querySelectorAll('.btn-primary').forEach(btn => {
+            btn.addEventListener('click', function() {
+                showPage(3);
+            });
+        });
+        
+        // 返回按钮
+        document.querySelector('.back-btn').addEventListener('click', function() {
+            if (currentPage > 1) {
+                showPage(currentPage - 1);
+            }
+        });
+        
+        // 初始化页面
+        showPage(1);
+    </script>
+</body>
+</html>
