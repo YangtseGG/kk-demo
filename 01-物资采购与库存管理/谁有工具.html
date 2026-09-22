@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>物料领用查询结果</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.5;
+            padding: 0;
+            margin: 0;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+        }
+        
+        /* 顶部标题栏 */
+        .header {
+            background: linear-gradient(135deg, #3a8ffe 0%, #2962ff 100%);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(41, 98, 255, 0.2);
+        }
+        
+        .back-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            margin-right: 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            transition: background-color 0.2s;
+        }
+        
+        .back-btn:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .header-title {
+            flex: 1;
+        }
+        
+        .header-title h1 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .header-title p {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+        
+        /* 物料信息卡片 */
+        .material-card {
+            background-color: white;
+            border-radius: 12px;
+            margin: 20px 15px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        
+        .material-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .material-name {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .material-code {
+            background-color: #f0f7ff;
+            color: #2962ff;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        
+        .material-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        
+        .info-item {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .info-label {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+        
+        .info-value {
+            font-size: 15px;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        /* 列表标题 */
+        .list-title {
+            padding: 0 15px;
+            margin: 25px 0 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .list-title h2 {
+            font-size: 18px;
+            color: #333;
+        }
+        
+        .count-badge {
+            background-color: #e8f0fe;
+            color: #2962ff;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        
+        /* 领用列表 */
+        .holder-list {
+            padding: 0 15px 20px;
+        }
+        
+        .holder-item {
+            background-color: white;
+            border-radius: 12px;
+            padding: 18px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .holder-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+        
+        .holder-info {
+            flex: 1;
+        }
+        
+        .holder-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        
+        .holder-details {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        
+        .holder-type {
+            font-size: 13px;
+            color: #666;
+            display: flex;
+            align-items: center;
+        }
+        
+        .type-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+        
+        .type-team {
+            background-color: #ff9a9e;
+        }
+        
+        .type-person {
+            background-color: #a1c4fd;
+        }
+        
+        .time-info {
+            font-size: 13px;
+            color: #888;
+            display: flex;
+            align-items: center;
+        }
+        
+        .time-info i {
+            font-size: 11px;
+            margin-right: 5px;
+        }
+        
+        .quantity-info {
+            text-align: right;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+        
+        .quantity {
+            font-size: 20px;
+            font-weight: 700;
+            color: #2962ff;
+            margin-bottom: 4px;
+        }
+        
+        .unit {
+            font-size: 13px;
+            color: #666;
+        }
+        
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+        
+        .empty-icon {
+            font-size: 60px;
+            color: #ddd;
+            margin-bottom: 15px;
+        }
+        
+        .empty-state h3 {
+            font-size: 18px;
+            margin-bottom: 8px;
+            color: #666;
+        }
+        
+        .empty-state p {
+            font-size: 14px;
+        }
+        
+        /* 筛选功能 */
+        .filter-section {
+            padding: 0 15px;
+            margin: 15px 0;
+        }
+        
+        .filter-options {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+        }
+        
+        .filter-btn {
+            background-color: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 20px;
+            padding: 8px 16px;
+            font-size: 13px;
+            color: #666;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+        
+        .filter-btn:hover {
+            background-color: #f5f7fa;
+        }
+        
+        .filter-btn.active {
+            background-color: #2962ff;
+            color: white;
+            border-color: #2962ff;
+        }
+        
+        /* 响应式调整 */
+        @media (max-width: 350px) {
+            .material-info {
+                grid-template-columns: 1fr;
+            }
+            
+            .holder-details {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 6px;
+            }
+        }
+        
+        /* 列表项状态指示器 */
+        .status-indicator {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            margin-right: 8px;
+            display: inline-block;
+        }
+        
+        .status-active {
+            background-color: #4caf50;
+        }
+        
+        .status-inactive {
+            background-color: #f44336;
+        }
+        
+        /* 列表项排序按钮 */
+        .sort-section {
+            padding: 0 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: flex-end;
+        }
+        
+        .sort-btn {
+            background: none;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 12px;
+            color: #666;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .sort-btn:hover {
+            background-color: #f5f7fa;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 顶部标题栏 -->
+        <div class="header">
+            <button class="back-btn">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <div class="header-title">
+                <h1>钢筋 HRB400E</h1>
+                <p>MAT-GJ-00420 | 当前库存: 15.8 t</p>
+            </div>
+        </div>
+        
+        <!-- 筛选功能 -->
+        <div class="filter-section">
+            <div class="filter-options">
+                <button class="filter-btn active">全部</button>
+                <button class="filter-btn">施工班组</button>
+                <button class="filter-btn">个人</button>
+                <button class="filter-btn">今日</button>
+                <button class="filter-btn">本周</button>
+            </div>
+        </div>
+        
+        <!-- 列表排序 -->
+        <div class="sort-section">
+            <button class="sort-btn">
+                <i class="fas fa-sort-amount-down"></i> 按时间排序
+            </button>
+        </div>
+        
+        <!-- 列表标题 -->
+        <div class="list-title">
+            <h2>领用记录</h2>
+            <div class="count-badge">5 条记录</div>
+        </div>
+        
+        <!-- 领用列表 -->
+        <div class="holder-list">
+            <div class="holder-item">
+                <div class="holder-info">
+                    <div class="holder-name">钢筋绑扎班组</div>
+                    <div class="holder-details">
+                        <div class="holder-type">
+                            <div class="type-indicator type-team"></div>
+                            施工班组
+                        </div>
+                        <div class="time-info">
+                            <i class="far fa-clock"></i> 2026-03-20 14:30
+                        </div>
+                        <div class="status-indicator status-active"></div>
+                        <span style="font-size: 12px; color: #4caf50;">进行中</span>
+                    </div>
+                </div>
+                <div class="quantity-info">
+                    <div class="quantity">2.5</div>
+                    <div class="unit">吨</div>
+                </div>
+            </div>
+            
+            <div class="holder-item">
+                <div class="holder-info">
+                    <div class="holder-name">模板支护班组</div>
+                    <div class="holder-details">
+                        <div class="holder-type">
+                            <div class="type-indicator type-team"></div>
+                            施工班组
+                        </div>
+                        <div class="time-info">
+                            <i class="far fa-clock"></i> 2026-03-20 10:15
+                        </div>
+                        <div class="status-indicator status-active"></div>
+                        <span style="font-size: 12px; color: #4caf50;">进行中</span>
+                    </div>
+                </div>
+                <div class="quantity-info">
+                    <div class="quantity">1.8</div>
+                    <div class="unit">吨</div>
+                </div>
+            </div>
+            
+            <div class="holder-item">
+                <div class="holder-info">
+                    <div class="holder-name">张三</div>
+                    <div class="holder-details">
+                        <div class="holder-type">
+                            <div class="type-indicator type-person"></div>
+                            现场管理员
+                        </div>
+                        <div class="time-info">
+                            <i class="far fa-clock"></i> 2026-03-19 16:45
+                        </div>
+                        <div class="status-indicator status-inactive"></div>
+                        <span style="font-size: 12px; color: #f44336;">已结束</span>
+                    </div>
+                </div>
+                <div class="quantity-info">
+                    <div class="quantity">0.5</div>
+                    <div class="unit">吨</div>
+                </div>
+            </div>
+            
+            <div class="holder-item">
+                <div class="holder-info">
+                    <div class="holder-name">混凝土浇筑班组</div>
+                    <div class="holder-details">
+                        <div class="holder-type">
+                            <div class="type-indicator type-team"></div>
+                            施工班组
+                        </div>
+                        <div class="time-info">
+                            <i class="far fa-clock"></i> 2026-03-19 09:20
+                        </div>
+                        <div class="status-indicator status-inactive"></div>
+                        <span style="font-size: 12px; color: #f44336;">已结束</span>
+                    </div>
+                </div>
+                <div class="quantity-info">
+                    <div class="quantity">3.2</div>
+                    <div class="unit">吨</div>
+                </div>
+            </div>
+            
+            <div class="holder-item">
+                <div class="holder-info">
+                    <div class="holder-name">李四</div>
+                    <div class="holder-details">
+                        <div class="holder-type">
+                            <div class="type-indicator type-person"></div>
+                            安全员
+                        </div>
+                        <div class="time-info">
+                            <i class="far fa-clock"></i> 2026-03-18 11:10
+                        </div>
+                        <div class="status-indicator status-inactive"></div>
+                        <span style="font-size: 12px; color: #f44336;">已结束</span>
+                    </div>
+                </div>
+                <div class="quantity-info">
+                    <div class="quantity">0.8</div>
+                    <div class="unit">吨</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 返回按钮功能
+        document.querySelector('.back-btn').addEventListener('click', function() {
+            alert('返回上一页');
+        });
+        
+        // 筛选按钮功能
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        filterButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // 移除所有按钮的激活状态
+                filterButtons.forEach(btn => btn.classList.remove('active'));
+                // 为当前点击的按钮添加激活状态
+                this.classList.add('active');
+                
+                const filterType = this.textContent;
+                alert(`按"${filterType}"筛选记录`);
+            });
+        });
+        
+        // 排序按钮功能
+        document.querySelector('.sort-btn').addEventListener('click', function() {
+            alert('按时间排序列表');
+        });
+        
+        // 列表项点击事件
+        const holderItems = document.querySelectorAll('.holder-item');
+        holderItems.forEach(item => {
+            item.addEventListener('click', function() {
+                const holderName = this.querySelector('.holder-name').textContent;
+                const quantity = this.querySelector('.quantity').textContent;
+                const time = this.querySelector('.time-info').textContent.trim();
+                const holderType = this.querySelector('.holder-type').textContent.trim();
+                const statusText = this.querySelector('.holder-details span:last-child').textContent;
+                
+                alert(`领用详情：\n\n持有人：${holderName}\n类型：${holderType}\n领用数量：${quantity}吨\n领取时间：${time}\n状态：${statusText}`);
+            });
+        });
+        
+        // 模拟数据加载
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('物料领用查询结果界面已加载');
+        });
+    </script>
+</body>
+</html>

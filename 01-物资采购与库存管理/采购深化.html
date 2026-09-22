@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>物料采购管理后台</title>
+    <style>
+        :root {
+            --primary-color: #1890ff;
+            --border-color: #e8e8e8;
+            --bg-color: #f0f2f5;
+            --text-color: #333;
+            --text-secondary: #888;
+            --input-bg: #fff;
+            --input-border: #d9d9d9;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+        }
+
+        /* 容器样式：支持卡片式布局和横向滚动 */
+        .table-container {
+            background: #fff;
+            padding: 24px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            overflow-x: auto; /* 字段太多时允许横向滚动 */
+        }
+
+        /* 表格基础样式 */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1400px; /* 保证最小宽度，防止内容挤压 */
+            font-size: 14px;
+            color: var(--text-color);
+        }
+
+        th, td {
+            padding: 16px 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+
+        /* 表头样式 */
+        th {
+            background-color: #fafafa;
+            font-weight: 600;
+            color: #555;
+            white-space: nowrap; /* 表头不换行 */
+        }
+
+        /* 悬停效果 */
+        tbody tr:hover {
+            background-color: #fdfdfd;
+        }
+
+        /* ----- 特定列样式 ----- */
+
+        /* 图片列 */
+        .col-img {
+            width: 60px;
+            text-align: center;
+        }
+        .img-thumbnail {
+            width: 48px;
+            height: 48px;
+            object-fit: cover;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .img-thumbnail:hover {
+            transform: scale(1.5); /* 简单的放大预览效果 */
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            position: relative;
+            z-index: 10;
+        }
+
+        /* 重点编辑区域样式 */
+        .editable-cell {
+            background-color: #f9fcff; /* 淡淡的蓝色背景提示可编辑 */
+            border-left: 2px solid transparent;
+        }
+        .editable-cell:focus-within {
+            border-left: 2px solid var(--primary-color);
+        }
+
+        /* 输入框统一样式 */
+        input[type="text"], 
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 6px 8px;
+            border: 1px solid var(--input-border);
+            border-radius: 4px;
+            box-sizing: border-box;
+            transition: all 0.3s;
+        }
+        input:focus, select:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+        }
+
+        /* 上传组件模拟 */
+        .upload-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .upload-btn {
+            font-size: 12px;
+            color: var(--primary-color);
+            cursor: pointer;
+            background: #e6f7ff;
+            padding: 4px 8px;
+            border-radius: 4px;
+            white-space: nowrap;
+        }
+
+        /* 文本截断（用于备注和名称） */
+        .text-truncate {
+            max-width: 150px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* 按钮样式 */
+        .btn {
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        .btn-link {
+            background: none;
+            color: var(--primary-color);
+        }
+        
+        /* 金额样式 */
+        .price {
+            font-family: monospace;
+            font-weight: 600;
+        }
+        .price-est { color: var(--text-secondary); }
+        .price-act { color: #f5222d; } /* 实际价格用红色突出 */
+
+    </style>
+</head>
+<body>
+
+<div class="table-container">
+    <h2>采购物料清单</h2>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 80px;">物料编码</th>
+                <th class="col-img">图片</th>
+                <th style="width: 100px;">分类</th>
+                <th style="width: 150px;">物料名称</th>
+                <th style="width: 60px;">数量</th>
+                <th style="width: 50px;">单位</th>
+                <th style="width: 100px;">预估价格</th>
+                <th style="width: 120px; color: #1890ff;">* 实际价格</th>
+                <th style="width: 160px; color: #1890ff;">* 供应商</th>
+                <th style="width: 140px; color: #1890ff;">* 样品图</th>
+                <th style="width: 150px;">用途备注</th>
+                <th style="width: 80px;">申领人</th>
+                <th style="width: 100px; text-align: center; position: sticky; right: 0; background: #fafafa; box-shadow: -2px 0 5px rgba(0,0,0,0.05);">操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>M-2023001</strong></td>
+                <td class="col-img">
+                    <img src="https://via.placeholder.com/100" alt="物料" class="img-thumbnail">
+                </td>
+                <td>办公用品</td>
+                <td>
+                    <div class="text-truncate" title="人体工学办公椅 高背可调节">人体工学办公椅</div>
+                </td>
+                <td>10</td>
+                <td>把</td>
+                <td class="price price-est">¥ 800.00</td>
+                
+                <td class="editable-cell">
+                    <input type="number" placeholder="0.00" class="price price-act">
+                </td>
+                <td class="editable-cell">
+                    <input type="text" list="suppliers" placeholder="选择或输入">
+                    <datalist id="suppliers">
+                        <option value="晨光办公">
+                        <option value="得力集团">
+                        <option value="宜家家居">
+                    </datalist>
+                </td>
+                <td class="editable-cell">
+                    <div class="upload-box">
+                        <span class="upload-btn">+ 上传</span>
+                        <span style="font-size:12px; color:#ccc;">未上传</span>
+                    </div>
+                </td>
+                <td><div class="text-truncate" title="新入职员工配置，研发部专用">新员工配置...</div></td>
+                <td>张三</td>
+                <td style="text-align: center; position: sticky; right: 0; background: #fff; box-shadow: -2px 0 5px rgba(0,0,0,0.05);">
+                    <button class="btn btn-link">保存</button>
+                    <button class="btn btn-link" style="color: #ff4d4f;">驳回</button>
+                </td>
+            </tr>
+
+            <tr>
+                <td><strong>M-2023002</strong></td>
+                <td class="col-img">
+                    <img src="https://via.placeholder.com/100/000000/FFFFFF/?text=MacBook" alt="物料" class="img-thumbnail">
+                </td>
+                <td>电子设备</td>
+                <td>
+                    <div class="text-truncate">MacBook Pro 14'</div>
+                </td>
+                <td>2</td>
+                <td>台</td>
+                <td class="price price-est">¥ 14,000</td>
+                
+                <td class="editable-cell">
+                    <input type="number" value="13800" class="price price-act">
+                </td>
+                <td class="editable-cell">
+                    <input type="text" value="Apple 官方直营">
+                </td>
+                <td class="editable-cell">
+                    <div class="upload-box">
+                        <img src="https://via.placeholder.com/100/1890ff/FFFFFF/?text=Sample" class="img-thumbnail" style="width: 32px; height: 32px;">
+                        <span class="upload-btn">修改</span>
+                    </div>
+                </td>
+                <td><div class="text-truncate">设计总监专用</div></td>
+                <td>李四</td>
+                <td style="text-align: center; position: sticky; right: 0; background: #fff; box-shadow: -2px 0 5px rgba(0,0,0,0.05);">
+                    <button class="btn btn-link">保存</button>
+                    <button class="btn btn-link" style="color: #ff4d4f;">驳回</button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+</body>
+</html>

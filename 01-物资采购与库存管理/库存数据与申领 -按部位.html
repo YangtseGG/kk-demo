@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>施工部位物料管理系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
+        }
+        
+        body {
+            background: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 100%;
+            position: relative;
+        }
+        
+        /* 状态栏 */
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 16px;
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            font-size: 13px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .time {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        /* 顶部标题和搜索 */
+        .header {
+            background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+            padding: 15px 16px 20px;
+            color: white;
+            position: relative;
+            z-index: 90;
+        }
+        
+        .nav-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .page-title {
+            font-size: 22px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .action-icon {
+            background: rgba(255, 255, 255, 0.25);
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* 施工部位选择 */
+        .location-selector {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            padding: 10px 15px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .location-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .location-name {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 3px;
+        }
+        
+        .location-path {
+            font-size: 12px;
+            opacity: 0.85;
+        }
+        
+        .change-btn {
+            background: rgba(255, 255, 255, 0.3);
+            border: none;
+            border-radius: 16px;
+            padding: 5px 15px;
+            color: white;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        
+        /* 搜索区域 */
+        .search-section {
+            background: rgba(255, 255, 255, 0.25);
+            border-radius: 25px;
+            padding: 8px 15px;
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        
+        .search-section input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 16px;
+            padding: 5px 10px;
+            outline: none;
+        }
+        
+        .search-section input::placeholder {
+            color: rgba(255, 255, 255, 0.75);
+        }
+        
+        /* 筛选栏 */
+        .filters {
+            display: flex;
+            overflow-x: auto;
+            gap: 8px;
+            padding: 15px 16px 8px;
+            background: white;
+            position: sticky;
+            top: 0;
+            z-index: 80;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.03);
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        .filters::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .filter-btn {
+            flex-shrink: 0;
+            padding: 7px 14px;
+            border-radius: 16px;
+            font-size: 13px;
+            background: #f0f2f5;
+            color: #595959;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .filter-btn.active {
+            background: #1890ff;
+            color: white;
+        }
+        
+        .filter-count {
+            font-size: 11px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            padding: 0 5px;
+            min-width: 16px;
+            text-align: center;
+        }
+        
+        /* 施工部位选择面板 */
+        .location-panel {
+            background: white;
+            border-radius: 16px;
+            margin: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+            overflow: hidden;
+            max-height: 0;
+            opacity: 0;
+            transition: all 0.4s ease;
+        }
+        
+        .location-panel.show {
+            max-height: 400px;
+            opacity: 1;
+        }
+        
+        .panel-header {
+            padding: 12px 16px;
+            background: #f9fbff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .panel-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1890ff;
+        }
+        
+        .tree-container {
+            max-height: 320px;
+            overflow-y: auto;
+            padding: 10px 0;
+        }
+        
+        .tree-item {
+            padding: 12px 16px;
+            position: relative;
+            border-bottom: 1px solid #f7f7f7;
+            display: flex;
+            align-items: center;
+        }
+        
+        .tree-item.main-item {
+            font-weight: 600;
+            background: #f9f9f9;
+        }
+        
+        .tree-item.sub-item {
+            padding-left: 30px;
+        }
+        
+        .tree-item.third-item {
+            padding-left: 45px;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .tree-item.selected {
+            background-color: #e6f7ff;
+            color: #1890ff;
+            font-weight: 500;
+        }
+        
+        .tree-icon {
+            margin-right: 10px;
+            color: #1890ff;
+            min-width: 16px;
+            text-align: center;
+        }
+        
+        .tree-arrow {
+            position: absolute;
+            right: 16px;
+            top: 14px;
+            font-size: 12px;
+            color: #999;
+        }
+        
+        /* 物料卡片 */
+        .material-list {
+            padding: 0 16px 100px;
+        }
+        
+        .material-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+            position: relative;
+        }
+        
+        .material-card.yellow {
+            border-left: 4px solid #faad14;
+        }
+        
+        .material-card.red {
+            border-left: 4px solid #f5222d;
+        }
+        
+        .material-name {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .material-code {
+            font-size: 14px;
+            color: #595959;
+            margin-bottom: 12px;
+        }
+        
+        .material-category {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            padding: 3px 8px;
+            font-size: 12px;
+            border-radius: 4px;
+            background: #e6f7ff;
+            color: #1890ff;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .stat {
+            background: #f9f9f9;
+            border-radius: 8px;
+            padding: 10px;
+        }
+        
+        .stat-label {
+            font-size: 13px;
+            color: #8c8c8c;
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            font-weight: bold;
+            font-size: 15px;
+        }
+        
+        .alert-info {
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+        
+        .alert-info.yellow {
+            background: #fffbe6;
+            border: 1px solid #ffe58f;
+            color: #d48806;
+        }
+        
+        .alert-info.red {
+            background: #fff2f0;
+            border: 1px solid #ffccc7;
+            color: #f5222d;
+        }
+        
+        .action-btn {
+            margin-top: 12px;
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+        
+        .action-btn.blue {
+            background: #1890ff;
+            color: white;
+        }
+        
+        .action-btn.yellow {
+            background: #faad14;
+            color: white;
+        }
+        
+        .action-btn.red {
+            background: #f5222d;
+            color: white;
+        }
+        
+        .action-btn.gray {
+            background: #bfbfbf;
+            color: white;
+            cursor: not-allowed;
+        }
+        
+        /* 底部操作栏 */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.08);
+            z-index: 70;
+        }
+        
+        .selected-info {
+            font-size: 14px;
+        }
+        
+        .selected-count {
+            font-weight: 600;
+            color: #1890ff;
+        }
+        
+        .submit-btn {
+            padding: 10px 24px;
+            background: #1890ff;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            box-shadow: 0 3px 8px rgba(24, 144, 255, 0.3);
+        }
+        
+        /* 施工部位选择样式 */
+        .sections-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            padding: 10px 16px;
+        }
+        
+        .section-card {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            border: 2px solid transparent;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .section-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .section-card.selected {
+            border-color: #1890ff;
+            background: #e6f7ff;
+        }
+        
+        .section-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+            color: #1890ff;
+        }
+        
+        .section-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #262626;
+        }
+        
+        .item-count {
+            font-size: 13px;
+            color: #8c8c8c;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 480px) {
+            .stats {
+                grid-template-columns: 1fr;
+            }
+            
+            .section-name {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 状态栏 -->
+        <div class="status-bar">
+            <div>9:41</div>
+            <div class="time">09:41</div>
+            <div>100% <i class="fas fa-battery-full"></i></div>
+        </div>
+        
+        <!-- 顶部标题和搜索 -->
+        <div class="header">
+            <div class="nav-header">
+                <div class="page-title">
+                    <i class="fas fa-warehouse"></i> 物料申请系统
+                </div>
+                <div class="header-actions">
+                    <div class="action-icon">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <div class="action-icon">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 施工部位选择区域 -->
+            <div class="location-selector">
+                <div class="location-info">
+                    <div class="location-name">土工合成材料地基</div>
+                    <div class="location-path">地基与基础 > 地基</div>
+                </div>
+                <button class="change-btn" onclick="toggleLocationPanel()">
+                    更改 <i class="fas fa-chevron-down"></i>
+                </button>
+            </div>
+            
+            <!-- 搜索栏 -->
+            <div class="search-section">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="搜索物料名称或编码">
+            </div>
+        </div>
+        
+        <!-- 筛选栏 -->
+        <div class="filters">
+            <button class="filter-btn active">仅看有库存 <span class="filter-count">5</span></button>
+            <button class="filter-btn">库存黄色预警 <span class="filter-count">5</span></button>
+            <button class="filter-btn">库存红色预警 <span class="filter-count">5</span></button>
+            <button class="filter-btn">基础材料</button>
+            <button class="filter-btn">周转材料</button>
+        </div>
+        
+        <!-- 施工部位选择面板 -->
+        <div class="location-panel" id="locationPanel">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <i class="fas fa-sitemap"></i> 选择施工部位
+                </div>
+                <button class="change-btn" onclick="toggleLocationPanel()">
+                    完成 <i class="fas fa-check"></i>
+                </button>
+            </div>
+            
+            <div class="tree-container">
+                <!-- 施工部位层级选择 -->
+                <div class="sections-grid">
+                    <div class="section-card" onclick="selectSection('地基与基础')">
+                        <div class="section-icon">
+                            <i class="fas fa-layer-group"></i>
+                        </div>
+                        <div class="section-name">地基与基础</div>
+                        <div class="item-count">[3] 分项</div>
+                    </div>
+                    
+                    <div class="section-card" onclick="selectSection('主体结构')">
+                        <div class="section-icon">
+                            <i class="fas fa-building"></i>
+                        </div>
+                        <div class="section-name">主体结构</div>
+                        <div class="item-count">[8] 分项</div>
+                    </div>
+                    
+                    <div class="section-card" onclick="selectSection('屋面工程')">
+                        <div class="section-icon">
+                            <i class="fas fa-home"></i>
+                        </div>
+                        <div class="section-name">屋面工程</div>
+                        <div class="item-count">[4] 分项</div>
+                    </div>
+                    
+                    <div class="section-card" onclick="selectSection('地基工程')">
+                        <div class="section-icon">
+                            <i class="fas fa-vector-square"></i>
+                        </div>
+                        <div class="section-name">地基工程</div>
+                        <div class="item-count">[6] 分项</div>
+                    </div>
+                </div>
+                
+                <!-- 详细的分项列表 -->
+                <div class="tree-item main-item selected">
+                    <div class="tree-icon"><i class="fas fa-layer-group"></i></div>
+                    <div>地基与基础</div>
+                    <div class="tree-arrow">▼</div>
+                </div>
+                
+                <div class="tree-item sub-item">
+                    <div class="tree-icon"><i class="fas fa-digging"></i></div>
+                    <div>地基</div>
+                    <div class="tree-arrow">▼</div>
+                </div>
+                
+                <div class="tree-item third-item">素土地基</div>
+                <div class="tree-item third-item selected">土工合成材料地基</div>
+                <div class="tree-item third-item">灰土地基</div>
+                <div class="tree-item third-item">砂和砂石地基</div>
+                <div class="tree-item third-item">粉煤灰地基</div>
+                
+                <div class="tree-item sub-item">
+                    <div class="tree-icon"><i class="fas fa-cubes"></i></div>
+                    <div>基础</div>
+                    <div class="tree-arrow">▼</div>
+                </div>
+                
+                <div class="tree-item sub-item">
+                    <div class="tree-icon"><i class="fas fa-archway"></i></div>
+                    <div>基坑支护</div>
+                    <div class="tree-arrow">▼</div>
+                </div>
+                
+                <div class="tree-item sub-item">
+                    <div class="tree-icon"><i class="fas fa-water"></i></div>
+                    <div>地下水控制</div>
+                    <div class="tree-arrow">▼</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 物料列表 -->
+        <div class="material-list">
+            <div class="material-card">
+                <span class="material-category">基础材料</span>
+                <div class="material-name">土工合成材料</div>
+                <div class="material-code">TC-XK-0126</div>
+                
+                <div class="stats">
+                    <div class="stat">
+                        <div class="stat-label">库存</div>
+                        <div class="stat-value">100 pcs</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">可领用</div>
+                        <div class="stat-value">85 pcs</div>
+                    </div>
+                </div>
+                
+                <button class="action-btn blue" onclick="addMaterial(event)">
+                    <i class="fas fa-clipboard-check"></i> 申领
+                </button>
+            </div>
+            
+            <div class="material-card yellow">
+                <span class="material-category">周转材料</span>
+                <div class="material-name">XXXX-XXXXX 钢筋</div>
+                <div class="material-code">MAT-JG-2023</div>
+                
+                <div class="stats">
+                    <div class="stat">
+                        <div class="stat-label">库存</div>
+                        <div class="stat-value">100 pcs</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">可领用</div>
+                        <div class="stat-value">10 pcs</div>
+                    </div>
+                </div>
+                
+                <div class="alert-info yellow">
+                    <i class="fas fa-exclamation-triangle"></i> 库存黄色预警：当前库存可领用部分不足
+                </div>
+                
+                <button class="action-btn yellow" onclick="addMaterial(event)">
+                    <i class="fas fa-cart-arrow-down"></i> 库存预警
+                </button>
+            </div>
+            
+            <div class="material-card red">
+                <span class="material-category">基础材料</span>
+                <div class="material-name">XXXX-XXXXX 钢筋</div>
+                <div class="material-code">MAT-JG-2024</div>
+                
+                <div class="stats">
+                    <div class="stat">
+                        <div class="stat-label">库存</div>
+                        <div class="stat-value">0 pcs</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">可领用</div>
+                        <div class="stat-value">需采购</div>
+                    </div>
+                </div>
+                
+                <div class="alert-info red">
+                    <i class="fas fa-exclamation-circle"></i> 库存红色预警：当前库存不足，请及时采购
+                </div>
+                
+                <button class="action-btn red" onclick="addMaterial(event)">
+                    <i class="fas fa-file-invoice-dollar"></i> 采购申请
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 底部操作栏 -->
+    <div class="bottom-nav">
+        <div class="selected-info">
+            已选 <span class="selected-count" id="selectedCount">0</span> 种物料
+        </div>
+        <button class="submit-btn" onclick="submitRequest()">提交申请</button>
+    </div>
+
+    <script>
+        // 施工部位面板切换
+        function toggleLocationPanel() {
+            const panel = document.getElementById('locationPanel');
+            const changeBtn = document.querySelector('.change-btn');
+            
+            if(panel.classList.contains('show')) {
+                panel.classList.remove('show');
+                changeBtn.innerHTML = '更改 <i class="fas fa-chevron-down"></i>';
+            } else {
+                panel.classList.add('show');
+                changeBtn.innerHTML = '完成 <i class="fas fa-check"></i>';
+            }
+        }
+        
+        // 选择施工部位
+        function selectSection(name) {
+            document.querySelector('.location-name').textContent = name;
+            document.querySelector('.location-path').textContent = '请选择具体分项';
+            document.getElementById('locationPanel').classList.remove('show');
+        }
+        
+        // 添加物料到申请列表
+        let selectedCount = 0;
+        const selectedCountElement = document.getElementById('selectedCount');
+        
+        function addMaterial(event) {
+            const btn = event.target.closest('button');
+            if(!btn) return;
+            
+            const text = btn.textContent;
+            btn.innerHTML = `<i class="fas fa-sync-alt fa-spin"></i> ${text}中...`;
+            btn.disabled = true;
+            
+            setTimeout(() => {
+                if(btn.classList.contains('blue')) {
+                    btn.innerHTML = `<i class="fas fa-check"></i> 申领成功`;
+                } else if(btn.classList.contains('yellow')) {
+                    btn.innerHTML = `<i class="fas fa-bell"></i> 预警已处理`;
+                } else {
+                    btn.innerHTML = `<i class="fas fa-shopping-cart"></i> 采购申请已提交`;
+                }
+                
+                // 更新计数
+                selectedCount++;
+                selectedCountElement.textContent = selectedCount;
+                
+                // 添加效果
+                btn.style.background = "#52c41a";
+                btn.style.transform = "scale(0.98)";
+                
+                // 更新底部按钮
+                const submitBtn = document.querySelector('.submit-btn');
+                submitBtn.textContent = `提交申请 (${selectedCount})`;
+            }, 1000);
+        }
+        
+        // 提交申请
+        function submitRequest() {
+            if(selectedCount > 0) {
+                const submitBtn = document.querySelector('.submit-btn');
+                submitBtn.innerHTML = `<i class="fas fa-sync-alt fa-spin"></i> 提交中`;
+                submitBtn.disabled = true;
+                
+                setTimeout(() => {
+                    alert(`成功提交${selectedCount}项物料申请！`);
+                    submitBtn.innerHTML = `提交申请`;
+                    submitBtn.disabled = false;
+                    
+                    // 重置选择计数
+                    selectedCount = 0;
+                    selectedCountElement.textContent = selectedCount;
+                    
+                    // 重置所有物料按钮状态
+                    document.querySelectorAll('.action-btn').forEach(btn => {
+                        if(btn.classList.contains('blue')) {
+                            btn.innerHTML = `<i class="fas fa-clipboard-check"></i> 申领`;
+                        } else if(btn.classList.contains('yellow')) {
+                            btn.innerHTML = `<i class="fas fa-cart-arrow-down"></i> 库存预警`;
+                        } else if(btn.classList.contains('red')) {
+                            btn.innerHTML = `<i class="fas fa-file-invoice-dollar"></i> 采购申请`;
+                        }
+                        btn.disabled = false;
+                        btn.style.background = "";
+                        btn.style.transform = "";
+                    });
+                }, 1500);
+            } else {
+                alert("请至少选择一种物料进行申请");
+            }
+        }
+    </script>
+</body>
+</html>

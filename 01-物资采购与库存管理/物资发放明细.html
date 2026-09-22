@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工地物资管理系统 - 发放记录统计</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        :root {
+            --primary: #1a6dcc;
+            --primary-dark: #0d4a9e;
+            --secondary: #f0f7ff;
+            --text: #333;
+            --text-light: #666;
+            --border: #e0e8f0;
+            --success: #28a745;
+            --warning: #ffc107;
+            --danger: #dc3545;
+            --radius: 6px;
+            --shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+            --app-bg: #f5f7fa;
+            --card-bg: #ffffff;
+        }
+
+        body {
+            background-color: var(--app-bg);
+            color: var(--text);
+            line-height: 1.4;
+            overflow-x: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            font-size: 14px;
+        }
+
+        /* APP顶部导航 */
+        .app-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 10px 12px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .app-title {
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .icon-btn {
+            background: rgba(255, 255, 255, 0.2);
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+            border: none;
+        }
+
+        /* 主内容区域 */
+        .app-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        /* 底部导航 */
+        .app-footer {
+            background: white;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-around;
+            padding: 6px 0;
+            position: sticky;
+            bottom: 0;
+            z-index: 100;
+            box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.04);
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            font-size: 10px;
+            color: var(--text-light);
+            padding: 4px 10px;
+            border-radius: 14px;
+            transition: all 0.3s;
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+            background: var(--secondary);
+        }
+
+        .nav-item i {
+            font-size: 16px;
+        }
+
+        /* 卡片样式 */
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 12px;
+            margin-bottom: 8px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .card-title {
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--primary);
+        }
+
+        /* 筛选区域 */
+        .filter-section {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: var(--secondary);
+            border-radius: var(--radius);
+        }
+
+        .filter-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .filter-label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .filter-input {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 13px;
+            background: white;
+        }
+
+        .filter-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: var(--radius);
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s;
+            align-self: flex-end;
+        }
+
+        .filter-btn:hover {
+            background: var(--primary-dark);
+        }
+
+        /* 日期分组 */
+        .date-group {
+            margin-bottom: 15px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+
+        .date-header {
+            background: var(--secondary);
+            padding: 10px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .date-title {
+            font-weight: 600;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .date-count {
+            background: var(--primary);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+        }
+
+        .date-icon {
+            transition: transform 0.3s;
+        }
+
+        .date-group.expanded .date-icon {
+            transform: rotate(180deg);
+        }
+
+        .record-list {
+            display: none;
+            background: white;
+        }
+
+        .date-group.expanded .record-list {
+            display: block;
+        }
+
+        /* 发放记录卡片 */
+        .record-card {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .record-card:last-child {
+            border-bottom: none;
+        }
+
+        .record-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .record-time {
+            font-size: 12px;
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .record-type {
+            background: var(--secondary);
+            color: var(--primary);
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .record-body {
+            display: flex;
+            gap: 10px;
+        }
+
+        .record-info {
+            flex: 1;
+        }
+
+        .record-member {
+            font-weight: 600;
+            margin-bottom: 3px;
+        }
+
+        .record-position {
+            font-size: 12px;
+            color: var(--text-light);
+        }
+
+        .record-materials {
+            flex: 2;
+        }
+
+        .material-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px 0;
+        }
+
+        .material-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            background: var(--secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            font-size: 12px;
+        }
+
+        .material-name {
+            font-size: 13px;
+        }
+
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 30px 15px;
+            color: var(--text-light);
+        }
+
+        .empty-state i {
+            font-size: 36px;
+            margin-bottom: 10px;
+            color: var(--border);
+        }
+
+        .empty-state h3 {
+            margin-bottom: 8px;
+            color: var(--text);
+            font-size: 14px;
+        }
+
+        /* 动画效果 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease forwards;
+        }
+
+        /* 页面切换 */
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <!-- APP顶部导航 -->
+    <header class="app-header">
+        <div class="header-content">
+            <div class="app-title">
+                <i class="fas fa-hard-hat"></i>
+                <span>物资发放记录统计</span>
+            </div>
+            <div class="header-actions">
+                <button class="icon-btn">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+                <button class="icon-btn">
+                    <i class="fas fa-bell"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主内容区域 - 发放记录统计页面 -->
+    <div class="app-container">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <i class="fas fa-filter"></i>
+                    <span>筛选条件</span>
+                </div>
+            </div>
+            
+            <div class="filter-section">
+                <div class="filter-group">
+                    <label class="filter-label">开始日期</label>
+                    <input type="date" class="filter-input" id="startDate">
+                </div>
+                
+                <div class="filter-group">
+                    <label class="filter-label">结束日期</label>
+                    <input type="date" class="filter-input" id="endDate">
+                </div>
+                
+                <div class="filter-group">
+                    <label class="filter-label">物料类型</label>
+                    <select class="filter-input" id="materialType">
+                        <option value="">全部类型</option>
+                        <option value="ppe">劳保用品</option>
+                        <option value="tools">工器具</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label class="filter-label">班组成员</label>
+                    <select class="filter-input" id="memberFilter">
+                        <option value="">全部成员</option>
+                        <!-- 成员选项将通过JavaScript动态填充 -->
+                    </select>
+                </div>
+                
+                <button class="filter-btn" id="applyFilter">
+                    <i class="fas fa-search"></i> 应用筛选
+                </button>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <i class="fas fa-history"></i>
+                    <span>发放记录</span>
+                </div>
+            </div>
+            
+            <div id="recordSection">
+                <!-- 发放记录将通过JavaScript动态填充 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- APP底部导航 -->
+    <div class="app-footer">
+        <div class="nav-item">
+            <i class="fas fa-home"></i>
+            <span>首页</span>
+        </div>
+        <div class="nav-item">
+            <i class="fas fa-chart-bar"></i>
+            <span>统计</span>
+        </div>
+        <div class="nav-item">
+            <i class="fas fa-box"></i>
+            <span>发放</span>
+        </div>
+        <div class="nav-item active">
+            <i class="fas fa-history"></i>
+            <span>记录</span>
+        </div>
+        <div class="nav-item">
+            <i class="fas fa-user"></i>
+            <span>我的</span>
+        </div>
+    </div>
+
+    <script>
+        // 模拟数据
+        const materials = [
+            { id: 1, name: "安全帽", type: "ppe", icon: "hard-hat" },
+            { id: 2, name: "反光背心", type: "ppe", icon: "vest" },
+            { id: 3, name: "防护手套", type: "ppe", icon: "mitten" },
+            { id: 4, name: "安全鞋", type: "ppe", icon: "shoe-prints" },
+            { id: 5, name: "防护眼镜", type: "ppe", icon: "glasses" },
+            { id: 6, name: "电钻", type: "tools", icon: "bolt" },
+            { id: 7, name: "扳手套装", type: "tools", icon: "wrench" },
+            { id: 8, name: "切割机", type: "tools", icon: "cut" },
+            { id: 9, name: "水平仪", type: "tools", icon: "ruler-combined" },
+            { id: 10, name: "万用表", type: "tools", icon: "tachometer-alt" }
+        ];
+        
+        const teamMembers = [
+            { id: 1, name: "张三", position: "钢筋工" },
+            { id: 2, name: "李四", position: "木工" },
+            { id: 3, name: "王五", position: "电工" },
+            { id: 4, name: "赵六", position: "泥瓦工" },
+            { id: 5, name: "钱七", position: "焊工" },
+            { id: 6, name: "孙八", position: "油漆工" }
+        ];
+        
+        // 模拟发放记录 - 按天分组
+        const issueRecords = [
+            { date: "2025-03-15", records: [
+                { time: "08:30", memberId: 1, materialId: 1 },
+                { time: "09:45", memberId: 2, materialId: 1 },
+                { time: "10:15", memberId: 1, materialId: 2 },
+                { time: "14:20", memberId: 1, materialId: 4 }
+            ]},
+            { date: "2025-03-18", records: [
+                { time: "09:30", memberId: 3, materialId: 3 },
+                { time: "11:10", memberId: 4, materialId: 4 },
+                { time: "14:50", memberId: 5, materialId: 5 }
+            ]},
+            { date: "2025-03-20", records: [
+                { time: "08:15", memberId: 6, materialId: 6 },
+                { time: "10:30", memberId: 1, materialId: 7 },
+                { time: "13:45", memberId: 2, materialId: 8 },
+                { time: "15:20", memberId: 3, materialId: 9 },
+                { time: "16:40", memberId: 4, materialId: 10 }
+            ]},
+            { date: "2025-03-22", records: [
+                { time: "09:00", memberId: 5, materialId: 1 },
+                { time: "10:30", memberId: 6, materialId: 2 },
+                { time: "14:15", memberId: 1, materialId: 3 }
+            ]},
+            { date: "2025-03-25", records: [
+                { time: "08:45", memberId: 2, materialId: 4 },
+                { time: "11:20", memberId: 3, materialId: 5 },
+                { time: "15:30", memberId: 4, materialId: 6 }
+            ]}
+        ];
+
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', function() {
+            // 设置默认日期范围（最近7天）
+            const today = new Date();
+            const oneWeekAgo = new Date();
+            oneWeekAgo.setDate(today.getDate() - 7);
+            
+            document.getElementById('startDate').valueAsDate = oneWeekAgo;
+            document.getElementById('endDate').valueAsDate = today;
+            
+            // 填充班组成员筛选选项
+            populateMemberFilter();
+            
+            // 渲染发放记录
+            renderIssueRecords(issueRecords);
+            
+            // 设置事件监听器
+            setupEventListeners();
+        });
+        
+        // 填充班组成员筛选选项
+        function populateMemberFilter() {
+            const memberFilter = document.getElementById('memberFilter');
+            
+            teamMembers.forEach(member => {
+                const option = document.createElement('option');
+                option.value = member.id;
+                option.textContent = member.name;
+                memberFilter.appendChild(option);
+            });
+        }
+        
+        // 渲染发放记录 - 按天分组
+        function renderIssueRecords(records) {
+            const recordSection = document.getElementById('recordSection');
+            recordSection.innerHTML = '';
+            
+            if (records.length === 0) {
+                recordSection.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <h3>没有找到发放记录</h3>
+                        <p>请尝试调整筛选条件</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            records.forEach(group => {
+                const dateGroup = document.createElement('div');
+                dateGroup.className = 'date-group fade-in expanded';
+                
+                // 格式化日期
+                const formattedDate = formatDate(group.date);
+                
+                dateGroup.innerHTML = `
+                    <div class="date-header">
+                        <div class="date-title">
+                            <i class="fas fa-calendar-day"></i>
+                            <span>${formattedDate}</span>
+                            <span class="date-count">${group.records.length}条记录</span>
+                        </div>
+                        <i class="fas fa-chevron-down date-icon"></i>
+                    </div>
+                    
+                    <div class="record-list">
+                        ${renderRecordList(group.records)}
+                    </div>
+                `;
+                
+                // 添加点击事件切换展开/折叠
+                const dateHeader = dateGroup.querySelector('.date-header');
+                dateHeader.addEventListener('click', function() {
+                    dateGroup.classList.toggle('expanded');
+                });
+                
+                recordSection.appendChild(dateGroup);
+            });
+        }
+        
+        // 渲染记录列表
+        function renderRecordList(records) {
+            let html = '';
+            
+            records.forEach(record => {
+                const member = teamMembers.find(m => m.id === record.memberId);
+                const material = materials.find(m => m.id === record.materialId);
+                
+                if (!member || !material) return;
+                
+                html += `
+                    <div class="record-card">
+                        <div class="record-header">
+                            <div class="record-time">
+                                <i class="fas fa-clock"></i>
+                                <span>${record.time}</span>
+                            </div>
+                            <div class="record-type">
+                                ${material.type === 'ppe' ? '劳保用品' : '工器具'}
+                            </div>
+                        </div>
+                        
+                        <div class="record-body">
+                            <div class="record-info">
+                                <div class="record-member">${member.name}</div>
+                                <div class="record-position">${member.position}</div>
+                            </div>
+                            
+                            <div class="record-materials">
+                                <div class="material-item">
+                                    <div class="material-icon">
+                                        <i class="fas fa-${material.icon}"></i>
+                                    </div>
+                                    <div class="material-name">${material.name}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            return html;
+        }
+        
+        // 应用筛选条件
+        function applyFilters() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            const materialType = document.getElementById('materialType').value;
+            const memberId = document.getElementById('memberFilter').value;
+            
+            // 过滤记录
+            const filteredRecords = issueRecords.filter(group => {
+                // 日期筛选
+                if (startDate && group.date < startDate) return false;
+                if (endDate && group.date > endDate) return false;
+                
+                // 过滤组内记录
+                group.records = group.records.filter(record => {
+                    const material = materials.find(m => m.id === record.materialId);
+                    
+                    // 物料类型筛选
+                    if (materialType && material.type !== materialType) return false;
+                    
+                    // 班组成员筛选
+                    if (memberId && record.memberId !== parseInt(memberId)) return false;
+                    
+                    return true;
+                });
+                
+                // 如果组内没有记录，过滤掉整个组
+                return group.records.length > 0;
+            });
+            
+            // 重新渲染记录
+            renderIssueRecords(filteredRecords);
+        }
+        
+        // 设置事件监听器
+        function setupEventListeners() {
+            // 应用筛选按钮
+            document.getElementById('applyFilter').addEventListener('click', applyFilters);
+            
+            // 底部导航切换
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    // 在实际应用中，这里会切换到其他页面
+                    // 本示例中只高亮当前项
+                    document.querySelectorAll('.nav-item').forEach(nav => {
+                        nav.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                });
+            });
+        }
+        
+        // 格式化日期
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            
+            // 添加星期几
+            const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+            const weekday = weekdays[date.getDay()];
+            
+            return `${year}年${month}月${day}日 ${weekday}`;
+        }
+    </script>
+</body>
+</html>

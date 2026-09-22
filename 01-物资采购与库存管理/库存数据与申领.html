@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智慧工地仓储库存管理系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            padding: 0;
+            max-width: 500px;
+            margin: 0 auto;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        /* 遮罩层 */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 500;
+            display: none;
+        }
+        
+        /* 顶部导航 */
+        .header {
+            position: sticky;
+            top: 0;
+            background: linear-gradient(135deg, #1e5799 0%, #207cca 100%);
+            color: white;
+            padding: 15px 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 100;
+        }
+        
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            margin-bottom: 12px;
+            opacity: 0.9;
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .title {
+            font-size: 22px;
+            font-weight: 600;
+        }
+        
+        .action-btn {
+            background-color: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: #ff4757;
+            color: white;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        /* 搜索区域 - 添加了过滤按钮 */
+        .search-section {
+            background-color: white;
+            padding: 15px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 124px;
+            z-index: 99;
+        }
+        
+        .search-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .search-box {
+            position: relative;
+            flex: 1;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 14px 20px;
+            border-radius: 30px;
+            border: none;
+            background-color: #f1f4fa;
+            font-size: 16px;
+            padding-left: 50px;
+        }
+        
+        .search-box i {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #7a8aa5;
+        }
+        
+        .filter-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 15px;
+            background: #f1f4fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .filter-btn:hover {
+            background: #e5eaf1;
+        }
+        
+        .filter-btn i {
+            font-size: 20px;
+            color: #1e5799;
+        }
+        
+        .filter-btn .notification-badge {
+            top: -5px;
+            right: -5px;
+        }
+        
+        /* 库存筛选标签 */
+        .filter-tabs {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .filter-tab {
+            flex-shrink: 0;
+            padding: 10px 15px;
+            border-radius: 20px;
+            background-color: #f1f4fa;
+            text-align: center;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+        
+        .filter-tab.active {
+            background-color: #e3eeff;
+            color: #1e5799;
+            font-weight: 600;
+        }
+        
+        .yellow-tab {
+            background-color: #fff5e6;
+            color: #d35400;
+            border-left: 4px solid #ffd166;
+        }
+        
+        .red-tab {
+            background-color: #ffeded;
+            color: #c0392b;
+            border-left: 4px solid #ff6b6b;
+        }
+        
+        /* 侧边筛选栏 */
+        .filter-panel {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 300px;
+            height: 100vh;
+            background-color: white;
+            box-shadow: -2px 0 15px rgba(0,0,0,0.2);
+            z-index: 600;
+            transform: translateX(100%);
+            transition: transform 0.4s ease;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .filter-panel.active {
+            transform: translateX(0);
+        }
+        
+        .filter-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 20px;
+        }
+        
+        .filter-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1e5799;
+        }
+        
+        .close-filter {
+            font-size: 24px;
+            cursor: pointer;
+            color: #777;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+        
+        .close-filter:hover {
+            background: #f5f7fa;
+        }
+        
+        .filter-section {
+            margin-bottom: 25px;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section-title i {
+            color: #1e5799;
+        }
+        
+        .filter-group {
+            background: #f9fafc;
+            border-radius: 10px;
+            padding: 15px;
+        }
+        
+        .filter-option {
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+        
+        .filter-option:last-child {
+            border-bottom: none;
+        }
+        
+        .filter-option input {
+            margin-right: 15px;
+            width: 20px;
+            height: 20px;
+            accent-color: #1e5799;
+            cursor: pointer;
+        }
+        
+        .option-name {
+            flex: 1;
+            font-size: 16px;
+        }
+        
+        .option-count {
+            background: #e3eeff;
+            color: #1e5799;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 13px;
+        }
+        
+        .filter-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .filter-actions button {
+            flex: 1;
+            padding: 15px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .reset-btn {
+            background-color: #f1f4fa;
+            color: #7a8aa5;
+        }
+        
+        .reset-btn:hover {
+            background-color: #e5eaf1;
+        }
+        
+        .apply-btn {
+            background: linear-gradient(135deg, #1e5799 0%, #207cca 100%);
+            color: white;
+            box-shadow: 0 4px 10px rgba(30, 87, 153, 0.3);
+        }
+        
+        .apply-btn:hover {
+            opacity: 0.9;
+        }
+        
+        /* 库存物料卡片 */
+        .inventory-container {
+            padding: 15px;
+        }
+        
+        .inventory-title {
+            font-size: 18px;
+            margin: 15px 0 10px 5px;
+            font-weight: 500;
+            color: #1e5799;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .material-card {
+            background-color: white;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            padding: 16px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+            position: relative;
+        }
+        
+        .material-card.warning {
+            border-left: 4px solid #ffd166;
+            background-color: #fffcf5;
+        }
+        
+        .material-card.critical {
+            border-left: 4px solid #ff6b6b;
+            background-color: #fff9f9;
+        }
+        
+        .material-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            position: relative;
+            padding-right: 30px;
+        }
+        
+        .material-id {
+            font-size: 13px;
+            color: #7a8aa5;
+            font-weight: 500;
+        }
+        
+        .warning-indicator {
+            position: absolute;
+            right: 0;
+            top: 0;
+            background-color: #ffd166;
+            color: #cc7c00;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        
+        .warning-critical {
+            background-color: #ff6b6b;
+            color: #970000;
+        }
+        
+        .material-name {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #2d3748;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .material-category {
+            font-size: 12px;
+            background: #e9f1f9;
+            color: #2a5a8c;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+        
+        .material-desc {
+            font-size: 14px;
+            color: #718096;
+            margin-bottom: 15px;
+        }
+        
+        .stock-info {
+            display: flex;
+            margin-bottom: 12px;
+        }
+        
+        .stock-section {
+            flex: 1;
+            border-right: 1px solid #e2e8f0;
+            padding-right: 10px;
+        }
+        
+        .stock-section:last-child {
+            border-right: none;
+            padding-right: 0;
+        }
+        
+        .stock-label {
+            font-size: 13px;
+            color: #718096;
+            margin-bottom: 4px;
+        }
+        
+        .stock-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+        
+        .stock-danger {
+            color: #e74c3c;
+        }
+        
+        .stock-warning {
+            color: #e67e22;
+        }
+        
+        .stock-progress {
+            height: 6px;
+            background-color: #edf2f7;
+            border-radius: 3px;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+        
+        .progress-value {
+            height: 100%;
+            border-radius: 3px;
+        }
+        
+        .progress-high {
+            background-color: #48c78e;
+        }
+        
+        .progress-medium {
+            background-color: #ffd166;
+            width: 50%;
+        }
+        
+        .progress-low {
+            background-color: #ff6b6b;
+            width: 20%;
+        }
+        
+        .action-button {
+            display: flex;
+            justify-content: flex-end;
+        }
+        
+        .btn-request {
+            background-color: #1e5799;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-warning {
+            background-color: #ffd166;
+            color: #8a6500;
+        }
+        
+        .btn-danger {
+            background-color: #ff6b6b;
+            color: #970000;
+        }
+        
+        .btn-request:hover {
+            opacity: 0.9;
+            transform: scale(1.03);
+        }
+        
+        /* 应用状态栏 */
+        .app-status {
+            background-color: white;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.05);
+        }
+        
+        .summary {
+            font-size: 15px;
+            color: #718096;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .action-icon {
+            background-color: #1e5799;
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 3px 8px rgba(30, 87, 153, 0.3);
+        }
+        
+        .action-icon.new {
+            background-color: #ff6b6b;
+        }
+        
+        /* 动画效果 */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+    </style>
+</head>
+<body>
+    <!-- 遮罩层 -->
+    <div class="overlay" id="overlay"></div>
+    
+    <!-- 顶部导航栏 -->
+    <div class="header">
+        <div class="status-bar">
+            <div>9:41</div>
+            <div><i class="fas fa-signal"></i> <i class="fas fa-wifi"></i> <i class="fas fa-battery-three-quarters"></i></div>
+        </div>
+        <div class="header-content">
+            <div class="title">库存数据</div>
+            <div class="action-btn">
+                <i class="fas fa-sync-alt"></i>
+                <div class="notification-badge">1</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 搜索和筛选区域 -->
+    <div class="search-section">
+        <div class="search-container">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="搜索物料名称或编码" id="search-input">
+            </div>
+            <div class="filter-btn" id="filter-btn">
+                <i class="fas fa-filter"></i>
+                <div class="notification-badge">2</div>
+            </div>
+        </div>
+        
+        <div class="filter-tabs">
+            <div class="filter-tab active">仅看有库存 (8)</div>
+            <div class="filter-tab yellow-tab"><i class="fas fa-bolt"></i> 黄色预警 (5)</div>
+            <div class="filter-tab red-tab"><i class="fas fa-exclamation-circle"></i> 红色预警 (5)</div>
+        </div>
+    </div>
+    
+    <!-- 侧边筛选面板 -->
+    <div class="filter-panel" id="filter-panel">
+        <div class="filter-header">
+            <div class="filter-title">物料筛选</div>
+            <div class="close-filter" id="close-filter">
+                <i class="fas fa-times"></i>
+            </div>
+        </div>
+        
+        <div class="filter-section">
+            <div class="section-title">
+                <i class="fas fa-cubes"></i>
+                <span>物料类型</span>
+            </div>
+            <div class="filter-group">
+                <div class="filter-option">
+                    <input type="checkbox" id="type1" checked>
+                    <label for="type1" class="option-name">建材五金</label>
+                    <div class="option-count">32</div>
+                </div>
+                <div class="filter-option">
+                    <input type="checkbox" id="type2" checked>
+                    <label for="type2" class="option-name">施工辅料</label>
+                    <div class="option-count">24</div>
+                </div>
+                <div class="filter-option">
+                    <input type="checkbox" id="type3">
+                    <label for="type3" class="option-name">防护用品</label>
+                    <div class="option-count">18</div>
+                </div>
+                <div class="filter-option">
+                    <input type="checkbox" id="type4">
+                    <label for="type4" class="option-name">工程耗材</label>
+                    <div class="option-count">15</div>
+                </div>
+                <div class="filter-option">
+                    <input type="checkbox" id="type5">
+                    <label for="type5" class="option-name">电气器材</label>
+                    <div class="option-count">9</div>
+                </div>
+                <div class="filter-option">
+                    <input type="checkbox" id="type6">
+                    <label for="type6" class="option-name">专用工具</label>
+                    <div class="option-count">7</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="filter-section">
+            <div class="section-title">
+                <i class="fas fa-truck-loading"></i>
+                <span>库存状态</span>
+            </div>
+            <div class="filter-group">
+                <div class="filter-option">
+                    <input type="checkbox" id="status1" checked>
+                    <label for="status1" class="option-name">正常库存</label>
+                </div>
+                <div class="filter-option">
+                    <input type="checkbox" id="status2" checked>
+                    <label for="status2" class="option-name">黄色预警</label>
+                </div>
+                <div class="filter-option">
+                    <input type="checkbox" id="status3" checked>
+                    <label for="status3" class="option-name">红色预警</label>
+                </div>
+                <div class="filter-option">
+                    <input type="checkbox" id="status4">
+                    <label for="status4" class="option-name">缺货</label>
+                </div>
+            </div>
+        </div>
+        
+        <div class="filter-section">
+            <div class="section-title">
+                <i class="fas fa-building"></i>
+                <span>项目区域</span>
+            </div>
+            <div class="filter-group">
+                <div class="filter-option">
+                    <input type="checkbox" id="area1" checked>
+                    <label for="area1" class="option-name">A区 - 主体施工</label>
+                </div>
+                <div class="filter-option">
+                    <input type="checkbox" id="area2" checked>
+                    <label for="area2" class="option-name">B区 - 结构施工</label>
+                </div>
+                <div class="filter-option">
+                    <input type="checkbox" id="area3">
+                    <label for="area3" class="option-name">C区 - 机电安装</label>
+                </div>
+                <div class="filter-option">
+                    <input type="checkbox" id="area4">
+                    <label for="area4" class="option-name">D区 - 装饰装修</label>
+                </div>
+            </div>
+        </div>
+        
+        <div class="filter-actions">
+            <button class="reset-btn" id="reset-filter">重置</button>
+            <button class="apply-btn" id="apply-filter">应用筛选</button>
+        </div>
+    </div>
+    
+    <!-- 库存物料卡片 -->
+    <div class="inventory-container">
+        <div class="inventory-title">
+            <i class="fas fa-hard-hat"></i> 建材五金类
+        </div>
+        
+        <div class="material-card warning">
+            <div class="material-header">
+                <div class="material-id">MAT-001</div>
+                <div class="warning-indicator">预警</div>
+            </div>
+            <div class="material-name">
+                木工锤 (carpenter hammer)
+                <div class="material-category">建材五金</div>
+            </div>
+            <div class="material-desc">重型木工专用锤</div>
+            
+            <div class="stock-info">
+                <div class="stock-section">
+                    <div class="stock-label">库存</div>
+                    <div class="stock-value">10 pcs</div>
+                </div>
+                <div class="stock-section">
+                    <div class="stock-label">可领用</div>
+                    <div class="stock-value stock-warning">2 pcs</div>
+                </div>
+                <div class="stock-section">
+                    <div class="stock-label">安全库存</div>
+                    <div class="stock-value">5 pcs</div>
+                </div>
+            </div>
+            
+            <div class="stock-progress">
+                <div class="progress-value progress-medium"></div>
+            </div>
+            
+            <div class="action-button">
+                <button class="btn-request btn-warning">申领</button>
+            </div>
+        </div>
+        
+        <div class="material-card">
+            <div class="material-header">
+                <div class="material-id">MAT-002</div>
+            </div>
+            <div class="material-name">
+                木工扳手 (spanner)
+                <div class="material-category">建材五金</div>
+            </div>
+            <div class="material-desc">多功能木工工具</div>
+            
+            <div class="stock-info">
+                <div class="stock-section">
+                    <div class="stock-label">库存</div>
+                    <div class="stock-value">10 pcs</div>
+                </div>
+                <div class="stock-section">
+                    <div class="stock-label">可领用</div>
+                    <div class="stock-value">5 pcs</div>
+                </div>
+                <div class="stock-section">
+                    <div class="stock-label">安全库存</div>
+                    <div class="stock-value">4 pcs</div>
+                </div>
+            </div>
+            
+            <div class="stock-progress">
+                <div class="progress-value progress-high" style="width:80%"></div>
+            </div>
+            
+            <div class="action-button">
+                <button class="btn-request">申领</button>
+            </div>
+        </div>
+        
+        <div class="material-card critical pulse">
+            <div class="material-header">
+                <div class="material-id">MAT-004</div>
+                <div class="warning-indicator warning-critical">紧急</div>
+            </div>
+            <div class="material-name">
+                铁丝 (Iron wire)
+                <div class="material-category">建材五金</div>
+            </div>
+            <div class="material-desc">工地绑扎专用钢丝</div>
+            
+            <div class="stock-info">
+                <div class="stock-section">
+                    <div class="stock-label">库存</div>
+                    <div class="stock-value">7 roll</div>
+                </div>
+                <div class="stock-section">
+                    <div class="stock-label">可领用</div>
+                    <div class="stock-value">3 roll</div>
+                </div>
+                <div class="stock-section">
+                    <div class="stock-label">安全库存</div>
+                    <div class="stock-value stock-danger">10 roll</div>
+                </div>
+            </div>
+            
+            <div class="stock-progress">
+                <div class="progress-value progress-low"></div>
+            </div>
+            
+            <div class="action-button">
+                <button class="btn-request btn-warning">申领</button>
+            </div>
+        </div>
+        
+        <div class="inventory-title">
+            <i class="fas fa-tools"></i> 施工辅料类
+        </div>
+        
+        <div class="material-card">
+            <div class="material-header">
+                <div class="material-id">MAT-006</div>
+            </div>
+            <div class="material-name">
+                水泥钉 (concrete nail)
+                <div class="material-category">施工辅料</div>
+            </div>
+            <div class="material-desc">混凝土专用强力钉</div>
+            
+            <div class="stock-info">
+                <div class="stock-section">
+                    <div class="stock-label">库存</div>
+                    <div class="stock-value">30 箱</div>
+                </div>
+                <div class="stock-section">
+                    <div class="stock-label">可领用</div>
+                    <div class="stock-value">15 箱</div>
+                </div>
+                <div class="stock-section">
+                    <div class="stock-label">安全库存</div>
+                    <div class="stock-value">20 箱</div>
+                </div>
+            </div>
+            
+            <div class="stock-progress">
+                <div class="progress-value progress-high" style="width:70%"></div>
+            </div>
+            
+            <div class="action-button">
+                <button class="btn-request">申领</button>
+            </div>
+        </div>
+        
+        <div class="material-card">
+            <div class="material-header">
+                <div class="material-id">MAT-005</div>
+            </div>
+            <div class="material-name">
+                施工线 (Construction line)
+                <div class="material-category">施工辅料</div>
+            </div>
+            <div class="material-desc">高强度施工参考线</div>
+            
+            <div class="stock-info">
+                <div class="stock-section">
+                    <div class="stock-label">库存</div>
+                    <div class="stock-value">50 pcs</div>
+                </div>
+                <div class="stock-section">
+                    <div class="stock-label">可领用</div>
+                    <div class="stock-value">50 pcs</div>
+                </div>
+                <div class="stock-section">
+                    <div class="stock-label">安全库存</div>
+                    <div class="stock-value">15 pcs</div>
+                </div>
+            </div>
+            
+            <div class="stock-progress">
+                <div class="progress-value progress-high" style="width:100%"></div>
+            </div>
+            
+            <div class="action-button">
+                <button class="btn-request">申领</button>
+            </div>
+        </div>
+        
+        <div class="material-card critical">
+            <div class="material-header">
+                <div class="material-id">MAT-007</div>
+                <div class="warning-indicator warning-critical">缺货</div>
+            </div>
+            <div class="material-name">
+                合金打磨片 (Alloy Filing Disc)
+                <div class="material-category">施工辅料</div>
+            </div>
+            <div class="material-desc">钢材质表面处理打磨片</div>
+            
+            <div class="stock-info">
+                <div class="stock-section">
+                    <div class="stock-label">库存</div>
+                    <div class="stock-value stock-danger">0 pcs</div>
+                </div>
+                <div class="stock-section">
+                    <div class="stock-label">可领用</div>
+                    <div class="stock-value stock-danger">需采购</div>
+                </div>
+                <div class="stock-section">
+                    <div class="stock-label">安全库存</div>
+                    <div class="stock-value">50 pcs</div>
+                </div>
+            </div>
+            
+            <div class="stock-progress">
+                <div class="progress-value" style="width:0%"></div>
+            </div>
+            
+            <div class="action-button">
+                <button class="btn-request btn-danger">采购申请</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 底部操作栏 -->
+    <div class="app-status">
+        <div class="summary">共8种物料 · 5项预警</div>
+        <div class="actions">
+            <div class="action-icon">
+                <i class="fas fa-file-alt"></i>
+            </div>
+            <div class="action-icon new">
+                <i class="fas fa-plus"></i>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 获取DOM元素
+        const overlay = document.getElementById('overlay');
+        const filterBtn = document.getElementById('filter-btn');
+        const closeFilter = document.getElementById('close-filter');
+        const filterPanel = document.getElementById('filter-panel');
+        const resetFilter = document.getElementById('reset-filter');
+        const applyFilter = document.getElementById('apply-filter');
+        
+        // 显示筛选面板
+        function showFilterPanel() {
+            filterPanel.classList.add('active');
+            overlay.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+        
+        // 隐藏筛选面板
+        function hideFilterPanel() {
+            filterPanel.classList.remove('active');
+            overlay.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+        
+        // 重置筛选
+        function resetAllFilters() {
+            const checkboxes = document.querySelectorAll('.filter-group input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            
+            // 默认勾选主要选项
+            document.getElementById('type1').checked = true;
+            document.getElementById('type2').checked = true;
+            document.getElementById('status1').checked = true;
+            document.getElementById('status2').checked = true;
+            document.getElementById('status3').checked = true;
+            document.getElementById('area1').checked = true;
+            document.getElementById('area2').checked = true;
+        }
+        
+        // 应用筛选
+        function applyFilters() {
+            console.log('应用筛选');
+            hideFilterPanel();
+            // 实际应用中这里会执行筛选逻辑
+        }
+        
+        // 添加事件监听
+        filterBtn.addEventListener('click', showFilterPanel);
+        closeFilter.addEventListener('click', hideFilterPanel);
+        overlay.addEventListener('click', hideFilterPanel);
+        resetFilter.addEventListener('click', resetAllFilters);
+        applyFilter.addEventListener('click', applyFilters);
+        
+        // 初始状态重置筛选
+        resetAllFilters();
+        
+        // 添加库存筛选标签的交互
+        const filterTabs = document.querySelectorAll('.filter-tab');
+        filterTabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                if (!this.classList.contains('active')) {
+                    filterTabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    console.log(`库存筛选: ${this.textContent}`);
+                }
+            });
+        });
+        
+        // 搜索功能实现
+        const searchInput = document.getElementById('search-input');
+        searchInput.addEventListener('input', function() {
+            const searchText = this.value.toLowerCase().trim();
+            console.log(`搜索关键词: ${searchText}`);
+        });
+    </script>
+</body>
+</html>

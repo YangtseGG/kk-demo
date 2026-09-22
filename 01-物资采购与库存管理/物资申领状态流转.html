@@ -1,0 +1,396 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <title>物资申领状态流转</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <link href="resources/css/axure_rp_page.css" type="text/css" rel="stylesheet"/>
+    <link href="data/styles.css" type="text/css" rel="stylesheet"/>
+    <link href="files/物资申领状态流转/styles.css" type="text/css" rel="stylesheet"/>
+    <script src="resources/scripts/jquery-3.2.1.min.js"></script>
+    <script src="resources/scripts/axure/axQuery.js"></script>
+    <script src="resources/scripts/axure/globals.js"></script>
+    <script src="resources/scripts/axutils.js"></script>
+    <script src="resources/scripts/axure/annotation.js"></script>
+    <script src="resources/scripts/axure/axQuery.std.js"></script>
+    <script src="resources/scripts/axure/doc.js"></script>
+    <script src="resources/scripts/messagecenter.js"></script>
+    <script src="resources/scripts/axure/events.js"></script>
+    <script src="resources/scripts/axure/recording.js"></script>
+    <script src="resources/scripts/axure/action.js"></script>
+    <script src="resources/scripts/axure/expr.js"></script>
+    <script src="resources/scripts/axure/geometry.js"></script>
+    <script src="resources/scripts/axure/flyout.js"></script>
+    <script src="resources/scripts/axure/model.js"></script>
+    <script src="resources/scripts/axure/repeater.js"></script>
+    <script src="resources/scripts/axure/sto.js"></script>
+    <script src="resources/scripts/axure/utils.temp.js"></script>
+    <script src="resources/scripts/axure/variables.js"></script>
+    <script src="resources/scripts/axure/drag.js"></script>
+    <script src="resources/scripts/axure/move.js"></script>
+    <script src="resources/scripts/axure/visibility.js"></script>
+    <script src="resources/scripts/axure/style.js"></script>
+    <script src="resources/scripts/axure/adaptive.js"></script>
+    <script src="resources/scripts/axure/tree.js"></script>
+    <script src="resources/scripts/axure/init.temp.js"></script>
+    <script src="resources/scripts/axure/legacy.js"></script>
+    <script src="resources/scripts/axure/viewer.js"></script>
+    <script src="resources/scripts/axure/math.js"></script>
+    <script src="resources/scripts/axure/jquery.nicescroll.min.js"></script>
+    <script src="data/document.js"></script>
+    <script src="files/物资申领状态流转/data.js"></script>
+    <script type="text/javascript">
+      $axure.utils.getTransparentGifPath = function() { return 'resources/images/transparent.gif'; };
+      $axure.utils.getOtherPath = function() { return 'resources/Other.html'; };
+      $axure.utils.getReloadPath = function() { return 'resources/reload.html'; };
+    </script>
+  </head>
+  <body>
+    <div id="base" class="">
+
+      <!-- Unnamed (矩形) -->
+      <div id="u1784" class="ax_default paragraph">
+        <div id="u1784_div" class=""></div>
+        <div id="u1784_text" class="text ">
+          <p><span>NEW(0,&quot;新建&quot;),</span></p><p><span>&nbsp;&nbsp;&nbsp; WAIT_AUDIT(1,&quot;审核中&quot;),</span></p><p><span>&nbsp;&nbsp;&nbsp; PASSED(2,&quot;通过&quot;),</span></p><p><span>&nbsp;&nbsp;&nbsp; REJECT(3,&quot;拒绝&quot;),</span></p><p><span>&nbsp;&nbsp;&nbsp; CLOSED_TIMEOUT(4,&quot;超时关闭&quot;),</span></p><p><span>&nbsp;&nbsp;&nbsp; ALREADY_OUT(5,&quot;已出库&quot;),</span></p><p><span>&nbsp;&nbsp;&nbsp; TAKE_CONFIRM(6,&quot;确认领取&quot;),</span></p><p><span>&nbsp;&nbsp;&nbsp; CLOSED(7,&quot;关闭&quot;),</span></p><p><span>&nbsp;&nbsp;&nbsp; PURCHASE(8,&quot;采购中&quot;),</span></p><p><span>&nbsp;&nbsp;&nbsp; ALREADY_IN(9,&quot;已入库&quot;),</span></p>
+        </div>
+      </div>
+
+      <!-- Unnamed (矩形) -->
+      <div id="u1785" class="ax_default flow_shape">
+        <div id="u1785_div" class=""></div>
+        <div id="u1785_text" class="text ">
+          <p><span>发起申领</span></p>
+        </div>
+      </div>
+
+      <!-- Unnamed (矩形) -->
+      <div id="u1786" class="ax_default flow_shape">
+        <div id="u1786_div" class=""></div>
+        <div id="u1786_text" class="text ">
+          <p><span>发起审核</span></p>
+        </div>
+      </div>
+
+      <!-- Unnamed (矩形) -->
+      <div id="u1787" class="ax_default flow_shape">
+        <div id="u1787_div" class=""></div>
+        <div id="u1787_text" class="text ">
+          <p><span>出库审核</span></p>
+        </div>
+      </div>
+
+      <!-- Unnamed (矩形) -->
+      <div id="u1788" class="ax_default flow_shape">
+        <div id="u1788_div" class=""></div>
+        <div id="u1788_text" class="text ">
+          <p><span>出库清点</span></p>
+        </div>
+      </div>
+
+      <!-- Unnamed (矩形) -->
+      <div id="u1789" class="ax_default box_1">
+        <div id="u1789_div" class=""></div>
+        <div id="u1789_text" class="text ">
+          <p><span>发起申领</span></p>
+        </div>
+      </div>
+
+      <!-- Unnamed (矩形) -->
+      <div id="u1790" class="ax_default flow_shape">
+        <div id="u1790_div" class=""></div>
+        <div id="u1790_text" class="text ">
+          <p><span>采购流程</span></p>
+        </div>
+      </div>
+
+      <!-- Unnamed (矩形) -->
+      <div id="u1791" class="ax_default box_1">
+        <div id="u1791_div" class=""></div>
+        <div id="u1791_text" class="text ">
+          <p><span>审核中</span></p>
+        </div>
+      </div>
+
+      <!-- Unnamed (矩形) -->
+      <div id="u1792" class="ax_default box_1">
+        <div id="u1792_div" class=""></div>
+        <div id="u1792_text" class="text ">
+          <p><span>拒绝</span></p>
+        </div>
+      </div>
+
+      <!-- Unnamed (矩形) -->
+      <div id="u1793" class="ax_default box_1">
+        <div id="u1793_div" class=""></div>
+        <div id="u1793_text" class="text ">
+          <p><span>采购中</span></p>
+        </div>
+      </div>
+
+      <!-- Unnamed (矩形) -->
+      <div id="u1794" class="ax_default box_1">
+        <div id="u1794_div" class=""></div>
+        <div id="u1794_text" class="text ">
+          <p><span>拒绝</span></p>
+        </div>
+      </div>
+
+      <!-- Unnamed (矩形) -->
+      <div id="u1795" class="ax_default box_1">
+        <div id="u1795_div" class=""></div>
+        <div id="u1795_text" class="text ">
+          <p><span>待清点</span></p>
+        </div>
+      </div>
+
+      <!-- Unnamed (矩形) -->
+      <div id="u1796" class="ax_default flow_shape">
+        <div id="u1796_div" class=""></div>
+        <div id="u1796_text" class="text ">
+          <p><span>确认领取</span></p>
+        </div>
+      </div>
+
+      <!-- Unnamed (矩形) -->
+      <div id="u1797" class="ax_default flow_shape">
+        <div id="u1797_div" class=""></div>
+        <div id="u1797_text" class="text ">
+          <p><span>关闭和超时关闭是哪一步？</span></p>
+        </div>
+      </div>
+
+      <!-- Unnamed (矩形) -->
+      <div id="u1798" class="ax_default box_1">
+        <div id="u1798_div" class=""></div>
+        <div id="u1798_text" class="text ">
+          <p><span>已入库</span></p>
+        </div>
+      </div>
+
+      <!-- Unnamed (矩形) -->
+      <div id="u1799" class="ax_default flow_shape">
+        <div id="u1799_div" class=""></div>
+        <div id="u1799_text" class="text ">
+          <p><span>验收入库</span></p>
+        </div>
+      </div>
+
+      <!-- Unnamed (矩形) -->
+      <div id="u1800" class="ax_default box_1">
+        <div id="u1800_div" class=""></div>
+        <div id="u1800_text" class="text ">
+          <p><span>已出库</span></p>
+        </div>
+      </div>
+
+      <!-- Unnamed (矩形) -->
+      <div id="u1801" class="ax_default box_1">
+        <div id="u1801_div" class=""></div>
+        <div id="u1801_text" class="text ">
+          <p><span>已领取</span></p>
+        </div>
+      </div>
+
+      <!-- Unnamed (连接) -->
+      <div id="u1802" class="ax_default connector">
+        <img id="u1802_seg0" class="img " src="images/物资申领状态流转/u1802_seg0.svg" alt="u1802_seg0"/>
+        <img id="u1802_seg1" class="img " src="images/物资申领状态流转/u1802_seg1.svg" alt="u1802_seg1"/>
+        <div id="u1802_text" class="text " style="display:none; visibility: hidden">
+          <p></p>
+        </div>
+      </div>
+
+      <!-- Unnamed (连接) -->
+      <div id="u1803" class="ax_default connector">
+        <img id="u1803_seg0" class="img " src="images/物资申领状态流转/u1803_seg0.svg" alt="u1803_seg0"/>
+        <img id="u1803_seg1" class="img " src="images/物资申领状态流转/u1803_seg1.svg" alt="u1803_seg1"/>
+        <div id="u1803_text" class="text " style="display:none; visibility: hidden">
+          <p></p>
+        </div>
+      </div>
+
+      <!-- Unnamed (连接) -->
+      <div id="u1804" class="ax_default connector">
+        <img id="u1804_seg0" class="img " src="images/物资申领状态流转/u1804_seg0.svg" alt="u1804_seg0"/>
+        <img id="u1804_seg1" class="img " src="images/物资申领状态流转/u1804_seg1.svg" alt="u1804_seg1"/>
+        <img id="u1804_seg2" class="img " src="images/物资申领状态流转/u1804_seg2.svg" alt="u1804_seg2"/>
+        <div id="u1804_text" class="text " style="display:none; visibility: hidden">
+          <p></p>
+        </div>
+      </div>
+
+      <!-- Unnamed (连接) -->
+      <div id="u1805" class="ax_default connector">
+        <img id="u1805_seg0" class="img " src="images/物资申领状态流转/u1805_seg0.svg" alt="u1805_seg0"/>
+        <img id="u1805_seg1" class="img " src="images/物资申领状态流转/u1805_seg1.svg" alt="u1805_seg1"/>
+        <img id="u1805_seg2" class="img " src="images/物资申领状态流转/u1805_seg2.svg" alt="u1805_seg2"/>
+        <img id="u1805_seg3" class="img " src="images/物资申领状态流转/u1805_seg3.svg" alt="u1805_seg3"/>
+        <div id="u1805_text" class="text " style="display:none; visibility: hidden">
+          <p></p>
+        </div>
+      </div>
+
+      <!-- Unnamed (矩形) -->
+      <div id="u1806" class="ax_default flow_shape">
+        <div id="u1806_div" class=""></div>
+        <div id="u1806_text" class="text ">
+          <p><span>拒绝的操作后续增加</span></p>
+        </div>
+      </div>
+
+      <!-- Unnamed (连接) -->
+      <div id="u1807" class="ax_default connector">
+        <img id="u1807_seg0" class="img " src="images/物资申领状态流转/u1807_seg0.svg" alt="u1807_seg0"/>
+        <img id="u1807_seg1" class="img " src="images/物资申领状态流转/u1807_seg1.svg" alt="u1807_seg1"/>
+        <img id="u1807_seg2" class="img " src="images/物资申领状态流转/u1807_seg2.svg" alt="u1807_seg2"/>
+        <img id="u1807_seg3" class="img " src="images/物资申领状态流转/u1807_seg3.svg" alt="u1807_seg3"/>
+        <div id="u1807_text" class="text " style="display:none; visibility: hidden">
+          <p></p>
+        </div>
+      </div>
+
+      <!-- Unnamed (连接) -->
+      <div id="u1808" class="ax_default connector">
+        <img id="u1808_seg0" class="img " src="images/物资申领状态流转/u1808_seg0.svg" alt="u1808_seg0"/>
+        <img id="u1808_seg1" class="img " src="images/物资申领状态流转/u1808_seg1.svg" alt="u1808_seg1"/>
+        <img id="u1808_seg2" class="img " src="images/物资申领状态流转/u1808_seg2.svg" alt="u1808_seg2"/>
+        <img id="u1808_seg3" class="img " src="images/物资申领状态流转/u1808_seg3.svg" alt="u1808_seg3"/>
+        <div id="u1808_text" class="text " style="display:none; visibility: hidden">
+          <p></p>
+        </div>
+      </div>
+
+      <!-- Unnamed (连接) -->
+      <div id="u1809" class="ax_default connector">
+        <img id="u1809_seg0" class="img " src="images/物资申领状态流转/u1809_seg0.svg" alt="u1809_seg0"/>
+        <img id="u1809_seg1" class="img " src="images/物资申领状态流转/u1809_seg1.svg" alt="u1809_seg1"/>
+        <div id="u1809_text" class="text " style="display:none; visibility: hidden">
+          <p></p>
+        </div>
+      </div>
+
+      <!-- Unnamed (连接) -->
+      <div id="u1810" class="ax_default connector">
+        <img id="u1810_seg0" class="img " src="images/物资申领状态流转/u1810_seg0.svg" alt="u1810_seg0"/>
+        <img id="u1810_seg1" class="img " src="images/物资申领状态流转/u1810_seg1.svg" alt="u1810_seg1"/>
+        <img id="u1810_seg2" class="img " src="images/物资申领状态流转/u1810_seg2.svg" alt="u1810_seg2"/>
+        <img id="u1810_seg3" class="img " src="images/物资申领状态流转/u1810_seg3.svg" alt="u1810_seg3"/>
+        <div id="u1810_text" class="text " style="display:none; visibility: hidden">
+          <p></p>
+        </div>
+      </div>
+
+      <!-- Unnamed (连接) -->
+      <div id="u1811" class="ax_default connector">
+        <img id="u1811_seg0" class="img " src="images/物资申领状态流转/u1811_seg0.svg" alt="u1811_seg0"/>
+        <img id="u1811_seg1" class="img " src="images/物资申领状态流转/u1811_seg1.svg" alt="u1811_seg1"/>
+        <img id="u1811_seg2" class="img " src="images/物资申领状态流转/u1811_seg2.svg" alt="u1811_seg2"/>
+        <img id="u1811_seg3" class="img " src="images/物资申领状态流转/u1811_seg3.svg" alt="u1811_seg3"/>
+        <div id="u1811_text" class="text " style="display:none; visibility: hidden">
+          <p></p>
+        </div>
+      </div>
+
+      <!-- Unnamed (连接) -->
+      <div id="u1812" class="ax_default connector">
+        <img id="u1812_seg0" class="img " src="images/物资申领状态流转/u1812_seg0.svg" alt="u1812_seg0"/>
+        <img id="u1812_seg1" class="img " src="images/物资申领状态流转/u1812_seg1.svg" alt="u1812_seg1"/>
+        <img id="u1812_seg2" class="img " src="images/物资申领状态流转/u1812_seg2.svg" alt="u1812_seg2"/>
+        <img id="u1812_seg3" class="img " src="images/物资申领状态流转/u1812_seg3.svg" alt="u1812_seg3"/>
+        <div id="u1812_text" class="text " style="display:none; visibility: hidden">
+          <p></p>
+        </div>
+      </div>
+
+      <!-- Unnamed (连接) -->
+      <div id="u1813" class="ax_default connector">
+        <img id="u1813_seg0" class="img " src="images/物资申领状态流转/u1813_seg0.svg" alt="u1813_seg0"/>
+        <img id="u1813_seg1" class="img " src="images/物资申领状态流转/u1813_seg1.svg" alt="u1813_seg1"/>
+        <div id="u1813_text" class="text " style="display:none; visibility: hidden">
+          <p></p>
+        </div>
+      </div>
+
+      <!-- Unnamed (连接) -->
+      <div id="u1814" class="ax_default connector">
+        <img id="u1814_seg0" class="img " src="images/物资申领状态流转/u1814_seg0.svg" alt="u1814_seg0"/>
+        <img id="u1814_seg1" class="img " src="images/物资申领状态流转/u1814_seg1.svg" alt="u1814_seg1"/>
+        <div id="u1814_text" class="text " style="display:none; visibility: hidden">
+          <p></p>
+        </div>
+      </div>
+
+      <!-- Unnamed (连接) -->
+      <div id="u1815" class="ax_default connector">
+        <img id="u1815_seg0" class="img " src="images/物资申领状态流转/u1815_seg0.svg" alt="u1815_seg0"/>
+        <img id="u1815_seg1" class="img " src="images/物资申领状态流转/u1815_seg1.svg" alt="u1815_seg1"/>
+        <div id="u1815_text" class="text " style="display:none; visibility: hidden">
+          <p></p>
+        </div>
+      </div>
+
+      <!-- Unnamed (连接) -->
+      <div id="u1816" class="ax_default connector">
+        <img id="u1816_seg0" class="img " src="images/物资申领状态流转/u1816_seg0.svg" alt="u1816_seg0"/>
+        <img id="u1816_seg1" class="img " src="images/物资申领状态流转/u1816_seg1.svg" alt="u1816_seg1"/>
+        <div id="u1816_text" class="text " style="display:none; visibility: hidden">
+          <p></p>
+        </div>
+      </div>
+
+      <!-- Unnamed (连接) -->
+      <div id="u1817" class="ax_default connector">
+        <img id="u1817_seg0" class="img " src="images/物资申领状态流转/u1817_seg0.svg" alt="u1817_seg0"/>
+        <img id="u1817_seg1" class="img " src="images/物资申领状态流转/u1817_seg1.svg" alt="u1817_seg1"/>
+        <div id="u1817_text" class="text " style="display:none; visibility: hidden">
+          <p></p>
+        </div>
+      </div>
+
+      <!-- Unnamed (连接) -->
+      <div id="u1818" class="ax_default connector">
+        <img id="u1818_seg0" class="img " src="images/物资申领状态流转/u1818_seg0.svg" alt="u1818_seg0"/>
+        <img id="u1818_seg1" class="img " src="images/物资申领状态流转/u1818_seg1.svg" alt="u1818_seg1"/>
+        <img id="u1818_seg2" class="img " src="images/物资申领状态流转/u1818_seg2.svg" alt="u1818_seg2"/>
+        <div id="u1818_text" class="text " style="display:none; visibility: hidden">
+          <p></p>
+        </div>
+      </div>
+
+      <!-- Unnamed (矩形) -->
+      <div id="u1819" class="ax_default box_1">
+        <div id="u1819_div" class=""></div>
+        <div id="u1819_text" class="text ">
+          <p><span>已撤回</span></p>
+        </div>
+      </div>
+
+      <!-- Unnamed (连接) -->
+      <div id="u1820" class="ax_default connector">
+        <img id="u1820_seg0" class="img " src="images/物资申领状态流转/u1820_seg0.svg" alt="u1820_seg0"/>
+        <img id="u1820_seg1" class="img " src="images/物资申领状态流转/u1820_seg1.svg" alt="u1820_seg1"/>
+        <div id="u1820_text" class="text " style="display:none; visibility: hidden">
+          <p></p>
+        </div>
+      </div>
+
+      <!-- Unnamed (矩形) -->
+      <div id="u1821" class="ax_default sticky_1">
+        <div id="u1821_div" class=""></div>
+        <div id="u1821_text" class="text ">
+          <p><span>特定流程可撤回</span></p>
+        </div>
+      </div>
+
+      <!-- Unnamed (矩形) -->
+      <div id="u1822" class="ax_default box_1">
+        <div id="u1822_div" class=""></div>
+        <div id="u1822_text" class="text ">
+          <p><span>待审核</span></p>
+        </div>
+      </div>
+    </div>
+    <script src="resources/scripts/axure/ios.js"></script>
+  </body>
+</html>

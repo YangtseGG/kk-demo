@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>工地物资发放管理</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        :root {
+            --primary: #1a6dcc;
+            --primary-dark: #0d4a9e;
+            --secondary: #f0f7ff;
+            --text: #333;
+            --text-light: #666;
+            --border: #e0e8f0;
+            --success: #28a745;
+            --warning: #ffc107;
+            --danger: #dc3545;
+            --radius: 6px;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            --app-bg: #f5f7fa;
+            --card-bg: #ffffff;
+        }
+
+        body {
+            background-color: var(--app-bg);
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            font-size: 14px;
+        }
+
+        /* APP顶部导航 */
+        .app-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 12px 15px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .app-title {
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .icon-btn {
+            background: rgba(255, 255, 255, 0.2);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+            border: none;
+        }
+
+        /* 主内容区域 */
+        .app-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* 底部导航 */
+        .app-footer {
+            background: white;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0;
+            position: sticky;
+            bottom: 0;
+            z-index: 100;
+            box-shadow: 0 -1px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            font-size: 11px;
+            color: var(--text-light);
+            padding: 4px 12px;
+            border-radius: 16px;
+            transition: all 0.3s;
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+            background: var(--secondary);
+        }
+
+        .nav-item i {
+            font-size: 18px;
+        }
+
+        /* 卡片样式 */
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 15px;
+            margin-bottom: 12px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--primary);
+        }
+
+        /* 成员卡片 */
+        .member-card {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            border-radius: var(--radius);
+            background: var(--card-bg);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+            margin-bottom: 8px;
+            cursor: pointer;
+        }
+
+        .member-card.selected {
+            background: var(--secondary);
+            border: 1px solid var(--primary);
+        }
+
+        .member-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .member-info {
+            flex: 1;
+        }
+
+        .member-info h3 {
+            font-size: 14px;
+            margin-bottom: 3px;
+            color: var(--text);
+        }
+
+        .member-info p {
+            color: var(--text-light);
+            font-size: 12px;
+        }
+
+        /* 物资卡片 */
+        .material-card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 12px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border);
+            margin-bottom: 8px;
+        }
+
+        .material-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .material-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: var(--secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            font-size: 18px;
+        }
+
+        .material-info {
+            flex: 1;
+        }
+
+        .material-info h4 {
+            font-size: 14px;
+            margin-bottom: 3px;
+            color: var(--text);
+        }
+
+        .material-info p {
+            color: var(--text-light);
+            font-size: 12px;
+        }
+
+        .last-received {
+            background: #f8f9fa;
+            padding: 8px;
+            border-radius: 6px;
+            margin: 8px 0;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .last-received span {
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .action-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid var(--border);
+        }
+
+        .reissue-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-weight: 600;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .reissue-btn:hover {
+            background: var(--primary-dark);
+        }
+
+        .recycle-btn {
+            background: none;
+            border: none;
+            color: var(--danger);
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 5px 10px;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+
+        .recycle-btn:hover {
+            background: rgba(220, 53, 69, 0.1);
+        }
+
+        /* 标签切换 */
+        .tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 12px;
+            background: #f0f4f8;
+            padding: 4px;
+            border-radius: 20px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            background: transparent;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 13px;
+            text-align: center;
+        }
+
+        .tab-btn.active {
+            background: white;
+            color: var(--primary);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 搜索框 */
+        .search-box {
+            position: relative;
+            margin-bottom: 12px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px 12px 10px 36px;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            font-size: 13px;
+            background: white;
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-light);
+        }
+
+        /* 按钮样式 */
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 6px rgba(26, 109, 204, 0.3);
+        }
+
+        .btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(13, 74, 158, 0.3);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            box-shadow: none;
+        }
+
+        .action-bar {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 15px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
+        }
+
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 30px 15px;
+            color: var(--text-light);
+        }
+
+        .empty-state i {
+            font-size: 36px;
+            margin-bottom: 10px;
+            color: var(--border);
+        }
+
+        .empty-state h3 {
+            margin-bottom: 8px;
+            color: var(--text);
+        }
+
+        /* 处置选项 */
+        .dispose-section {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid var(--border);
+            display: none;
+        }
+
+        .dispose-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .dispose-options {
+            display: flex;
+            gap: 10px;
+        }
+
+        .dispose-option {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            border-radius: var(--radius);
+            background: #f8f9fa;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid transparent;
+        }
+
+        .dispose-option.selected {
+            background: var(--secondary);
+            border-color: var(--primary);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .dispose-option i {
+            font-size: 20px;
+            margin-bottom: 6px;
+        }
+
+        .recycle-option i {
+            color: var(--success);
+        }
+
+        .lost-option i {
+            color: var(--danger);
+        }
+
+        .dispose-option h5 {
+            font-size: 13px;
+            margin-bottom: 4px;
+            color: var(--text);
+        }
+
+        .dispose-option p {
+            color: var(--text-light);
+            font-size: 11px;
+        }
+
+        /* 动画效果 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease forwards;
+        }
+
+        /* 页面切换 */
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .action-bar {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .dispose-options {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- APP顶部导航 -->
+    <header class="app-header">
+        <div class="header-content">
+            <div class="app-title">
+                <i class="fas fa-hard-hat"></i>
+                <span>物资发放管理</span>
+            </div>
+            <div class="header-actions">
+                <button class="icon-btn">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+                <button class="icon-btn">
+                    <i class="fas fa-bell"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主内容区域 - 终极修复版 -->
+    <div class="app-container">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <i class="fas fa-users"></i>
+                    <span>班组成员</span>
+                </div>
+            </div>
+            
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="memberSearch" placeholder="搜索班组成员...">
+            </div>
+            
+            <div id="memberList">
+                <!-- 成员列表将通过JavaScript动态填充 -->
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <i class="fas fa-user"></i>
+                    <span id="selectedMemberName">选择班组成员</span>
+                </div>
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="ppe">劳保用品</button>
+                    <button class="tab-btn" data-tab="tools">工器具</button>
+                </div>
+            </div>
+            
+            <div id="materialSection">
+                <div class="empty-state">
+                    <i class="fas fa-user-friends"></i>
+                    <h3>请选择班组成员</h3>
+                    <p>选择成员后，可查看其物资领取情况并进行发放</p>
+                </div>
+            </div>
+            
+            <div class="action-bar" id="actionBar">
+                <button class="btn" id="issueBtn">
+                    <i class="fas fa-paper-plane"></i> 发放选中物资
+                </button>
+                <button class="btn btn-outline" id="resetBtn">
+                    <i class="fas fa-redo"></i> 重置选择
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- APP底部导航 -->
+    <div class="app-footer">
+        <div class="nav-item active" data-page="statsPage">
+            <i class="fas fa-chart-bar"></i>
+            <span>班组成员</span>
+        </div>
+        <div class="nav-item" data-page="issuePage">
+            <i class="fas fa-box"></i>
+            <span>物资发放</span>
+        </div>
+        <div class="nav-item">
+            <i class="fas fa-history"></i>
+            <span>领取记录</span>
+        </div>
+        <div class="nav-item">
+            <i class="fas fa-user"></i>
+            <span>我的</span>
+        </div>
+    </div>
+
+    <script>
+        // 模拟数据
+        const materials = [
+            { id: 1, name: "安全帽", type: "ppe", icon: "hard-hat", 
+              fixedCycle: 6, mustRecycle: true, description: "每6个月强制更换" },
+            { id: 2, name: "反光背心", type: "ppe", icon: "vest", 
+              fixedCycle: 12, mustRecycle: true, description: "每年强制更换" },
+            { id: 3, name: "防护手套", type: "ppe", icon: "mitten", 
+              fixedCycle: 0, mustRecycle: false, description: "损坏时更换" },
+            { id: 4, name: "安全鞋", type: "ppe", icon: "shoe-prints", 
+              fixedCycle: 12, mustRecycle: true, description: "每年强制更换" },
+            { id: 5, name: "防护眼镜", type: "ppe", icon: "glasses", 
+              fixedCycle: 0, mustRecycle: false, description: "损坏时更换" },
+            { id: 6, name: "电钻", type: "tools", icon: "bolt", 
+              fixedCycle: 0, mustRecycle: true, description: "发放新设备必须回收旧设备" },
+            { id: 7, name: "扳手套装", type: "tools", icon: "wrench", 
+              fixedCycle: 0, mustRecycle: false, description: "损坏时更换" },
+            { id: 8, name: "切割机", type: "tools", icon: "cut", 
+              fixedCycle: 0, mustRecycle: true, description: "发放新设备必须回收旧设备" },
+            { id: 9, name: "水平仪", type: "tools", icon: "ruler-combined", 
+              fixedCycle: 0, mustRecycle: false, description: "损坏时更换" },
+            { id: 10, name: "万用表", type: "tools", icon: "tachometer-alt", 
+              fixedCycle: 0, mustRecycle: true, description: "发放新设备必须回收旧设备" }
+        ];
+        
+        const teamMembers = [
+            { id: 1, name: "张三", position: "钢筋工" },
+            { id: 2, name: "李四", position: "木工" },
+            { id: 3, name: "王五", position: "电工" },
+            { id: 4, name: "赵六", position: "泥瓦工" },
+            { id: 5, name: "钱七", position: "焊工" },
+            { id: 6, name: "孙八", position: "油漆工" }
+        ];
+        
+        // 模拟发放记录
+        const issueRecords = [
+            { memberId: 1, materialId: 1, date: new Date('2025-03-15 08:30:00') },
+            { memberId: 1, materialId: 2, date: new Date('2025-03-18 10:15:00') },
+            { memberId: 1, materialId: 4, date: new Date('2025-03-20 14:20:00') },
+            { memberId: 2, materialId: 1, date: new Date('2025-06-16 09:45:00') },
+            { memberId: 2, materialId: 6, date: new Date('2025-06-20 14:20:00') },
+            { memberId: 3, materialId: 3, date: new Date('2025-09-17 11:10:00') },
+            { memberId: 3, materialId: 10, date: new Date('2025-09-21 15:30:00') },
+            { memberId: 4, materialId: 4, date: new Date('2025-01-19 13:25:00') },
+            { memberId: 5, materialId: 5, date: new Date('2025-02-18 10:45:00') },
+            { memberId: 5, materialId: 7, date: new Date('2025-02-22 16:10:00') },
+            { memberId: 6, materialId: 8, date: new Date('2025-07-20 14:50:00') }
+        ];
+        
+        // 当前选中的班组成员
+        let selectedMember = null;
+        // 当前选中的物资类型
+        let currentTab = 'ppe';
+        // 当前需要处置的物料
+        let materialToDispose = null;
+        // 当前处置方式
+        let selectedDisposeAction = null;
+        // 当前选中的物资
+        let selectedMaterials = [];
+
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', function() {
+            renderMemberList();
+            setupEventListeners();
+            
+            // 默认隐藏操作栏
+            document.getElementById('actionBar').classList.add('hidden');
+        });
+        
+        // 渲染班组成员列表
+        function renderMemberList() {
+            const memberList = document.getElementById('memberList');
+            memberList.innerHTML = '';
+            
+            teamMembers.forEach(member => {
+                const card = document.createElement('div');
+                card.className = 'member-card fade-in';
+                card.dataset.id = member.id;
+                
+                // 获取姓氏首字母
+                const initial = member.name.charAt(0);
+                
+                card.innerHTML = `
+                    <div class="member-avatar">${initial}</div>
+                    <div class="member-info">
+                        <h3>${member.name}</h3>
+                        <p>${member.position}</p>
+                    </div>
+                `;
+                
+                card.addEventListener('click', () => {
+                    selectMember(member);
+                });
+                
+                memberList.appendChild(card);
+            });
+        }
+        
+        // 选择班组成员
+        function selectMember(member) {
+            // 移除之前选中的成员
+            document.querySelectorAll('.member-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            // 选中当前成员
+            const selectedCard = document.querySelector(`.member-card[data-id="${member.id}"]`);
+            selectedCard.classList.add('selected');
+            
+            selectedMember = member;
+            
+            // 更新标题
+            document.getElementById('selectedMemberName').textContent = member.name;
+            
+            // 显示物资发放区域
+            document.getElementById('actionBar').classList.remove('hidden');
+            
+            // 渲染物资发放选项
+            renderMaterialOptions();
+        }
+        
+        // 渲染物资发放选项 - 终极修复
+        function renderMaterialOptions() {
+            const materialSection = document.getElementById('materialSection');
+            materialSection.innerHTML = '';
+            
+            // 获取该成员的所有物资记录
+            const memberRecords = issueRecords.filter(record => record.memberId === selectedMember.id);
+            
+            // 筛选当前标签的物资
+            const filteredMaterials = materials.filter(m => m.type === currentTab);
+            
+            if (filteredMaterials.length === 0) {
+                materialSection.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-box-open"></i>
+                        <h3>暂无${currentTab === 'ppe' ? '劳保用品' : '工器具'}数据</h3>
+                    </div>
+                `;
+                return;
+            }
+            
+            // 创建物资列表容器
+            const listContainer = document.createElement('div');
+            
+            // 已领取物资分组
+            const ownedMaterials = filteredMaterials.filter(material => 
+                memberRecords.some(record => record.materialId === material.id)
+            );
+            
+            // 未领取物资分组
+            const unownedMaterials = filteredMaterials.filter(material => 
+                !memberRecords.some(record => record.materialId === material.id)
+            );
+            
+            // 渲染分组标题
+            if (ownedMaterials.length > 0) {
+                const groupTitle = document.createElement('div');
+                groupTitle.className = 'card-title';
+                groupTitle.innerHTML = `
+                    <i class="fas fa-check-circle" style="color: var(--success);"></i>
+                    <span>已领取物资</span>
+                `;
+                listContainer.appendChild(groupTitle);
+            }
+            
+            // 渲染已领取物资
+            ownedMaterials.forEach(material => {
+                const card = createMaterialCard(material, true);
+                listContainer.appendChild(card);
+            });
+            
+            // 渲染分组标题
+            if (unownedMaterials.length > 0) {
+                const groupTitle = document.createElement('div');
+                groupTitle.className = 'card-title';
+                groupTitle.innerHTML = `
+                    <i class="fas fa-plus-circle" style="color: var(--primary);"></i>
+                    <span>可领取物资</span>
+                `;
+                listContainer.appendChild(groupTitle);
+            }
+            
+            // 渲染未领取物资
+            unownedMaterials.forEach(material => {
+                const card = createMaterialCard(material, false);
+                listContainer.appendChild(card);
+            });
+            
+            materialSection.appendChild(listContainer);
+            
+            // 添加事件监听器
+            addEventListeners();
+        }
+        
+        // 创建物资卡片 - 终极修复
+        function createMaterialCard(material, isOwned) {
+            const card = document.createElement('div');
+            card.className = 'material-card fade-in';
+            card.dataset.id = material.id;
+            
+            // 检查该成员是否已经领取过此物资
+            const existingRecord = issueRecords.find(record => 
+                record.memberId === selectedMember.id && record.materialId === material.id
+            );
+            
+            // 计算固定周期信息
+            let cycleInfo = '';
+            if (material.fixedCycle > 0 && existingRecord) {
+                const lastIssueDate = existingRecord.date;
+                const nextIssueDate = new Date(lastIssueDate);
+                nextIssueDate.setMonth(nextIssueDate.getMonth() + material.fixedCycle);
+                
+                const today = new Date();
+                const daysLeft = Math.ceil((nextIssueDate - today) / (1000 * 60 * 60 * 24));
+                
+                if (daysLeft > 0) {
+                    cycleInfo = `<div class="last-received">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>下次发放: ${formatDate(nextIssueDate)} (${daysLeft}天后)</span>
+                    </div>`;
+                } else {
+                    cycleInfo = `<div class="last-received" style="background: rgba(255, 193, 7, 0.1);">
+                        <i class="fas fa-exclamation-triangle" style="color: #ffc107;"></i>
+                        <span>已超过发放周期，请立即更换</span>
+                    </div>`;
+                }
+            }
+            
+            card.innerHTML = `
+                <div class="material-header">
+                    <div class="material-icon">
+                        <i class="fas fa-${material.icon}"></i>
+                    </div>
+                    <div class="material-info">
+                        <h4>${material.name}</h4>
+                        <p>${material.type === 'ppe' ? '劳保用品' : '工器具'}</p>
+                    </div>
+                </div>
+                
+                ${isOwned ? `
+                    <div class="last-received">
+                        <i class="fas fa-history"></i>
+                        <span>上次领取: ${formatDateTime(existingRecord.date)}</span>
+                    </div>
+                    ${cycleInfo}
+                ` : ''}
+                
+                <div class="action-row">
+                    ${isOwned ? `
+                        <button class="reissue-btn" data-id="${material.id}">
+                            <i class="fas fa-redo"></i> 重新发放
+                        </button>
+                        <button class="recycle-btn" data-id="${material.id}">
+                            <i class="fas fa-recycle"></i> 收回
+                        </button>
+                    ` : `
+                        <button class="reissue-btn" data-id="${material.id}">
+                            <i class="fas fa-paper-plane"></i> 发放
+                        </button>
+                    `}
+                </div>
+                
+                <!-- 旧物料处置 -->
+                <div class="dispose-section" id="dispose-${material.id}">
+                    <div class="dispose-title">
+                        <i class="fas fa-exclamation-triangle" style="color: var(--warning);"></i>
+                        <span>旧物料处置</span>
+                    </div>
+                    <div class="dispose-options">
+                        <div class="dispose-option recycle-option" data-id="${material.id}" data-action="recycle">
+                            <i class="fas fa-recycle"></i>
+                            <h5>回收物料</h5>
+                            <p>将旧物料回收至仓库</p>
+                        </div>
+                        <div class="dispose-option lost-option" data-id="${material.id}" data-action="lost">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <h5>标记为遗失</h5>
+                            <p>物料已遗失，无法找回</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            return card;
+        }
+        
+        // 添加事件监听器 - 终极修复
+        function addEventListeners() {
+            // 重新发放按钮
+            document.querySelectorAll('.reissue-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const materialId = parseInt(this.dataset.id);
+                    handleReissue(materialId);
+                });
+            });
+            
+            // 收回按钮
+            document.querySelectorAll('.recycle-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const materialId = parseInt(this.dataset.id);
+                    recycleMaterial(materialId);
+                });
+            });
+            
+            // 处置选项
+            document.querySelectorAll('.dispose-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    const materialId = parseInt(this.dataset.id);
+                    const action = this.dataset.action;
+                    selectDisposeAction(materialId, action);
+                });
+            });
+        }
+        
+        // 处理重新发放 - 终极修复
+        function handleReissue(materialId) {
+            if (!selectedMember) return;
+            
+            const material = materials.find(m => m.id === materialId);
+            if (!material) return;
+            
+            // 检查该成员是否已经领取过此物资
+            const existingRecord = issueRecords.find(record => 
+                record.memberId === selectedMember.id && record.materialId === materialId
+            );
+            
+            // 如果是已发放物资，显示处置选项
+            if (existingRecord && material.mustRecycle) {
+                // 显示处置区域
+                const disposeSection = document.getElementById(`dispose-${materialId}`);
+                disposeSection.style.display = 'block';
+            } else {
+                // 处理新物资发放
+                issueNewMaterial(materialId);
+            }
+        }
+        
+        // 选择处置方式
+        function selectDisposeAction(materialId, action) {
+            // 移除所有选中状态
+            document.querySelectorAll('.dispose-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            
+            // 选中当前选项
+            const selectedOption = document.querySelector(`.dispose-option[data-id="${materialId}"][data-action="${action}"]`);
+            selectedOption.classList.add('selected');
+            
+            materialToDispose = materialId;
+            selectedDisposeAction = action;
+            
+            // 完成重新发放
+            completeReissue(materialId, action);
+        }
+        
+        // 收回物资
+        function recycleMaterial(materialId) {
+            if (!selectedMember) return;
+            
+            const material = materials.find(m => m.id === materialId);
+            if (!material) return;
+            
+            const confirmRecycle = confirm(`确定要收回 ${selectedMember.name} 的 ${material.name} 吗？`);
+            
+            if (confirmRecycle) {
+                // 找到并移除发放记录
+                const index = issueRecords.findIndex(record => 
+                    record.memberId === selectedMember.id && record.materialId === materialId
+                );
+                
+                if (index !== -1) {
+                    issueRecords.splice(index, 1);
+                    
+                    // 更新UI
+                    renderMaterialOptions();
+                    
+                    alert(`已成功收回 ${material.name}`);
+                }
+            }
+        }
+        
+        // 完成重新发放
+        function completeReissue(materialId, action) {
+            if (!selectedMember) return;
+            
+            const material = materials.find(m => m.id === materialId);
+            if (!material) return;
+            
+            // 更新发放记录
+            const existingIndex = issueRecords.findIndex(record => 
+                record.memberId === selectedMember.id && record.materialId === materialId
+            );
+            
+            if (existingIndex !== -1) {
+                // 更新现有记录
+                issueRecords[existingIndex].date = new Date();
+            }
+            
+            // 隐藏处置区域
+            const disposeSection = document.getElementById(`dispose-${materialId}`);
+            if (disposeSection) {
+                disposeSection.style.display = 'none';
+            }
+            
+            // 更新UI
+            renderMaterialOptions();
+            
+            alert(`物资 ${material.name} 已成功重新发放给 ${selectedMember.name}`);
+        }
+        
+        // 发放新物资
+        function issueNewMaterial(materialId) {
+            const material = materials.find(m => m.id === materialId);
+            if (!material) return;
+            
+            // 添加新记录
+            issueRecords.push({
+                memberId: selectedMember.id,
+                materialId: materialId,
+                date: new Date()
+            });
+            
+            // 更新UI
+            renderMaterialOptions();
+            
+            alert(`物资 ${material.name} 已成功发放给 ${selectedMember.name}`);
+        }
+        
+        // 设置事件监听器
+        function setupEventListeners() {
+            // 标签切换
+            document.querySelectorAll('.tab-btn').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    document.querySelectorAll('.tab-btn').forEach(t => {
+                        t.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                    
+                    currentTab = this.dataset.tab;
+                    
+                    if (selectedMember) {
+                        renderMaterialOptions();
+                    }
+                });
+            });
+            
+            // 发放按钮
+            document.getElementById('issueBtn').addEventListener('click', issueMaterials);
+            
+            // 重置按钮
+            document.getElementById('resetBtn').addEventListener('click', resetSelections);
+            
+            // 成员搜索
+            document.getElementById('memberSearch').addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                
+                document.querySelectorAll('.member-card').forEach(card => {
+                    const name = card.querySelector('h3').textContent.toLowerCase();
+                    const position = card.querySelector('p').textContent.toLowerCase();
+                    
+                    if (name.includes(searchTerm) || position.includes(searchTerm)) {
+                        card.style.display = 'flex';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            });
+            
+            // 底部导航切换
+            document.querySelectorAll('.nav-item').forEach(item => {
+                if (item.dataset.page) {
+                    item.addEventListener('click', function() {
+                        switchPage(this.dataset.page);
+                        
+                        // 更新导航激活状态
+                        document.querySelectorAll('.nav-item').forEach(nav => {
+                            nav.classList.remove('active');
+                        });
+                        this.classList.add('active');
+                    });
+                }
+            });
+        }
+        
+        // 切换页面
+        function switchPage(pageId) {
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            document.getElementById(pageId).classList.add('active');
+        }
+        
+        // 发放物资
+        function issueMaterials() {
+            if (!selectedMember) {
+                alert('请先选择班组成员');
+                return;
+            }
+            
+            if (selectedMaterials.length === 0) {
+                alert('请选择要发放的物资');
+                return;
+            }
+            
+            // 处理物资发放
+            selectedMaterials.forEach(materialId => {
+                const material = materials.find(m => m.id === materialId);
+                
+                // 检查该成员是否已经领取过此物资
+                const existingRecord = issueRecords.find(record => 
+                    record.memberId === selectedMember.id && record.materialId === materialId
+                );
+                
+                if (existingRecord) {
+                    // 显示处置选项
+                    const disposeSection = document.getElementById(`dispose-${materialId}`);
+                    if (disposeSection) {
+                        disposeSection.style.display = 'block';
+                    }
+                } else {
+                    // 处理新物资发放
+                    issueNewMaterial(materialId);
+                }
+            });
+        }
+        
+        // 重置选择
+        function resetSelections() {
+            // 重置所有处置选项
+            document.querySelectorAll('.dispose-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            
+            // 隐藏所有处置区域
+            document.querySelectorAll('.dispose-section').forEach(section => {
+                section.style.display = 'none';
+            });
+            
+            // 清空选中列表
+            selectedMaterials = [];
+        }
+        
+        // 格式化日期时间
+        function formatDateTime(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            
+            return `${year}-${month}-${day} ${hours}:${minutes}`;
+        }
+        
+        // 格式化日期
+        function formatDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            
+            return `${year}-${month}-${day}`;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>物料审核系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .app-container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #3498db, #1a73e8);
+            color: white;
+            padding: 18px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header h1 {
+            font-size: 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .header h1 i {
+            font-size: 22px;
+        }
+        
+        .batch-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #eaeaea;
+        }
+        
+        .select-all {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 15px;
+            color: #555;
+        }
+        
+        .select-all input {
+            width: 18px;
+            height: 18px;
+        }
+        
+        .batch-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .batch-buttons button {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .batch-approve {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .batch-reject {
+            background: #f44336;
+            color: white;
+        }
+        
+        .batch-buttons button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .search-filter {
+            padding: 15px 20px;
+            background: white;
+            border-bottom: 1px solid #eaeaea;
+        }
+        
+        .search-box {
+            position: relative;
+            margin-bottom: 15px;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 12px 15px 12px 40px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 15px;
+            background: #f8f9fa;
+        }
+        
+        .search-box i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #888;
+        }
+        
+        .filter-options {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+        }
+        
+        .filter-options button {
+            padding: 8px 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 20px;
+            background: white;
+            font-size: 14px;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .filter-options button.active {
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+        
+        .materials-list {
+            padding: 0 20px 20px;
+        }
+        
+        .material-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            margin-bottom: 15px;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .material-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .material-card.selected {
+            border-left: 4px solid #3498db;
+        }
+        
+        .card-header {
+            padding: 15px;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .material-checkbox {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            flex: 1;
+        }
+        
+        .material-checkbox input {
+            width: 18px;
+            height: 18px;
+            margin-top: 3px;
+        }
+        
+        .material-basic-info {
+            flex: 1;
+        }
+        
+        .material-basic-info h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #222;
+        }
+        
+        .material-code {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        
+        .material-essential {
+            display: flex;
+            gap: 15px;
+            font-size: 13px;
+            flex-wrap: wrap;
+        }
+        
+        .material-essential span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #666;
+        }
+        
+        .quantity-highlight {
+            display: flex;
+            align-items: center;
+            background: #e3f2fd;
+            padding: 8px 12px;
+            border-radius: 8px;
+            margin-top: 8px;
+            width: fit-content;
+        }
+        
+        .quantity-highlight .quantity-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1976d2;
+            margin-right: 5px;
+        }
+        
+        .quantity-highlight .quantity-unit {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .expand-btn {
+            background: none;
+            border: none;
+            font-size: 16px;
+            color: #888;
+            cursor: pointer;
+            transition: transform 0.3s;
+            align-self: flex-start;
+            padding: 5px;
+        }
+        
+        .expand-btn.expanded {
+            transform: rotate(180deg);
+        }
+        
+        .card-details {
+            padding: 0 15px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, padding 0.3s;
+        }
+        
+        .card-details.expanded {
+            padding: 15px;
+            max-height: 200px;
+        }
+        
+        .details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        .detail-label {
+            font-size: 13px;
+            color: #888;
+        }
+        
+        .detail-value {
+            font-size: 14px;
+            color: #333;
+            font-weight: 500;
+        }
+        
+        .card-actions {
+            display: flex;
+            gap: 10px;
+            padding: 15px;
+            border-top: 1px solid #f0f0f0;
+        }
+        
+        .card-actions button {
+            flex: 1;
+            padding: 10px;
+            border-radius: 6px;
+            border: none;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+        
+        .approve-btn {
+            background: #e8f5e9;
+            color: #4CAF50;
+        }
+        
+        .reject-btn {
+            background: #ffebee;
+            color: #f44336;
+        }
+        
+        .approve-btn:hover, .reject-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #888;
+        }
+        
+        .empty-state i {
+            font-size: 50px;
+            margin-bottom: 15px;
+            color: #ddd;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-left: 8px;
+        }
+        
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        @media (max-width: 500px) {
+            .app-container {
+                box-shadow: none;
+            }
+            
+            .material-essential {
+                gap: 10px;
+            }
+            
+            .quantity-highlight .quantity-value {
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="header">
+            <h1><i class="fas fa-clipboard-check"></i> 物料审核</h1>
+        </div>
+        
+        <div class="batch-actions">
+            <div class="select-all">
+                <input type="checkbox" id="selectAll">
+                <label for="selectAll">全选</label>
+            </div>
+            <div class="batch-buttons">
+                <button class="batch-approve" disabled>批量通过</button>
+                <button class="batch-reject" disabled>批量拒绝</button>
+            </div>
+        </div>
+        
+        <div class="search-filter">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="搜索物料名称、编码或申领人...">
+            </div>
+            <div class="filter-options">
+                <button class="active">全部</button>
+                <button>待审核</button>
+                <button>领用</button>
+                <button>采购</button>
+                <button>生产</button>
+            </div>
+        </div>
+        
+        <div class="materials-list">
+            <!-- 物料卡片将在这里动态生成 -->
+        </div>
+    </div>
+
+    <script>
+        // 模拟数据 - 根据图片信息更新
+        const materialsData = [
+            {
+                id: 1,
+                code: "MAT001235",
+                category: "工具/手动工具",
+                name: "木工锤 carpenter hammer",
+                unit: "pcs",
+                type: "领用",
+                quantity: 10,
+                purpose: "日常维护使用",
+                usedBudget: "5/20",
+                deliveryDate: "2024-03-10",
+                applicant: "张三",
+                submitTime: "2024-03-01 10:30:15"
+            },
+            {
+                id: 2,
+                code: "MAT001236",
+                category: "工具/手动工具",
+                name: "木工扳手 spanner",
+                unit: "pcs",
+                type: "采购",
+                quantity: 10,
+                purpose: "新项目需求",
+                usedBudget: "0/10",
+                deliveryDate: "2024-03-12",
+                applicant: "张三",
+                submitTime: "2024-03-01 14:22:08"
+            },
+            {
+                id: 3,
+                code: "MAT001237",
+                category: "工具/手动工具",
+                name: "木工扳手 spanner",
+                unit: "pcs",
+                type: "领用",
+                quantity: 10,
+                purpose: "设备更换",
+                usedBudget: "8/15",
+                deliveryDate: "2024-03-08",
+                applicant: "张三",
+                submitTime: "2024-03-02 09:15:42"
+            },
+            {
+                id: 4,
+                code: "MAT001238",
+                category: "材料/金属材料",
+                name: "铁丝 Iron wire",
+                unit: "roll",
+                type: "采购",
+                quantity: 3,
+                purpose: "施工固定",
+                usedBudget: "0/3",
+                deliveryDate: "2024-03-15",
+                applicant: "张三",
+                submitTime: "2024-03-02 11:45:33"
+            },
+            {
+                id: 5,
+                code: "MAT001239",
+                category: "材料/测量工具",
+                name: "施工线 Construction line",
+                unit: "pcs",
+                type: "领用",
+                quantity: 50,
+                purpose: "现场测量",
+                usedBudget: "25/50",
+                deliveryDate: "2024-03-05",
+                applicant: "张三",
+                submitTime: "2024-03-03 16:20:19"
+            },
+            {
+                id: 6,
+                code: "MAT001240",
+                category: "材料/紧固件",
+                name: "水泥钉 concrete nail",
+                unit: "箱",
+                type: "采购",
+                quantity: 1,
+                purpose: "墙面固定",
+                usedBudget: "0/1",
+                deliveryDate: "2024-03-10",
+                applicant: "李四",
+                submitTime: "2024-03-04 09:30:25"
+            },
+            {
+                id: 7,
+                code: "MAT001241",
+                category: "材料/建筑材料",
+                name: "混凝土 c35",
+                unit: "立方",
+                type: "生产",
+                quantity: 50,
+                purpose: "地基浇筑",
+                usedBudget: "0/50",
+                deliveryDate: "2024-03-12",
+                applicant: "李四",
+                submitTime: "2024-03-04 14:15:40"
+            }
+        ];
+
+        // 渲染物料卡片
+        function renderMaterials() {
+            const materialsList = document.querySelector('.materials-list');
+            materialsList.innerHTML = '';
+            
+            if (materialsData.length === 0) {
+                materialsList.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <p>暂无待审核物料</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            materialsData.forEach(material => {
+                const card = document.createElement('div');
+                card.className = 'material-card';
+                card.innerHTML = `
+                    <div class="card-header">
+                        <div class="material-checkbox">
+                            <input type="checkbox" class="material-check" data-id="${material.id}">
+                            <div class="material-basic-info">
+                                <h3>${material.name} <span class="status-badge status-pending">待审核</span></h3>
+                                <div class="material-code">${material.code} | ${material.category}</div>
+                                <div class="material-essential">
+                                    <span><i class="fas fa-tag"></i> ${material.type}</span>
+                                    <span><i class="fas fa-user"></i> ${material.applicant}</span>
+                                    <span><i class="fas fa-calendar"></i> ${material.submitTime.split(' ')[0]}</span>
+                                </div>
+                                <div class="quantity-highlight">
+                                    <span class="quantity-value">${material.quantity}</span>
+                                    <span class="quantity-unit">${material.unit}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="expand-btn"><i class="fas fa-chevron-down"></i></button>
+                    </div>
+                    <div class="card-details">
+                        <div class="details-grid">
+                            <div>
+                                <div class="detail-label">用途备注</div>
+                                <div class="detail-value">${material.purpose || '无'}</div>
+                            </div>
+                            <div>
+                                <div class="detail-label">已使用/预算量</div>
+                                <div class="detail-value">${material.usedBudget || '无'}</div>
+                            </div>
+                            <div>
+                                <div class="detail-label">希望送达</div>
+                                <div class="detail-value">${material.deliveryDate || '无'}</div>
+                            </div>
+                            <div>
+                                <div class="detail-label">提交时间</div>
+                                <div class="detail-value">${material.submitTime}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-actions">
+                        <button class="approve-btn"><i class="fas fa-check"></i> 通过</button>
+                        <button class="reject-btn"><i class="fas fa-times"></i> 拒绝</button>
+                    </div>
+                `;
+                materialsList.appendChild(card);
+            });
+            
+            // 添加展开/收起功能
+            document.querySelectorAll('.expand-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const content = this.closest('.material-card').querySelector('.card-details');
+                    this.classList.toggle('expanded');
+                    content.classList.toggle('expanded');
+                });
+            });
+            
+            // 添加单选功能
+            document.querySelectorAll('.material-check').forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const card = this.closest('.material-card');
+                    if (this.checked) {
+                        card.classList.add('selected');
+                    } else {
+                        card.classList.remove('selected');
+                    }
+                    updateBatchButtons();
+                });
+            });
+            
+            // 添加审核按钮事件
+            document.querySelectorAll('.approve-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const card = this.closest('.material-card');
+                    const id = card.querySelector('.material-check').dataset.id;
+                    approveMaterial(id, true);
+                });
+            });
+            
+            document.querySelectorAll('.reject-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const card = this.closest('.material-card');
+                    const id = card.querySelector('.material-check').dataset.id;
+                    approveMaterial(id, false);
+                });
+            });
+        }
+        
+        // 全选功能
+        document.getElementById('selectAll').addEventListener('change', function() {
+            const checkboxes = document.querySelectorAll('.material-check');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+                const card = checkbox.closest('.material-card');
+                if (this.checked) {
+                    card.classList.add('selected');
+                } else {
+                    card.classList.remove('selected');
+                }
+            });
+            updateBatchButtons();
+        });
+        
+        // 批量审核按钮
+        document.querySelector('.batch-approve').addEventListener('click', function() {
+            const selectedIds = getSelectedIds();
+            if (selectedIds.length > 0) {
+                if (confirm(`确定要通过选中的 ${selectedIds.length} 个物料吗？`)) {
+                    selectedIds.forEach(id => approveMaterial(id, true));
+                }
+            }
+        });
+        
+        document.querySelector('.batch-reject').addEventListener('click', function() {
+            const selectedIds = getSelectedIds();
+            if (selectedIds.length > 0) {
+                if (confirm(`确定要拒绝选中的 ${selectedIds.length} 个物料吗？`)) {
+                    selectedIds.forEach(id => approveMaterial(id, false));
+                }
+            }
+        });
+        
+        // 获取选中的物料ID
+        function getSelectedIds() {
+            const selectedCheckboxes = document.querySelectorAll('.material-check:checked');
+            return Array.from(selectedCheckboxes).map(cb => cb.dataset.id);
+        }
+        
+        // 更新批量按钮状态
+        function updateBatchButtons() {
+            const selectedCount = getSelectedIds().length;
+            const batchButtons = document.querySelectorAll('.batch-buttons button');
+            
+            if (selectedCount > 0) {
+                batchButtons.forEach(btn => btn.disabled = false);
+            } else {
+                batchButtons.forEach(btn => btn.disabled = true);
+            }
+            
+            // 更新全选复选框状态
+            const totalCount = document.querySelectorAll('.material-check').length;
+            const selectedAll = document.getElementById('selectAll');
+            selectedAll.checked = selectedCount > 0 && selectedCount === totalCount;
+            selectedAll.indeterminate = selectedCount > 0 && selectedCount < totalCount;
+        }
+        
+        // 审核物料
+        function approveMaterial(id, isApproved) {
+            const index = materialsData.findIndex(m => m.id == id);
+            if (index !== -1) {
+                // 在实际应用中，这里会发送API请求
+                materialsData.splice(index, 1);
+                renderMaterials();
+                alert(`物料已${isApproved ? '通过' : '拒绝'}审核`);
+            }
+        }
+        
+        // 初始化渲染
+        renderMaterials();
+        
+        // 筛选功能
+        document.querySelectorAll('.filter-options button').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.filter-options button').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                // 在实际应用中，这里会根据筛选条件过滤数据
+            });
+        });
+    </script>
+</body>
+</html>

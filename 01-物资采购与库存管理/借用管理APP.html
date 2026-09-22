@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>物料管理系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        :root {
+            --primary: #2c6fbb;
+            --primary-light: #4a94e0;
+            --secondary: #f8f9fa;
+            --success: #28a745;
+            --warning: #ffc107;
+            --danger: #dc3545;
+            --dark: #343a40;
+            --light: #f8f9fa;
+            --text-primary: #212529;
+            --text-secondary: #6c757d;
+            --border: #dee2e6;
+            --card-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+        }
+        
+        body {
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            color: var(--text-primary);
+            background-color: #f5f7fa;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        #app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            max-width: 480px;
+            margin: 0 auto;
+            background-color: white;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* 顶部导航 */
+        .app-header {
+            background: linear-gradient(to right, var(--primary), var(--primary-light));
+            color: white;
+            padding: 18px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 10;
+        }
+        
+        .header-left, .header-right {
+            display: flex;
+            align-items: center;
+        }
+        
+        .app-title {
+            font-size: 22px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        
+        .header-btn {
+            background: rgba(255, 255, 255, 0.2);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 15px;
+            color: white;
+            font-size: 20px;
+        }
+        
+        /* 选项卡 */
+        .tabs {
+            display: flex;
+            background-color: white;
+            border-bottom: 1px solid var(--border);
+            padding: 0 15px;
+        }
+        
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 20px 0;
+            font-weight: 500;
+            color: var(--text-secondary);
+            position: relative;
+            transition: all 0.3s ease;
+            font-size: 17px;
+        }
+        
+        .tab.active {
+            color: var(--primary);
+            font-weight: 600;
+        }
+        
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 10%;
+            width: 80%;
+            height: 4px;
+            background-color: var(--primary);
+            border-radius: 3px;
+        }
+        
+        /* 内容区域 */
+        .tab-content {
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 20px 15px;
+            padding-bottom: 20px;
+        }
+        
+        .section {
+            margin-bottom: 25px;
+        }
+        
+        .section-title {
+            padding: 15px 0;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .section-title i {
+            margin-right: 10px;
+            color: var(--primary);
+        }
+        
+        .filter-btn {
+            background: none;
+            border: none;
+            color: var(--primary);
+            font-size: 15px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+        
+        .filter-btn i {
+            margin-right: 5px;
+        }
+        
+        /* 卡片设计 */
+        .card-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+            padding: 25px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .item-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #e1f0ff, #d0e5ff);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 20px;
+            color: var(--primary);
+            font-size: 28px;
+        }
+        
+        .item-title {
+            flex: 1;
+            font-weight: 600;
+            font-size: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .item-code {
+            font-size: 16px;
+            color: var(--text-secondary);
+            font-weight: 500;
+            margin-top: 5px;
+        }
+        
+        .status-tag {
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            margin-left: 10px;
+        }
+        
+        .tag-pending {
+            background-color: rgba(255, 193, 7, 0.15);
+            color: #dc9700;
+        }
+        
+        .tag-approved {
+            background-color: rgba(40, 167, 69, 0.15);
+            color: #1f7e3a;
+        }
+        
+        .tag-returned {
+            background-color: rgba(44, 111, 187, 0.15);
+            color: var(--primary);
+        }
+        
+        .tag-overdue {
+            background-color: rgba(220, 53, 69, 0.15);
+            color: var(--danger);
+        }
+        
+        .card-body {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .info-item {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .info-label {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .info-label i {
+            margin-right: 8px;
+            width: 20px;
+            text-align: center;
+            color: var(--primary);
+        }
+        
+        .info-value {
+            font-size: 17px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+        
+        .card-footer {
+            margin-top: 25px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+        }
+        
+        .action-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 25px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            min-width: 120px;
+        }
+        
+        .btn-approve {
+            background: linear-gradient(to right, #28a745, #218838);
+            color: white;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.25);
+        }
+        
+        .btn-approve:hover {
+            background: linear-gradient(to right, #218838, #1e7e34);
+            transform: translateY(-2px);
+        }
+        
+        .btn-view {
+            background: linear-gradient(to right, var(--primary), #2573a7);
+            color: white;
+            box-shadow: 0 4px 15px rgba(44, 111, 187, 0.25);
+        }
+        
+        .btn-view:hover {
+            background: linear-gradient(to right, #2573a7, #1e6391);
+            transform: translateY(-2px);
+        }
+        
+        .btn-return {
+            background: linear-gradient(to right, #28a745, #218838);
+            color: white;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.25);
+        }
+        
+        .btn-return:hover {
+            background: linear-gradient(to right, #218838, #1e7e34);
+            transform: translateY(-2px);
+        }
+        
+        /* 详情页 */
+        .detail-page {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: white;
+            z-index: 100;
+            transform: translateX(100%);
+            transition: transform 0.4s ease;
+            overflow-y: auto;
+            padding-bottom: 20px;
+        }
+        
+        .detail-page.active {
+            transform: translateX(0);
+        }
+        
+        .detail-header {
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            background: linear-gradient(to right, var(--primary), var(--primary-light));
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .back-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+        }
+        
+        .detail-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        .detail-content {
+            padding: 25px;
+        }
+        
+        .detail-item {
+            margin-bottom: 30px;
+        }
+        
+        .detail-label {
+            font-size: 16px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            font-weight: 500;
+        }
+        
+        .detail-label i {
+            margin-right: 12px;
+            width: 24px;
+            text-align: center;
+            color: var(--primary);
+            font-size: 20px;
+        }
+        
+        .detail-value {
+            font-size: 18px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 12px;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+        
+        .text-input {
+            width: 100%;
+            border: none;
+            outline: none;
+            padding: 10px 0;
+            font-size: 18px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-primary);
+        }
+        
+        .select-input {
+            width: 100%;
+            border: none;
+            outline: none;
+            padding: 10px 0;
+            font-size: 18px;
+            border-bottom: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-primary);
+        }
+        
+        .textarea-input {
+            width: 100%;
+            height: 120px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 15px;
+            font-size: 16px;
+            margin-top: 10px;
+            resize: vertical;
+        }
+        
+        .camera-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+        }
+        
+        .camera-box {
+            width: 100%;
+            height: 220px;
+            background-color: #f8f9fa;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+        
+        .camera-icon {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(to right, var(--primary), var(--primary-light));
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            cursor: pointer;
+            box-shadow: 0 6px 15px rgba(44, 111, 187, 0.3);
+        }
+        
+        .camera-text {
+            text-align: center;
+            font-size: 16px;
+            color: var(--text-secondary);
+        }
+        
+        .detail-action-btn {
+            display: block;
+            width: 100%;
+            padding: 18px;
+            text-align: center;
+            background: linear-gradient(to right, var(--primary), var(--primary-light));
+            color: white;
+            border-radius: 16px;
+            font-weight: 600;
+            font-size: 18px;
+            border: none;
+            margin-top: 20px;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(44, 111, 187, 0.3);
+            transition: all 0.3s;
+        }
+        
+        .detail-action-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(44, 111, 187, 0.4);
+        }
+        
+        .detail-action-btn.green {
+            background: linear-gradient(to right, #28a745, #218838);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.3);
+        }
+        
+        .detail-action-btn.green:hover {
+            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4);
+        }
+        
+        /* 动画效果 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease forwards;
+        }
+        
+        /* 图片预览 */
+        .image-preview {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+            border-radius: 16px;
+        }
+        
+        .empty-state {
+            padding: 40px 20px;
+            text-align: center;
+            color: var(--text-secondary);
+            background: white;
+            border-radius: 16px;
+            box-shadow: var(--card-shadow);
+        }
+        
+        .empty-state i {
+            font-size: 60px;
+            margin-bottom: 20px;
+            color: #e0e6ed;
+        }
+        
+        .empty-state h3 {
+            font-size: 20px;
+            margin-bottom: 10px;
+            color: var(--text-primary);
+        }
+        
+        .empty-state p {
+            font-size: 16px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app-container">
+        <!-- 主页面 -->
+        <div class="app-header">
+            <div class="header-left">
+                <i class="fas fa-warehouse"></i>
+                <div class="app-title">物料管理系统</div>
+            </div>
+            <div class="header-right">
+                <div class="header-btn">
+                    <i class="fas fa-search"></i>
+                </div>
+                <div class="header-btn">
+                    <i class="fas fa-bell"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="tabs">
+            <div class="tab active" data-tab="borrow">借用审批</div>
+            <div class="tab" data-tab="return">归还管理</div>
+            <div class="tab" data-tab="history">借用流水</div>
+        </div>
+        
+        <!-- 借用审批页面 -->
+        <div class="tab-content" id="borrow-tab">
+            <div class="section">
+                <div class="section-title">
+                    <div>
+                        <i class="fas fa-list-check"></i> 借用申请列表
+                    </div>
+                    <button class="filter-btn">
+                        <i class="fas fa-filter"></i> 筛选
+                    </button>
+                </div>
+                
+                <div class="card-container">
+                    <!-- 待审批 -->
+                    <div class="card fade-in" data-id="1" data-type="borrow" data-status="pending">
+                        <div class="card-header">
+                            <div class="item-icon">
+                                <i class="fas fa-helmet-safety"></i>
+                            </div>
+                            <div class="item-title">
+                                <div>安全帽</div>
+                                <div class="item-code">SC2023-001</div>
+                            </div>
+                            <span class="status-tag tag-pending">待审批</span>
+                        </div>
+                        
+                        <div class="card-body">
+                            <div class="info-item">
+                                <div class="info-label">
+                                    <i class="fas fa-user"></i> 领用人
+                                </div>
+                                <div class="info-value">张工 (生产一部)</div>
+                            </div>
+                            
+                            <div class="info-item">
+                                <div class="info-label">
+                                    <i class="fas fa-list"></i> 事由
+                                </div>
+                                <div class="info-value">新员工入职装备</div>
+                            </div>
+                            
+                            <div class="info-item">
+                                <div class="info-label">
+                                    <i class="fas fa-hashtag"></i> 数量
+                                </div>
+                                <div class="info-value">15 个</div>
+                            </div>
+                            
+                            <div class="info-item">
+                                <div class="info-label">
+                                    <i class="fas fa-calendar"></i> 申请日期
+                                </div>
+                                <div class="info-value">2023-08-18</div>
+                            </div>
+                        </div>
+                        
+                        <div class="card-footer">
+                            <button class="action-btn btn-approve">
+                                <i class="fas fa-edit"></i> 审批
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- 已审批未归还 -->
+                    <div class="card fade-in" data-id="2" data-type="borrow" data-status="approved">
+                        <div class="card-header">
+                            <div class="item-icon">
+                                <i class="fas fa-toolbox"></i>
+                            </div>
+                            <div class="item-title">
+                                <div>工具箱套装</div>
+                                <div class="item-code">SC2023-006</div>
+                            </div>
+                            <span class="status-tag tag-approved">已审批</span>
+                        </div>
+                        
+                        <div class="card-body">
+                            <div class="info-item">
+                                <div class="info-label">
+                                    <i class="fas fa-user"></i> 领用人
+                                </div>
+                                <div class="info-value">刘工 (设备维修部)</div>
+                            </div>
+                            
+                            <div class="info-item">
+                                <div class="info-label">
+                                    <i class="fas fa-list"></i> 事由
+                                </div>
+                                <div class="info-value">车间设备维护</div>
+                            </div>
+                            
+                            <div class="info-item">
+                                <div class="info-label">
+                                    <i class="fas fa-hashtag"></i> 数量
+                                </div>
+                                <div class="info-value">5 套</div>
+                            </div>
+                            
+                            <div class="info-item">
+                                <div class="info-label">
+                                    <i class="fas fa-calendar"></i> 应还日期
+                                </div>
+                                <div class="info-value">2023-09-05</div>
+                            </div>
+                        </div>
+                        
+                        <div class="card-footer">
+                            <button class="action-btn btn-view">
+                                <i class="fas fa-eye"></i> 查看详情
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- 已审批未归还（即将到期） -->
+                    <div class="card fade-in" data-id="3" data-type="borrow" data-status="approved">
+                        <div class="card-header">
+                            <div class="item-icon">
+                                <i class="fas fa-temperature-high"></i>
+                            </div>
+                            <div class="item-title">
+                                <div>红外测温仪</div>
+                                <div class="item-code">SC2023-015</div>
+                            </div>
+                            <span class="status-tag tag-overdue">即将到期</span>
+                        </div>
+                        
+                        <div class="card-body">
+                            <div class="info-item">
+                                <div class="info-label">
+                                    <i class="fas fa-user"></i> 领用人
+                                </div>
+                                <div class="info-value">钱工 (质检部)</div>
+                            </div>
+                            
+                            <div class="info-item">
+                                <div class="info-label">
+                                    <i class="fas fa-list"></i> 事由
+                                </div>
+                                <div class="info-value">生产线温度检测</div>
+                            </div>
+                            
+                            <div class="info-item">
+                                <div class="info-label">
+                                    <i class="fas fa-hashtag"></i> 数量
+                                </div>
+                                <div class="info-value">2 台</div>
+                            </div>
+                            
+                            <div class="info-item">
+                                <div class="info-label">
+                                    <i class="fas fa-calendar"></i> 应还日期
+                                </div>
+                                <div class="info-value">2023-08-25</div>
+                            </div>
+                        </div>
+                        
+                        <div class="card-footer">
+                            <button class="action-btn btn-view">
+                                <i class="fas fa-eye"></i> 查看详情
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 归还管理页面 -->
+        <div class="tab-content" id="return-tab" style="display: none;">
+            <div class="section">
+                <div class="section-title">
+                    <div>
+                        <i class="fas fa-undo-alt"></i> 待归还物料
+                    </div>
+                    <button class="filter-btn">
+                        <i class="fas fa-filter"></i> 筛选
+                    </button>
+                </div>
+                
+                <div class="card-container">
+                    <!-- 待归还 -->
+                    <div class="card fade-in" data-id="1" data-type="return">
+                        <div class="card-header">
+                            <div class="item-icon">
+                                <i class="fas fa-hammer"></i>
+                            </div>
+                            <div class="item-title">
+                                <div>电锤</div>
+                                <div class="item-code">SC2023-003</div>
+                            </div>
+                            <span class="status-tag tag-approved">待归还</span>
+                        </div>
+                        
+                        <div class="card-body">
+                            <div class="info-item">
+                                <div class="info-label">
+                                    <i class="fas fa-user"></i> 领用人
+                                </div>
+                                <div class="info-value">李工 (维修组)</div>
+                            </div>
+                            
+                            <div class="info-item">
+                                <div class="info-label">
+                                    <i class="fas fa-list"></i> 事由
+                                </div>
+                                <div class="info-value">设备安装</div>
+                            </div>
+                            
+                            <div class="info-item">
+                                <div class="info-label">
+                                    <i class="fas fa-hashtag"></i> 借用数量
+                                </div>
+                                <div class="info-value">1 台</div>
+                            </div>
+                            
+                            <div class="info-item">
+                                <div class="info-label">
+                                    <i class="fas fa-calendar"></i> 应还日期
+                                </div>
+                                <div class="info-value">2023-08-25</div>
+                            </div>
+                        </div>
+                        
+                        <div class="card-footer">
+                            <button class="action-btn btn-return">
+                                <i class="fas fa-undo"></i> 归还
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- 待归还（即将到期） -->
+                    <div class="card fade-in" data-id="2" data-type="return">
+                        <div class="card-header">
+                            <div class="item-icon">
+                                <i class="fas fa-temperature-high"></i>
+                            </div>
+                            <div class="item-title">
+                                <div>红外测温仪</div>
+                                <div class="item-code">SC2023-015</div>
+                            </div>
+                            <span class="status-tag tag-overdue">即将到期</span>
+                        </div>
+                        
+                        <div class="card-body">
+                            <div class="info-item">
+                                <div class="info-label">
+                                    <i class="fas fa-user"></i> 领用人
+                                </div>
+                                <div class="info-value">钱工 (质检部)</div>
+                            </div>
+                            
+                            <div class="info-item">
+                                <div class="info-label">
+                                    <i class="fas fa-list"></i> 事由
+                                </div>
+                                <div class="info-value">生产线温度检测</div>
+                            </div>
+                            
+                            <div class="info-item">
+                                <div class="info-label">
+                                    <i class="fas fa-hashtag"></i> 借用数量
+                                </div>
+                                <div class="info-value">2 台</div>
+                            </div>
+                            
+                            <div class="info-item">
+                                <div class="info-label">
+                                    <i class="fas fa-calendar"></i> 应还日期
+                                </div>
+                                <div class="info-value">2023-08-25</div>
+                            </div>
+                        </div>
+                        
+                        <div class="card-footer">
+                            <button class="action-btn btn-return">
+                                <i class="fas fa-undo"></i> 归还
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 借用流水页面 -->
+        <div class="tab-content" id="history-tab" style="display: none;">
+            <div class="section">
+                <div class="section-title">
+                    <div>
+                        <i class="fas fa-history"></i> 借用归还记录
+                    </div>
+                    <button class="filter-btn">
+                        <i class="fas fa-filter"></i> 筛选
+                    </button>
+                </div>
+                
+                <div class="card-container">
+                    <!-- 已归还记录 -->
+                    <div class="card fade-in">
+                        <div class="card-header">
+                            <div class="item-icon">
+                                <i class="fas fa-compact-disc"></i>
+                            </div>
+                            <div class="item-title">
+                                <div>光纤熔接机</div>
+                                <div class="item-code">SC2023-008</div>
+                            </div>
+                            <span class="status-tag tag-approved">已归还</span>
+                        </div>
+                        
+                        <div class="card-body">
+                            <div class="info-item">
+                                <div class="info-label">
+                                    <i class="fas fa-user"></i> 领用人
+                                </div>
+                                <div class="info-value">王工 (网络工程部)</div>
+                            </div>
+                            
+                            <div class="info-item">
+                                <div class="info-label">
+                                    <i class="fas fa-list"></i> 事由
+                                </div>
+                                <div class="info-value">网络设备安装</div>
+                            </div>
+                            
+                            <div class="info-item">
+                                <div class="info-label">
+                                    <i class="fas fa-hashtag"></i> 借用数量
+                                </div>
+                                <div class="info-value">1 台</div>
+                            </div>
+                            
+                            <div class="info-item">
+                                <div class="info-label">
+                                    <i class="fas fa-calendar"></i> 借用日期
+                                </div>
+                                <div class="info-value">2023-07-15</div>
+                            </div>
+                            
+                            <div class="info-item">
+                                <div class="info-label">
+                                    <i class="fas fa-calendar-check"></i> 归还日期
+                                </div>
+                                <div class="info-value">2023-08-18</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 待归还记录 -->
+                    <div class="card fade-in">
+                        <div class="card-header">
+                            <div class="item-icon">
+                                <i class="fas fa-plug"></i>
+                            </div>
+                            <div class="item-title">
+                                <div>高压验电器</div>
+                                <div class="item-code">SC2023-012</div>
+                            </div>
+                            <span class="status-tag tag-overdue">待归还</span>
+                        </div>
+                        
+                        <div class="card-body">
+                            <div class="info-item">
+                                <div class="info-label">
+                                    <i class="fas fa-user"></i> 领用人
+                                </div>
+                                <div class="info-value">赵工 (电力工程部)</div>
+                            </div>
+                            
+                            <div class="info-item">
+                                <div class="info-label">
+                                    <i class="fas fa-list"></i> 事由
+                                </div>
+                                <div class="info-value">变电站检修</div>
+                            </div>
+                            
+                            <div class="info-item">
+                                <div class="info-label">
+                                    <i class="fas fa-hashtag"></i> 借用数量
+                                </div>
+                                <div class="info-value">3 个</div>
+                            </div>
+                            
+                            <div class="info-item">
+                                <div class="info-label">
+                                    <i class="fas fa-calendar"></i> 借用日期
+                                </div>
+                                <div class="info-value">2023-08-01</div>
+                            </div>
+                            
+                            <div class="info-item">
+                                <div class="info-label">
+                                    <i class="fas fa-calendar-times"></i> 应还日期
+                                </div>
+                                <div class="info-value">2023-08-22</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 借用详情页 -->
+        <div class="detail-page" id="borrow-detail">
+            <div class="detail-header">
+                <div class="back-btn">
+                    <i class="fas fa-arrow-left"></i>
+                </div>
+                <div class="detail-title">借用详情</div>
+            </div>
+            
+            <div class="detail-content">
+                <div class="detail-item">
+                    <div class="detail-label">
+                        <i class="fas fa-barcode"></i> 物料编码
+                    </div>
+                    <div class="detail-value">SC2023-001</div>
+                </div>
+                
+                <div class="detail-item">
+                    <div class="detail-label">
+                        <i class="fas fa-tag"></i> 物料名称
+                    </div>
+                    <div class="detail-value">安全帽</div>
+                </div>
+                
+                <div class="detail-item">
+                    <div class="detail-label">
+                        <i class="fas fa-layer-group"></i> 物料分类
+                    </div>
+                    <div class="detail-value">个人防护装备</div>
+                </div>
+                
+                <div class="detail-item">
+                    <div class="detail-label">
+                        <i class="fas fa-balance-scale"></i> 单位
+                    </div>
+                    <div class="detail-value">个</div>
+                </div>
+                
+                <div class="detail-item">
+                    <div class="detail-label">
+                        <i class="fas fa-hashtag"></i> 借用数量
+                    </div>
+                    <input type="number" class="text-input" value="15" min="1">
+                </div>
+                
+                <div class="detail-item">
+                    <div class="detail-label">
+                        <i class="fas fa-user"></i> 领用人
+                    </div>
+                    <select class="select-input">
+                        <option selected>张工 (生产一部)</option>
+                        <option>李工 (维修组)</option>
+                        <option>王工 (质检部)</option>
+                        <option>刘工 (设备维修部)</option>
+                    </select>
+                </div>
+                
+                <div class="detail-item">
+                    <div class="detail-label">
+                        <i class="fas fa-clipboard-list"></i> 借用事因
+                    </div>
+                    <textarea class="textarea-input">新员工入职装备，需求15顶安全帽用于安全培训</textarea>
+                </div>
+                
+                <div class="detail-item">
+                    <div class="detail-label">
+                        <i class="fas fa-user-check"></i> 借用审批人
+                    </div>
+                    <select class="select-input">
+                        <option>王主管 (仓库)</option>
+                        <option selected>李经理 (生产部)</option>
+                        <option>张主任 (设备)</option>
+                    </select>
+                </div>
+                
+                <button class="detail-action-btn">
+                    <i class="fas fa-check-circle"></i> 完成审批
+                </button>
+            </div>
+        </div>
+        
+        <!-- 归还详情页 -->
+        <div class="detail-page" id="return-detail">
+            <div class="detail-header">
+                <div class="back-btn">
+                    <i class="fas fa-arrow-left"></i>
+                </div>
+                <div class="detail-title">归还详情</div>
+            </div>
+            
+            <div class="detail-content">
+                <div class="detail-item">
+                    <div class="detail-label">
+                        <i class="fas fa-barcode"></i> 物料编码
+                    </div>
+                    <div class="detail-value">SC2023-015</div>
+                </div>
+                
+                <div class="detail-item">
+                    <div class="detail-label">
+                        <i class="fas fa-tag"></i> 物料名称
+                    </div>
+                    <div class="detail-value">红外测温仪</div>
+                </div>
+                
+                <div class="detail-item">
+                    <div class="detail-label">
+                        <i class="fas fa-hashtag"></i> 借用数量
+                    </div>
+                    <div class="detail-value">2台</div>
+                </div>
+                
+                <div class="detail-item">
+                    <div class="detail-label">
+                        <i class="fas fa-hashtag"></i> 归还数量
+                    </div>
+                    <input type="number" class="text-input" value="2" min="1" max="2">
+                </div>
+                
+                <div class="detail-item">
+                    <div class="detail-label">
+                        <i class="fas fa-user"></i> 归还人
+                    </div>
+                    <select class="select-input">
+                        <option selected>钱工 (质检部)</option>
+                        <option>张工 (生产一部)</option>
+                        <option>李工 (维修组)</option>
+                    </select>
+                </div>
+                
+                <div class="detail-item">
+                    <div class="detail-label">
+                        <i class="fas fa-calendar"></i> 归还日期
+                    </div>
+                    <input type="date" class="text-input" value="2023-08-18">
+                </div>
+                
+                <div class="detail-item">
+                    <div class="detail-label">
+                        <i class="fas fa-file-alt"></i> 归还说明
+                    </div>
+                    <textarea class="textarea-input">使用后功能正常，轻微磨损</textarea>
+                </div>
+                
+                <div class="detail-item">
+                    <div class="detail-label">
+                        <i class="fas fa-camera"></i> 物料状态拍照
+                    </div>
+                    <div class="camera-section">
+                        <div class="camera-box">
+                            <img src="" class="image-preview" id="preview-image" style="display: none;">
+                            <div class="camera-icon" id="camera-btn">
+                                <i class="fas fa-camera"></i>
+                            </div>
+                        </div>
+                        <div class="camera-text">点击拍照记录归还物料状态</div>
+                    </div>
+                </div>
+                
+                <button class="detail-action-btn green">
+                    <i class="fas fa-check-circle"></i> 确认归还
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 隐藏的文件输入用于拍照功能 -->
+    <input type="file" accept="image/*" id="camera-input" style="display: none;">
+    
+    <script>
+        // 切换选项卡
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                // 更新活动标签
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                
+                // 切换内容显示
+                document.getElementById('borrow-tab').style.display = 'none';
+                document.getElementById('return-tab').style.display = 'none';
+                document.getElementById('history-tab').style.display = 'none';
+                
+                const tabId = this.getAttribute('data-tab') + '-tab';
+                document.getElementById(tabId).style.display = 'block';
+            });
+        });
+        
+        // 处理点击列表项打开详情页
+        document.querySelectorAll('.card[data-type="borrow"]').forEach(card => {
+            const btn = card.querySelector('.action-btn');
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                
+                const status = card.getAttribute('data-status');
+                const detailPage = document.getElementById('borrow-detail');
+                
+                // 根据状态设置详情页标题
+                if(status === 'pending') {
+                    detailPage.querySelector('.detail-title').textContent = '审批借用申请';
+                } else {
+                    detailPage.querySelector('.detail-title').textContent = '借用详情';
+                }
+                
+                detailPage.classList.add('active');
+            });
+        });
+        
+        document.querySelectorAll('.card[data-type="return"]').forEach(card => {
+            const btn = card.querySelector('.action-btn');
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                document.getElementById('return-detail').classList.add('active');
+            });
+        });
+        
+        // 返回按钮功能
+        document.querySelectorAll('.back-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                this.closest('.detail-page').classList.remove('active');
+            });
+        });
+        
+        // 拍照功能
+        document.getElementById('camera-btn').addEventListener('click', function() {
+            document.getElementById('camera-input').click();
+        });
+        
+        document.getElementById('camera-input').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const preview = document.getElementById('preview-image');
+                    preview.src = event.target.result;
+                    preview.style.display = 'block';
+                    document.getElementById('camera-btn').style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        // 模拟筛选功能
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                alert('打开筛选面板，可按物料类型、部门、状态等进行筛选');
+            });
+        });
+    </script>
+</body>
+</html>
