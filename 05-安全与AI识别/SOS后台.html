@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>工地SOS报警系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+        
+        body {
+            background-color: #0d1b2a;
+            color: #ffffff;
+            font-size: 15px;
+            line-height: 1.6;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        /* 应用容器 */
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            position: relative;
+        }
+        
+        /* 顶部导航 */
+        .app-header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(16, 42, 67, 0.95);
+            color: white;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+        }
+        
+        .header-title i {
+            margin-right: 10px;
+            color: #4CAF50;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 16px;
+        }
+        
+        .header-btn {
+            background: rgba(255, 255, 255, 0.15);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: none;
+            color: white;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* 地图区域 - 占据主要空间 */
+        .map-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .map-content {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #152a4c, #1a365d);
+            transform-origin: center;
+        }
+        
+        /* 模拟地图网格线 */
+        .map-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+        
+        /* 地图标记样式 */
+        .location-marker {
+            position: absolute;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            transform: translate(-50%, -50%);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+        }
+        
+        .location-marker:hover {
+            transform: translate(-50%, -50%) scale(1.2);
+        }
+        
+        .marker-normal {
+            background: #2196F3;
+            box-shadow: 0 0 0 8px rgba(33, 150, 243, 0.3);
+        }
+        
+        .marker-medical {
+            background: #4CAF50;
+            box-shadow: 0 0 0 8px rgba(76, 175, 80, 0.3);
+            animation: pulse-medical 2s infinite;
+        }
+        
+        .marker-safety {
+            background: #f44336;
+            box-shadow: 0 0 0 8px rgba(244, 67, 54, 0.3);
+            animation: pulse-safety 1.5s infinite;
+        }
+        
+        .marker-outfence {
+            background: #FF9800;
+            box-shadow: 0 0 0 8px rgba(255, 152, 0, 0.3);
+        }
+        
+        .marker-medical i, .marker-safety i, .marker-outfence i {
+            color: white;
+            font-size: 18px;
+        }
+        
+        /* 电子围栏 */
+        .fence-area {
+            position: absolute;
+            border: 2px dashed rgba(255, 255, 255, 0.7);
+            background-color: rgba(30, 60, 114, 0.15);
+            z-index: 5;
+            border-radius: 6px;
+        }
+        
+        /* 地图操作按钮 */
+        .map-controls {
+            position: absolute;
+            bottom: 100px;
+            right: 20px;
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .map-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: rgba(16, 42, 67, 0.9);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+            border: none;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
+        
+        /* 统计图例面板 */
+        .legend-panel {
+            position: absolute;
+            top: 70px;
+            left: 15px;
+            width: 160px;
+            background: rgba(16, 42, 67, 0.9);
+            border-radius: 16px;
+            padding: 15px;
+            z-index: 30;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+            transform: translateX(-200px);
+            transition: transform 0.4s ease;
+        }
+        
+        .legend-panel.active {
+            transform: translateX(0);
+        }
+        
+        .legend-header {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .legend-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 18px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        
+        .legend-label {
+            font-size: 14px;
+            flex: 1;
+        }
+        
+        .legend-count {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 2px 8px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        
+        /* 报警分类和统计栏 */
+        .stats-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(16, 42, 67, 0.9);
+            padding: 15px;
+            display: flex;
+            justify-content: space-around;
+            z-index: 50;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 -2px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .stat-count {
+            font-size: 24px;
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 5px;
+        }
+        
+        .stat-type {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+        
+        .stat-total .stat-count {
+            color: #2196F3;
+        }
+        
+        .stat-medical .stat-count {
+            color: #4CAF50;
+        }
+        
+        .stat-safety .stat-count {
+            color: #f44336;
+        }
+        
+        .stat-fence .stat-count {
+            color: #FF9800;
+        }
+        
+        /* 报警详情弹窗 */
+        .alert-detail {
+            position: absolute;
+            bottom: 80px;
+            left: 15px;
+            right: 15px;
+            background: rgba(16, 42, 67, 0.95);
+            border-radius: 20px;
+            padding: 20px;
+            z-index: 100;
+            transform: translateY(150%);
+            transition: transform 0.4s cubic-bezier(0.33, 1, 0.68, 1);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+            max-height: 65vh;
+            overflow-y: auto;
+        }
+        
+        .alert-detail.active {
+            transform: translateY(0);
+        }
+        
+        .detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .detail-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .detail-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 22px;
+        }
+        
+        .detail-content {
+            margin-bottom: 15px;
+        }
+        
+        .alert-type {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 15px;
+        }
+        
+        .type-normal {
+            background: rgba(33, 150, 243, 0.2);
+            color: #2196F3;
+        }
+        
+        .type-medical {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4CAF50;
+        }
+        
+        .type-safety {
+            background: rgba(244, 67, 54, 0.2);
+            color: #f44336;
+        }
+        
+        .type-outfence {
+            background: rgba(255, 152, 0, 0.2);
+            color: #FF9800;
+        }
+        
+        .detail-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+        
+        .info-item {
+            background: rgba(255, 255, 255, 0.07);
+            border-radius: 12px;
+            padding: 12px;
+        }
+        
+        .info-label {
+            font-size: 13px;
+            opacity: 0.7;
+            margin-bottom: 5px;
+        }
+        
+        .info-value {
+            font-size: 15px;
+            font-weight: 500;
+        }
+        
+        .detail-map {
+            height: 150px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            margin: 15px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .action-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 15px;
+        }
+        
+        .action-btn {
+            padding: 14px;
+            border: none;
+            border-radius: 14px;
+            font-size: 15px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .action-call {
+            background: rgba(76, 175, 80, 0.9);
+            color: white;
+        }
+        
+        .action-mark {
+            background: rgba(33, 150, 243, 0.9);
+            color: white;
+        }
+        
+        /* 动画效果 */
+        @keyframes pulse-medical {
+            0% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.4); }
+            70% { box-shadow: 0 0 0 15px rgba(76, 175, 80, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); }
+        }
+        
+        @keyframes pulse-safety {
+            0% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.4); }
+            70% { box-shadow: 0 0 0 15px rgba(244, 67, 54, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0); }
+        }
+        
+        .marker-medical i, .marker-safety i {
+            animation: pulse-icon 2s infinite;
+        }
+        
+        @keyframes pulse-icon {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- 顶部导航 -->
+        <header class="app-header">
+            <div class="header-title">
+                <i class="fas fa-hard-hat"></i>
+                <span>工地SOS报警系统</span>
+            </div>
+            <div class="header-actions">
+                <button class="header-btn">
+                    <i class="fas fa-search"></i>
+                </button>
+                <button class="header-btn" id="toggleLegend">
+                    <i class="fas fa-layer-group"></i>
+                </button>
+            </div>
+        </header>
+        
+        <!-- 地图区域 -->
+        <div class="map-container">
+            <div class="map-content">
+                <div class="map-grid"></div>
+                
+                <!-- 电子围栏 -->
+                <div class="fence-area" style="top: 20%; left: 15%; width: 70%; height: 60%;"></div>
+                
+                <!-- 标记点 -->
+                <div class="location-marker marker-medical" style="top: 45%; left: 60%;" data-id="2">
+                    <i class="fas fa-plus"></i>
+                </div>
+                <div class="location-marker marker-safety" style="top: 70%; left: 40%;" data-id="3">
+                    <i class="fas fa-exclamation"></i>
+                </div>
+                <div class="location-marker marker-outfence" style="top: 15%; left: 20%;" data-id="4">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="location-marker marker-outfence" style="top: 85%; left: 50%;" data-id="5">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="location-marker marker-normal" style="top: 30%; left: 25%;" data-id="1"></div>
+                <div class="location-marker marker-normal" style="top: 65%; left: 70%;" data-id="6"></div>
+                <div class="location-marker marker-medical" style="top: 35%; left: 35%;" data-id="7">
+                    <i class="fas fa-plus"></i>
+                </div>
+                
+                <!-- 地图操作按钮 -->
+                <div class="map-controls">
+                    <button class="map-btn">
+                        <i class="fas fa-location-arrow"></i>
+                    </button>
+                    <button class="map-btn">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                    <button class="map-btn">
+                        <i class="fas fa-map-marker"></i>
+                    </button>
+                </div>
+                
+                <!-- 统计图例面板 -->
+                <div class="legend-panel" id="legendPanel">
+                    <div class="legend-header">
+                        <span>图例与统计</span>
+                        <button class="legend-close" id="closeLegend">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #2196F3;"></div>
+                        <div class="legend-label">定位上报</div>
+                        <div class="legend-count">8</div>
+                    </div>
+                    
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #4CAF50;"></div>
+                        <div class="legend-label">医疗报警</div>
+                        <div class="legend-count">2</div>
+                    </div>
+                    
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #f44336;"></div>
+                        <div class="legend-label">安全报警</div>
+                        <div class="legend-count">1</div>
+                    </div>
+                    
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #FF9800;"></div>
+                        <div class="legend-label">围栏报警</div>
+                        <div class="legend-count">3</div>
+                    </div>
+                    
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #9C27B0;"></div>
+                        <div class="legend-label">设备警报</div>
+                        <div class="legend-count">2</div>
+                    </div>
+                </div>
+                
+                <!-- 报警详情弹窗 -->
+                <div class="alert-detail" id="alertDetail">
+                    <div class="detail-header">
+                        <div class="detail-title">医疗急救报警</div>
+                        <button class="detail-close" id="closeDetail">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="alert-type type-medical">医疗急救</div>
+                    
+                    <div class="detail-content">
+                        3号塔吊附近，工人突然晕倒，需要紧急医疗救助
+                    </div>
+                    
+                    <div class="detail-info">
+                        <div class="info-item">
+                            <div class="info-label">上报人员</div>
+                            <div class="info-value">王工 (ID: W023)</div>
+                        </div>
+                        
+                        <div class="info-item">
+                            <div class="info-label">上报时间</div>
+                            <div class="info-value">10:25:42</div>
+                        </div>
+                        
+                        <div class="info-item">
+                            <div class="info-label">所在区域</div>
+                            <div class="info-value">3号塔吊区</div>
+                        </div>
+                        
+                        <div class="info-item">
+                            <div class="info-label">优先级</div>
+                            <div class="info-value">高</div>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-map">
+                        <!-- 简化的位置地图 -->
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button class="action-btn action-call">
+                            <i class="fas fa-phone-alt"></i> 立即联系
+                        </button>
+                        <button class="action-btn action-mark">
+                            <i class="fas fa-check-circle"></i> 标记处理
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 报警分类和统计栏 -->
+        <div class="stats-bar">
+            <div class="stat-item stat-total">
+                <div class="stat-count">14</div>
+                <div class="stat-type">总报警</div>
+            </div>
+            
+            <div class="stat-item stat-medical">
+                <div class="stat-count">2</div>
+                <div class="stat-type">医疗</div>
+            </div>
+            
+            <div class="stat-item stat-safety">
+                <div class="stat-count">1</div>
+                <div class="stat-type">安全</div>
+            </div>
+            
+            <div class="stat-item stat-fence">
+                <div class="stat-count">3</div>
+                <div class="stat-type">围栏</div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 控制图例面板
+        document.getElementById('toggleLegend').addEventListener('click', function() {
+            document.getElementById('legendPanel').classList.toggle('active');
+        });
+        
+        document.getElementById('closeLegend').addEventListener('click', function() {
+            document.getElementById('legendPanel').classList.remove('active');
+        });
+        
+        // 显示报警详情
+        document.querySelectorAll('.location-marker').forEach(marker => {
+            marker.addEventListener('click', function() {
+                document.getElementById('alertDetail').classList.add('active');
+            });
+        });
+        
+        document.getElementById('closeDetail').addEventListener('click', function() {
+            document.getElementById('alertDetail').classList.remove('active');
+        });
+        
+        // 点击弹窗外区域关闭详情
+        document.addEventListener('click', function(e) {
+            const alertDetail = document.getElementById('alertDetail');
+            if (alertDetail.classList.contains('active') && 
+                !alertDetail.contains(e.target) && 
+                !e.target.closest('.location-marker')) {
+                alertDetail.classList.remove('active');
+            }
+        });
+        
+        // 模拟报警点数据
+        const medicalMarker = document.querySelector('.marker-medical');
+        const safetyMarker = document.querySelector('.marker-safety');
+        
+        // 激活医疗和安全报警的动画
+        if (medicalMarker) {
+            medicalMarker.style.animationPlayState = 'running';
+            medicalMarker.querySelector('i').style.animationPlayState = 'running';
+        }
+        
+        if (safetyMarker) {
+            safetyMarker.style.animationPlayState = 'running';
+            safetyMarker.querySelector('i').style.animationPlayState = 'running';
+        }
+    </script>
+</body>
+</html>

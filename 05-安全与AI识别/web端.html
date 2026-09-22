@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智慧工地 - AI识别监控系统</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Noto Sans SC', sans-serif;
+        }
+        
+        :root {
+            --primary: #1a73e8;
+            --primary-dark: #0d47a1;
+            --secondary: #00c853;
+            --danger: #ff5252;
+            --warning: #ffab00;
+            --dark: #121212;
+            --dark-light: #1e1e1e;
+            --gray: #2d2d2d;
+            --light: #f5f5f5;
+            --text: #e0e0e0;
+            --text-secondary: #9e9e9e;
+        }
+        
+        body {
+            background-color: var(--dark);
+            color: var(--text);
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .app-container {
+            display: flex;
+            height: 100vh;
+        }
+        
+        /* 侧边栏样式 */
+        .sidebar {
+            width: 260px;
+            background-color: var(--dark-light);
+            border-right: 1px solid var(--gray);
+            padding: 20px 0;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .logo {
+            padding: 0 20px 20px;
+            border-bottom: 1px solid var(--gray);
+            margin-bottom: 20px;
+        }
+        
+        .logo h1 {
+            font-size: 22px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .logo i {
+            color: var(--primary);
+            font-size: 28px;
+        }
+        
+        .nav-menu {
+            flex: 1;
+        }
+        
+        .nav-item {
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-left: 4px solid transparent;
+        }
+        
+        .nav-item:hover {
+            background-color: var(--gray);
+        }
+        
+        .nav-item.active {
+            background-color: rgba(26, 115, 232, 0.15);
+            border-left: 4px solid var(--primary);
+            color: var(--primary);
+        }
+        
+        .nav-item i {
+            font-size: 18px;
+        }
+        
+        .nav-item span {
+            font-size: 16px;
+            font-weight: 500;
+        }
+        
+        .system-info {
+            padding: 20px;
+            border-top: 1px solid var(--gray);
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        
+        /* 主内容区样式 */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .header {
+            padding: 15px 25px;
+            background-color: var(--dark-light);
+            border-bottom: 1px solid var(--gray);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .header-btn {
+            background-color: var(--gray);
+            border: none;
+            color: var(--text);
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.3s;
+        }
+        
+        .header-btn:hover {
+            background-color: var(--primary);
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+        
+        /* 内容区样式 */
+        .content {
+            flex: 1;
+            padding: 25px;
+            overflow-y: auto;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* 配置页面样式 */
+        .config-section {
+            background-color: var(--dark-light);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section-title i {
+            color: var(--primary);
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 10px 15px;
+            background-color: var(--gray);
+            border: 1px solid transparent;
+            border-radius: 4px;
+            color: var(--text);
+            font-size: 15px;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        .form-select {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239e9e9e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 16px;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .checkbox-item input {
+            width: 18px;
+            height: 18px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border-radius: 4px;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid var(--gray);
+            color: var(--text);
+        }
+        
+        .btn-outline:hover {
+            background-color: var(--gray);
+        }
+        
+        .actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        /* 实时监控页面样式 */
+        .monitor-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 25px;
+        }
+        
+        .camera-card {
+            background-color: var(--dark-light);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .camera-header {
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--gray);
+        }
+        
+        .camera-title {
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .camera-status {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 14px;
+        }
+        
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+        
+        .status-active {
+            background-color: var(--secondary);
+        }
+        
+        .status-inactive {
+            background-color: var(--danger);
+        }
+        
+        .camera-view {
+            position: relative;
+            height: 250px;
+            background-color: #000;
+            overflow: hidden;
+        }
+        
+        .camera-view img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .ai-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .ai-box {
+            position: absolute;
+            border: 2px solid;
+            border-radius: 2px;
+            font-size: 12px;
+            padding: 2px 4px;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        
+        .helmet-box {
+            border-color: var(--secondary);
+            color: var(--secondary);
+        }
+        
+        .uniform-box {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+        
+        .intrusion-box {
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+        
+        .camera-footer {
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .recording-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--danger);
+            font-size: 14px;
+        }
+        
+        .camera-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .action-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: var(--gray);
+            border: none;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .action-btn:hover {
+            background-color: var(--primary);
+        }
+        
+        /* 报警页面样式 */
+        .alerts-container {
+            background-color: var(--dark-light);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .alerts-header {
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--gray);
+        }
+        
+        .filters {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .alert-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .alert-table th {
+            text-align: left;
+            padding: 15px 20px;
+            font-weight: 600;
+            border-bottom: 1px solid var(--gray);
+        }
+        
+        .alert-table td {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--gray);
+        }
+        
+        .alert-row:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+        
+        .alert-type {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .alert-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .icon-helmet {
+            background-color: rgba(0, 200, 83, 0.2);
+            color: var(--secondary);
+        }
+        
+        .icon-uniform {
+            background-color: rgba(26, 115, 232, 0.2);
+            color: var(--primary);
+        }
+        
+        .icon-intrusion {
+            background-color: rgba(255, 82, 82, 0.2);
+            color: var(--danger);
+        }
+        
+        .alert-camera {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .camera-thumb {
+            width: 60px;
+            height: 40px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .camera-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .alert-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status-pending {
+            background-color: rgba(255, 171, 0, 0.2);
+            color: var(--warning);
+        }
+        
+        .status-resolved {
+            background-color: rgba(0, 200, 83, 0.2);
+            color: var(--secondary);
+        }
+        
+        .pagination {
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .page-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 4px;
+            background-color: var(--gray);
+            border: none;
+            color: var(--text);
+            cursor: pointer;
+        }
+        
+        .page-btn.active {
+            background-color: var(--primary);
+        }
+        
+        /* 响应式调整 */
+        @media (max-width: 1200px) {
+            .monitor-grid {
+                grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            }
+        }
+        
+        @media (max-width: 992px) {
+            .sidebar {
+                width: 80px;
+            }
+            
+            .logo h1 span, .nav-item span {
+                display: none;
+            }
+            
+            .logo {
+                padding: 20px 10px;
+                text-align: center;
+            }
+            
+            .system-info {
+                display: none;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .monitor-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- 侧边导航 -->
+        <div class="sidebar">
+            <div class="logo">
+                <h1><i class="fas fa-hard-hat"></i> <span>智慧工地AI监控系统</span></h1>
+            </div>
+            
+            <div class="nav-menu">
+                <div class="nav-item" data-tab="config">
+                    <i class="fas fa-cog"></i>
+                    <span>AI识别配置</span>
+                </div>
+                <div class="nav-item" data-tab="monitor">
+                    <i class="fas fa-video"></i>
+                    <span>实时监控</span>
+                </div>
+                <div class="nav-item active" data-tab="alerts">
+                    <i class="fas fa-bell"></i>
+                    <span>报警管理</span>
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-chart-line"></i>
+                    <span>数据统计</span>
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-history"></i>
+                    <span>历史记录</span>
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-users"></i>
+                    <span>人员管理</span>
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-map-marked-alt"></i>
+                    <span>工地地图</span>
+                </div>
+            </div>
+            
+            <div class="system-info">
+                <p><i class="fas fa-server"></i> 系统状态: <span style="color: var(--secondary);">运行中</span></p>
+                <p><i class="fas fa-database"></i> 存储空间: 78%</p>
+                <p><i class="fas fa-clock"></i> 2025-08-20 15:28</p>
+            </div>
+        </div>
+        
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <div class="header">
+                <div class="header-title">报警管理</div>
+                <div class="header-actions">
+                    <button class="header-btn">
+                        <i class="fas fa-sync-alt"></i> 刷新
+                    </button>
+                    <button class="header-btn">
+                        <i class="fas fa-question-circle"></i> 帮助
+                    </button>
+                    <div class="user-info">
+                        <div class="user-avatar">张</div>
+                        <span>张工管理员</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="content">
+                <!-- AI识别配置 -->
+                <div class="tab-content" id="config">
+                    <div class="config-section">
+                        <h2 class="section-title"><i class="fas fa-camera"></i> 摄像头配置</h2>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">摄像头名称</label>
+                                <input type="text" class="form-control" placeholder="输入摄像头名称">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">摄像头位置</label>
+                                <select class="form-control form-select">
+                                    <option>选择位置</option>
+                                    <option>工地入口</option>
+                                    <option>主建筑区</option>
+                                    <option>材料堆放区</option>
+                                    <option>塔吊区域</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">RTSP地址</label>
+                                <input type="text" class="form-control" placeholder="rtsp://">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">状态</label>
+                                <select class="form-control form-select">
+                                    <option>启用</option>
+                                    <option>禁用</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="config-section">
+                        <h2 class="section-title"><i class="fas fa-draw-polygon"></i> 识别区域配置</h2>
+                        <div class="form-group">
+                            <label class="form-label">绘制识别区域</label>
+                            <div style="height: 300px; background-color: #000; border-radius: 4px; position: relative;">
+                                <img src="https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=800&q=80" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.7;">
+                                <div style="position: absolute; top: 20px; left: 20px; right: 20px; bottom: 20px; border: 2px dashed var(--primary);"></div>
+                                <div style="position: absolute; top: 50px; left: 50px; width: 120px; height: 80px; border: 2px dashed var(--secondary);"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="config-section">
+                        <h2 class="section-title"><i class="fas fa-robot"></i> AI识别配置</h2>
+                        <div class="form-group">
+                            <label class="form-label">识别类型</label>
+                            <div class="checkbox-group">
+                                <label class="checkbox-item">
+                                    <input type="checkbox" checked> 安全帽识别
+                                </label>
+                                <label class="checkbox-item">
+                                    <input type="checkbox" checked> 工装识别
+                                </label>
+                                <label class="checkbox-item">
+                                    <input type="checkbox" checked> 区域入侵检测
+                                </label>
+                                <label class="checkbox-item">
+                                    <input type="checkbox"> 烟火检测
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">报警阈值</label>
+                            <input type="range" min="0" max="100" value="80" class="form-control">
+                            <div style="text-align: center; margin-top: 5px; font-size: 14px;">80%</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">报警方式</label>
+                            <div class="checkbox-group">
+                                <label class="checkbox-item">
+                                    <input type="checkbox" checked> 系统通知
+                                </label>
+                                <label class="checkbox-item">
+                                    <input type="checkbox" checked> 声音报警
+                                </label>
+                                <label class="checkbox-item">
+                                    <input type="checkbox"> 短信通知
+                                </label>
+                                <label class="checkbox-item">
+                                    <input type="checkbox"> 邮件通知
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="actions">
+                        <button class="btn btn-outline">
+                            <i class="fas fa-times"></i> 取消
+                        </button>
+                        <button class="btn btn-primary">
+                            <i class="fas fa-save"></i> 保存配置
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 实时监控 -->
+                <div class="tab-content" id="monitor">
+                    <div class="monitor-grid">
+                        <!-- 摄像头卡片 1 -->
+                        <div class="camera-card">
+                            <div class="camera-header">
+                                <div class="camera-title">
+                                    <i class="fas fa-camera"></i> 工地入口摄像头
+                                </div>
+                                <div class="camera-status">
+                                    <div class="status-indicator status-active"></div>
+                                    <span>运行中</span>
+                                </div>
+                            </div>
+                            <div class="camera-view">
+                                <img src="https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=800&q=80" alt="工地入口">
+                                <div class="ai-overlay">
+                                    <div class="ai-box helmet-box" style="top: 30%; left: 25%; width: 80px; height: 100px;">
+                                        安全帽 √
+                                    </div>
+                                    <div class="ai-box uniform-box" style="top: 30%; left: 40%; width: 80px; height: 100px;">
+                                        工装 √
+                                    </div>
+                                    <div class="ai-box helmet-box" style="top: 40%; left: 60%; width: 80px; height: 100px;">
+                                        安全帽 √
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="camera-footer">
+                                <div class="recording-indicator">
+                                    <i class="fas fa-circle"></i>
+                                    <span>录制中</span>
+                                </div>
+                                <div class="camera-actions">
+                                    <button class="action-btn">
+                                        <i class="fas fa-expand"></i>
+                                    </button>
+                                    <button class="action-btn">
+                                        <i class="fas fa-cog"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 摄像头卡片 2 -->
+                        <div class="camera-card">
+                            <div class="camera-header">
+                                <div class="camera-title">
+                                    <i class="fas fa-camera"></i> 主建筑区摄像头
+                                </div>
+                                <div class="camera-status">
+                                    <div class="status-indicator status-active"></div>
+                                    <span>运行中</span>
+                                </div>
+                            </div>
+                            <div class="camera-view">
+                                <img src="https://images.unsplash.com/photo-1501163268664-d3afda34a78c?auto=format&fit=crop&w=800&q=80" alt="主建筑区">
+                                <div class="ai-overlay">
+                                    <div class="ai-box intrusion-box" style="top: 50%; left: 20%; width: 100px; height: 120px;">
+                                        区域入侵!
+                                    </div>
+                                    <div class="ai-box helmet-box" style="top: 30%; left: 60%; width: 80px; height: 100px;">
+                                        安全帽 √
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="camera-footer">
+                                <div class="recording-indicator">
+                                    <i class="fas fa-circle"></i>
+                                    <span>录制中</span>
+                                </div>
+                                <div class="camera-actions">
+                                    <button class="action-btn">
+                                        <i class="fas fa-expand"></i>
+                                    </button>
+                                    <button class="action-btn">
+                                        <i class="fas fa-cog"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 摄像头卡片 3 -->
+                        <div class="camera-card">
+                            <div class="camera-header">
+                                <div class="camera-title">
+                                    <i class="fas fa-camera"></i> 材料堆放区摄像头
+                                </div>
+                                <div class="camera-status">
+                                    <div class="status-indicator status-inactive"></div>
+                                    <span>离线</span>
+                                </div>
+                            </div>
+                            <div class="camera-view">
+                                <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-secondary);">
+                                    <i class="fas fa-plug" style="font-size: 48px;"></i>
+                                </div>
+                            </div>
+                            <div class="camera-footer">
+                                <div class="recording-indicator">
+                                    <i class="fas fa-circle" style="color: var(--text-secondary);"></i>
+                                    <span>未录制</span>
+                                </div>
+                                <div class="camera-actions">
+                                    <button class="action-btn">
+                                        <i class="fas fa-redo"></i>
+                                    </button>
+                                    <button class="action-btn">
+                                        <i class="fas fa-cog"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 摄像头卡片 4 -->
+                        <div class="camera-card">
+                            <div class="camera-header">
+                                <div class="camera-title">
+                                    <i class="fas fa-camera"></i> 塔吊区域摄像头
+                                </div>
+                                <div class="camera-status">
+                                    <div class="status-indicator status-active"></div>
+                                    <span>运行中</span>
+                                </div>
+                            </div>
+                            <div class="camera-view">
+                                <img src="https://images.unsplash.com/photo-1541888946425-d81bb19240f5?auto=format&fit=crop&w=800&q=80" alt="塔吊区域">
+                                <div class="ai-overlay">
+                                    <div class="ai-box helmet-box" style="top: 20%; left: 40%; width: 80px; height: 100px;">
+                                        安全帽 √
+                                    </div>
+                                    <div class="ai-box uniform-box" style="top: 60%; left: 30%; width: 80px; height: 100px;">
+                                        工装 √
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="camera-footer">
+                                <div class="recording-indicator">
+                                    <i class="fas fa-circle"></i>
+                                    <span>录制中</span>
+                                </div>
+                                <div class="camera-actions">
+                                    <button class="action-btn">
+                                        <i class="fas fa-expand"></i>
+                                    </button>
+                                    <button class="action-btn">
+                                        <i class="fas fa-cog"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 报警管理 -->
+                <div class="tab-content active" id="alerts">
+                    <div class="alerts-container">
+                        <div class="alerts-header">
+                            <h2>报警记录</h2>
+                            <div class="filters">
+                                <select class="form-control form-select">
+                                    <option>所有类型</option>
+                                    <option>安全帽识别</option>
+                                    <option>工装识别</option>
+                                    <option>区域入侵</option>
+                                </select>
+                                <select class="form-control form-select">
+                                    <option>所有状态</option>
+                                    <option>待处理</option>
+                                    <option>已处理</option>
+                                </select>
+                                <button class="btn btn-outline">
+                                    <i class="fas fa-filter"></i> 筛选
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <table class="alert-table">
+                            <thead>
+                                <tr>
+                                    <th>报警类型</th>
+                                    <th>摄像头</th>
+                                    <th>时间</th>
+                                    <th>位置</th>
+                                    <th>状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="alert-row">
+                                    <td>
+                                        <div class="alert-type">
+                                            <div class="alert-icon icon-intrusion">
+                                                <i class="fas fa-exclamation-triangle"></i>
+                                            </div>
+                                            <span>区域入侵</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="alert-camera">
+                                            <div class="camera-thumb">
+                                                <img src="https://images.unsplash.com/photo-1501163268664-d3afda34a78c?auto=format&fit=crop&w=200&q=80" alt="主建筑区">
+                                            </div>
+                                            <span>主建筑区摄像头</span>
+                                        </div>
+                                    </td>
+                                    <td>2025-08-20 15:22:05</td>
+                                    <td>危险区域A</td>
+                                    <td>
+                                        <div class="status-badge status-pending">待处理</div>
+                                    </td>
+                                    <td>
+                                        <div class="alert-actions">
+                                            <button class="action-btn">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="action-btn">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr class="alert-row">
+                                    <td>
+                                        <div class="alert-type">
+                                            <div class="alert-icon icon-helmet">
+                                                <i class="fas fa-hard-hat"></i>
+                                            </div>
+                                            <span>未戴安全帽</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="alert-camera">
+                                            <div class="camera-thumb">
+                                                <img src="https://images.unsplash.com/photo-1541888946425-d81bb19240f5?auto=format&fit=crop&w=200&q=80" alt="塔吊区域">
+                                            </div>
+                                            <span>塔吊区域摄像头</span>
+                                        </div>
+                                    </td>
+                                    <td>2025-08-20 14:58:31</td>
+                                    <td>塔吊操作区</td>
+                                    <td>
+                                        <div class="status-badge status-pending">待处理</div>
+                                    </td>
+                                    <td>
+                                        <div class="alert-actions">
+                                            <button class="action-btn">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="action-btn">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr class="alert-row">
+                                    <td>
+                                        <div class="alert-type">
+                                            <div class="alert-icon icon-uniform">
+                                                <i class="fas fa-tshirt"></i>
+                                            </div>
+                                            <span>未穿工装</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="alert-camera">
+                                            <div class="camera-thumb">
+                                                <img src="https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=200&q=80" alt="工地入口">
+                                            </div>
+                                            <span>工地入口摄像头</span>
+                                        </div>
+                                    </td>
+                                    <td>2025-08-20 14:45:12</td>
+                                    <td>入口检查点</td>
+                                    <td>
+                                        <div class="status-badge status-resolved">已处理</div>
+                                    </td>
+                                    <td>
+                                        <div class="alert-actions">
+                                            <button class="action-btn">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="action-btn">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr class="alert-row">
+                                    <td>
+                                        <div class="alert-type">
+                                            <div class="alert-icon icon-intrusion">
+                                                <i class="fas fa-exclamation-triangle"></i>
+                                            </div>
+                                            <span>区域入侵</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="alert-camera">
+                                            <div class="camera-thumb">
+                                                <img src="https://images.unsplash.com/photo-1501163268664-d3afda34a78c?auto=format&fit=crop&w=200&q=80" alt="主建筑区">
+                                            </div>
+                                            <span>主建筑区摄像头</span>
+                                        </div>
+                                    </td>
+                                    <td>2025-08-20 14:30:47</td>
+                                    <td>危险区域B</td>
+                                    <td>
+                                        <div class="status-badge status-resolved">已处理</div>
+                                    </td>
+                                    <td>
+                                        <div class="alert-actions">
+                                            <button class="action-btn">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="action-btn">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        
+                        <div class="pagination">
+                            <button class="page-btn"><i class="fas fa-chevron-left"></i></button>
+                            <button class="page-btn active">1</button>
+                            <button class="page-btn">2</button>
+                            <button class="page-btn">3</button>
+                            <button class="page-btn"><i class="fas fa-ellipsis-h"></i></button>
+                            <button class="page-btn">10</button>
+                            <button class="page-btn"><i class="fas fa-chevron-right"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 标签切换功能
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function() {
+                // 移除所有active类
+                document.querySelectorAll('.nav-item').forEach(nav => {
+                    nav.classList.remove('active');
+                });
+                
+                // 添加当前active类
+                this.classList.add('active');
+                
+                // 隐藏所有内容
+                document.querySelectorAll('.tab-content').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+                
+                // 显示对应内容
+                const tabId = this.getAttribute('data-tab');
+                if (tabId) {
+                    document.getElementById(tabId).classList.add('active');
+                    document.querySelector('.header-title').textContent = this.querySelector('span').textContent;
+                }
+            });
+        });
+        
+        // 模拟报警处理
+        document.querySelectorAll('.action-btn .fa-check').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const row = this.closest('.alert-row');
+                const statusCell = row.querySelector('.status-badge');
+                statusCell.textContent = '已处理';
+                statusCell.className = 'status-badge status-resolved';
+                
+                // 更改操作按钮
+                const actions = row.querySelector('.alert-actions');
+                actions.innerHTML = `
+                    <button class="action-btn">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="action-btn">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                `;
+            });
+        });
+        
+        // 模拟删除报警记录
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('fa-trash')) {
+                const row = e.target.closest('.alert-row');
+                row.style.opacity = '0';
+                setTimeout(() => {
+                    row.remove();
+                }, 300);
+            }
+        });
+    </script>
+</body>
+</html>

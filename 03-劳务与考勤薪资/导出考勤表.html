@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>考勤记录确认表</title>
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 15px;
+        }
+        
+        .header h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        .period-info {
+            background-color: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 18px;
+            text-align: center;
+        }
+        
+        .team-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+        
+        .team-info div {
+            flex: 1;
+            padding: 10px;
+        }
+        
+        .underline {
+            border-bottom: 1px solid #000;
+            display: inline-block;
+            min-width: 200px;
+            padding: 0 5px;
+            margin-left: 10px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px 15px;
+            text-align: center;
+        }
+        
+        th {
+            background-color: #3498db;
+            color: white;
+            font-weight: bold;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        
+        tr:hover {
+            background-color: #e9f7fe;
+        }
+        
+        .employee-name {
+            background-color: #2c3e50;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .weekend-header {
+            background-color: #e74c3c;
+        }
+        
+        .signature-cell {
+            height: 80px;
+            vertical-align: bottom;
+        }
+        
+        .date-header {
+            min-width: 100px;
+        }
+        
+        .date-cell {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+        }
+        
+        .chinese-day {
+            font-size: 14px;
+            margin-bottom: 2px;
+        }
+        
+        .english-day {
+            font-size: 12px;
+        }
+        
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px dashed #ccc;
+            text-align: center;
+            color: #7f8c8d;
+        }
+        
+        .instructions {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            font-size: 14px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .export-btn {
+            display: block;
+            margin: 20px auto;
+            padding: 12px 24px;
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .export-btn:hover {
+            background-color: #219653;
+        }
+        
+        @media print {
+            body {
+                padding: 0;
+                background: white;
+            }
+            
+            .container {
+                box-shadow: none;
+                padding: 10px;
+            }
+            
+            .no-print {
+                display: none;
+            }
+            
+            .export-btn {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>员工考勤记录确认表</h1>
+            <p>请核对您的考勤记录并在确认无误后签名</p>
+        </div>
+        
+        <div class="period-info">
+            <strong>考勤周期：</strong> 2025年10月20日 至 2025年10月26日
+        </div>
+        
+        <div class="team-info">
+            <div>
+                <strong>班组名称：</strong>
+                <span class="underline"></span>
+            </div>
+            <div>
+                <strong>班组长：</strong>
+                <span class="underline"></span>
+            </极>
+        </div>
+        
+        <table id="attendance-table">
+            <thead>
+                <tr>
+                    <th rowspan="2">姓名</th>
+                    <th colspan="2" class="date-header">
+                        <div class="date-cell">
+                            <div class="chinese-day">10月20日</div>
+                            <div class="chinese-day">星期一</div>
+                            <div class="english-day">MON</div>
+                        </div>
+                    </th>
+                    <th colspan="2" class="date-header">
+                        <div class="date-cell">
+                            <div class="chinese-day">10月21日</div>
+                            <div class="chinese-day">星期二</div>
+                            <div class="english-day">TUE</div>
+                        </div>
+                    </th>
+                    <th colspan="2" class="date-header">
+                        <div class="date-cell">
+                            <div class="chinese-day">10月22日</div>
+                            <div class="chinese-day">星期三</div>
+                            <div class="english-day">WED</div>
+                        </div>
+                    </th>
+                    <th colspan="2" class="date-header">
+                        <div class="date-cell">
+                            <div class="chinese-day">10月23日</div>
+                            <div class="chinese-day">星期四</div>
+                            <div class="english-day">THU</div>
+                        </div>
+                    </th>
+                    <th colspan="2" class="date-header">
+                        <div class="date-cell">
+                            <div class="chinese-day">10月24日</div>
+                            <div class="chinese-day">星期五</div>
+                            <div class="english-day">FRI</div>
+                        </div>
+                    </th>
+                    <th colspan="2" class="date-header weekend-header">
+                        <div class="date-cell">
+                            <div class="chinese-day">10月25日</div>
+                            <div class="chinese-day">星期六</div>
+                            <div class="english-day">SAT</div>
+                        </div>
+                    </th>
+                    <th colspan="2" class="date-header weekend-header">
+                        <div class="date-cell">
+                            <div class="chinese-day">10月26日</div>
+                            <div class="chinese-day">星期日</div>
+                            <div class="english-day">SUN</div>
+                        </div>
+                    </th>
+                    <th rowspan="2">签名(SIGN)</th>
+                </tr>
+                <tr>
+                    <!-- 普通工时列标题 -->
+                    <th>普通(ORD)</th>
+                    <th>加班(O/T)</th>
+                    <th>普通(ORD)</th>
+                    <th>加班(O/T)</th>
+                    <th>普通(ORD)</th>
+                    <th>加班(O/T)</th>
+                    <th>普通(ORD)</th>
+                    <th>加班(O/T)</th>
+                    <th>普通(ORD)</th>
+                    <th>加班(O/T)</th>
+                    <th class="weekend-header">普通(ORD)</th>
+                    <th class="weekend-header">加班(O/T)</th>
+                    <th class="weekend-header">普通(ORD)</th>
+                    <th class="weekend-header">加班(O/T)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="employee-name">张三</td>
+                    
+                    <!-- 10月20日 -->
+                    <td>8</td>
+                    <td>1.5</td>
+                    
+                    <!-- 10月21日 -->
+                    <td>8</td>
+                    <td>0</td>
+                    
+                    <!-- 10月22日 -->
+                    <td>8</td>
+                    <td>2</td>
+                    
+                    <!-- 10月23日 -->
+                    <td>8</td>
+                    <td>0</td>
+                    
+                    <!-- 10月24日 -->
+                    <td>8</td>
+                    <td>1</td>
+                    
+                    <!-- 10月25日 -->
+                    <td>4</td>
+                    <td>3</td>
+                    
+                    <!-- 10月26日 -->
+                    <td>0</td>
+                    <td>0</td>
+                    
+                    <td class="signature-cell"></td>
+                </tr>
+                
+                <tr>
+                    <td class="employee-name">李四</td>
+                    
+                    <!-- 10月20日 -->
+                    <td>8</td>
+                    <td>0</td>
+                    
+                    <!-- 10月21日 -->
+                    <td>8</td>
+                    <td>1</td>
+                    
+                    <!-- 10月22日 -->
+                    <td>8</td>
+                    <td>0</td>
+                    
+                    <!-- 10月23日 -->
+                    <td>8</td>
+                    <td>0</td>
+                    
+                    <!-- 10月24日 -->
+                    <td>8</td>
+                    <td>2.5</td>
+                    
+                    <!-- 10月25日 -->
+                    <td>0</td>
+                    <td>0</td>
+                    
+                    <!-- 10月26日 -->
+                    <td>0</td>
+                    <td>0</td>
+                    
+                    <td class="signature-cell"></td>
+                </tr>
+                
+                <tr>
+                    <td class="employee-name">王五</td>
+                    
+                    <!-- 10月20日 -->
+                    <td>8</td>
+                    <td>0.5</td>
+                    
+                    <!-- 10月21日 -->
+                    <td>8</td>
+                    <td>0</td>
+                    
+                    <!-- 10月22日 -->
+                    <td>8</td>
+                    <td>1</td>
+                    
+                    <!-- 10月23日 -->
+                    <td>8</td>
+                    <td>0</td>
+                    
+                    <!-- 10月24日 -->
+                    <td>8</td>
+                    <td>1.5</td>
+                    
+                    <!-- 10月25日 -->
+                    <td>6</td>
+                    <td>4</td>
+                    
+                    <!-- 10月26日 -->
+                    <td>0</td>
+                    <td>0</td>
+                    
+                    <td class="signature-cell"></td>
+                </tr>
+                
+                <tr>
+                    <td class="employee-name">赵六</td>
+                    
+                    <!-- 10月20日 -->
+                    <td>8</td>
+                    <td>0</td>
+                    
+                    <!-- 10月21日 -->
+                    <td>8</td>
+                    <td>0</td>
+                    
+                    <!-- 10月22日 -->
+                    <td>8</td>
+                    <td>0</td>
+                    
+                    <!-- 10月23日 -->
+                    <td>8</td>
+                    <td>0</td>
+                    
+                    <!-- 10月24日 -->
+                    <td>8</td>
+                    <td>0</td>
+                    
+                    <!-- 10月25日 -->
+                    <td>0</td>
+                    <td>0</td>
+                    
+                    <!-- 10月26日 -->
+                    <td>0</td>
+                    <td>0</td>
+                    
+                    <td class="signature-cell"></td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <button class="export-btn" onclick="exportToExcel()">导出为Excel文件</button>
+        
+        <div class="instructions">
+            <p><strong>填写说明：</strong></p>
+            <ol>
+                <li>请仔细核对您的考勤记录，包括日期、普通(ORD)和加班(O/T)</li>
+                <li>普通(ORD)指正常工作时间内的工作时长（单位：小时）</li>
+                <li>加班(O/T)指超出正常工作时间的工作时长（单位：小时）</li>
+                <li>周末日期表头已用红色背景突出显示</li>
+                <li>核对无误后，请在签名(SIGN)栏签名</li>
+                <li>如有任何疑问或需要更正，请联系人力资源部</li>
+                <li>点击上方按钮可将考勤表导出为Excel文件</li>
+            </ol>
+        </div>
+        
+        <div class="footer">
+            <p>人力资源部制表 | 2025年10月24日</p>
+            <p class="no-print">注：此表格适用于打印后手写签名</p>
+        </div>
+    </div>
+    
+    <script>
+        function exportToExcel() {
+            // 获取表格元素
+            const table = document.getElementById('attendance-table');
+            
+            // 创建工作簿
+            const wb = XLSX.utils.book_new();
+            
+            // 将表格转换为工作表
+            const ws = XLSX.utils.table_to_sheet(table);
+            
+            // 将工作表添加到工作簿
+            XLSX.utils.book_append_sheet(wb, ws, "考勤记录");
+            
+            // 生成Excel文件并下载
+            XLSX.writeFile(wb, "考勤记录表.xlsx");
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>视频识别报警系统</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .app-container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 15px;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eaeaea;
+        }
+        
+        .header h1 {
+            font-size: 1.4rem;
+            color: #2c3e50;
+        }
+        
+        .search-box {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 1rem;
+        }
+        
+        .filter-section {
+            margin-bottom: 20px;
+        }
+        
+        .filter-title {
+            font-size: 1rem;
+            margin-bottom: 10px;
+            color: #2c3e50;
+            font-weight: bold;
+        }
+        
+        .filter-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .filter-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-btn, .time-filter-btn, .location-select {
+            padding: 8px 15px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+        
+        .filter-btn.active, .time-filter-btn.active {
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+        
+        .location-select {
+            min-width: 120px;
+        }
+        
+        .alert-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            color: #7f8c8d;
+        }
+        
+        .alert-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+        
+        .alert-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .alert-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .alert-card.new {
+            border-left: 4px solid #e74c3c;
+        }
+        
+        .alert-image {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+        }
+        
+        .alert-content {
+            padding: 15px;
+        }
+        
+        .alert-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+        
+        .alert-type {
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: #2c3e50;
+        }
+        
+        .alert-time {
+            color: #7f8c8d;
+            font-size: 0.85rem;
+            text-align: right;
+        }
+        
+        .alert-location {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+        
+        .alert-description {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #555;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .alert-details {
+            margin-top: 12px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            font-size: 0.85rem;
+        }
+        
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        
+        .detail-label {
+            color: #7f8c8d;
+            font-weight: bold;
+        }
+        
+        .detail-value {
+            color: #2c3e50;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #7f8c8d;
+            grid-column: 1 / -1;
+        }
+        
+        .empty-state img {
+            width: 100px;
+            opacity: 0.5;
+            margin-bottom: 15px;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            background: #e74c3c;
+            color: white;
+            margin-left: 8px;
+        }
+        
+        .load-more {
+            grid-column: 1 / -1;
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .load-more-btn {
+            padding: 10px 20px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        
+        .read-status {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        
+        .read-status.unread {
+            background-color: #e74c3c;
+        }
+        
+        .read-status.read {
+            background-color: #27ae60;
+        }
+        
+        .custom-time-range {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-top: 10px;
+        }
+        
+        .date-input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .alert-list {
+                grid-template-columns: 1fr;
+            }
+            
+            .filter-row {
+                flex-direction: column;
+            }
+            
+            .custom-time-range {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="app-container">
+            <div class="header">
+                <h1>视频识别报警</h1>
+                <div class="header-actions">
+                    <span class="status-badge">{{ unreadCount }} 条未读</span>
+                </div>
+            </div>
+            
+            <input 
+                type="text" 
+                class="search-box" 
+                placeholder="搜索报警类型、位置或摄像头..." 
+                v-model="searchQuery"
+            >
+            
+            <div class="filter-section">
+                <div class="filter-title">时间范围</div>
+                <div class="filter-row">
+                    <button 
+                        class="time-filter-btn" 
+                        :class="{ active: timeRange === 'today' }"
+                        @click="setTimeRange('today')"
+                    >今天</button>
+                    <button 
+                        class="time-filter-btn" 
+                        :class="{ active: timeRange === 'week' }"
+                        @click="setTimeRange('week')"
+                    >最近7天</button>
+                    <button 
+                        class="time-filter-btn" 
+                        :class="{ active: timeRange === 'month' }"
+                        @click="setTimeRange('month')"
+                    >最近30天</button>
+                    <button 
+                        class="time-filter-btn" 
+                        :class="{ active: timeRange === 'custom' }"
+                        @click="setTimeRange('custom')"
+                    >自定义</button>
+                </div>
+                
+                <div v-if="timeRange === 'custom'" class="custom-time-range">
+                    <input type="date" v-model="startDate" class="date-input">
+                    <span>至</span>
+                    <input type="date" v-model="endDate" class="date-input">
+                    <button class="filter-btn" @click="applyCustomTimeRange">应用</button>
+                </div>
+            </div>
+            
+            <div class="filter-section">
+                <div class="filter-title">位置筛选</div>
+                <div class="filter-row">
+                    <select v-model="selectedLocation" class="location-select">
+                        <option value="all">全部位置</option>
+                        <option v-for="location in locationOptions" :value="location">{{ location }}</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="filter-section">
+                <div class="filter-title">报警类型</div>
+                <div class="filter-controls">
+                    <button 
+                        class="filter-btn" 
+                        :class="{ active: currentFilter === 'all' }"
+                        @click="setFilter('all')"
+                    >全部报警</button>
+                    <button 
+                        class="filter-btn" 
+                        :class="{ active: currentFilter === 'unread' }"
+                        @click="setFilter('unread')"
+                    >未读报警</button>
+                    <button 
+                        class="filter-btn" 
+                        :class="{ active: currentFilter === 'intrusion' }"
+                        @click="setFilter('intrusion')"
+                    >人员入侵</button>
+                    <button 
+                        class="filter-btn" 
+                        :class="{ active: currentFilter === 'fire' }"
+                        @click="setFilter('fire')"
+                    >火灾检测</button>
+                    <button 
+                        class="filter-btn" 
+                        :class="{ active: currentFilter === 'parking' }"
+                        @click="setFilter('parking')"
+                    >车辆违停</button>
+                    <button 
+                        class="filter-btn" 
+                        :class="{ active: currentFilter === 'suspension' }"
+                        @click="setFilter('suspension')"
+                    >阿悬</button>
+                </div>
+            </div>
+            
+            <div class="alert-stats">
+                <span>共 {{ filteredAlerts.length }} 条报警</span>
+                <span>今日新增 {{ todayCount }} 条</span>
+            </div>
+            
+            <div class="alert-list">
+                <div 
+                    v-for="alert in paginatedAlerts" 
+                    :key="alert.id" 
+                    class="alert-card"
+                    :class="{ new: !alert.read }"
+                    @click="markAsRead(alert.id)"
+                >
+                    <img :src="alert.image" :alt="alert.type" class="alert-image">
+                    <div class="alert-content">
+                        <div class="alert-header">
+                            <div class="alert-type">
+                                <span class="read-status" :class="alert.read ? 'read' : 'unread'"></span>
+                                {{ alert.type }}
+                            </div>
+                            <div class="alert-time">{{ formatTime(alert.time) }}</div>
+                        </div>
+                        <div class="alert-location">
+                            {{ alert.camera }} · {{ alert.location }}
+                        </div>
+                        <div class="alert-description">
+                            {{ alert.description }}
+                        </div>
+                        <div class="alert-details">
+                            <div class="detail-item">
+                                <span class="detail-label">摄像头ID:</span>
+                                <span class="detail-value">{{ alert.cameraId }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">置信度:</span>
+                                <span class="detail-value">{{ alert.confidence }}%</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">处理状态:</span>
+                                <span class="detail-value">{{ alert.status }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div v-if="filteredAlerts.length === 0" class="empty-state">
+                    <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCA2NCA2NCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTMyIDU2QzQ0LjE1MDMgNTYgNTQgNDYuMTUwMyA1NCAzNEM1NCAyMS44NDk3IDQ0LjE1MDMgMTIgMzIgMTJDMTkuODQ5NyAxMiAxMCAyMS44NDk3IDEwIDM0QzEwIDQ2LjE1MDMgMTkuODQ5NyA1NiAzMiA1NloiIGZpbGw9IiNEOEQ4RDgiLz4KPHBhdGggZD0iTTM0IDI2SDMwVjM4SDM0VjI2WiIgZmlsbD0id2hpdGUiLz4KPHBhdGggZD0iTTMyIDQyQzMzLjEwNDYgNDIgMzQgNDEuMTA0NiAzNCA0MEMzNCAzOC44OTU0IDMzLjEwNDYgMzggMzIgMzhDMzAuODk1NCAzOCAzMCAzOC44OTU0IDMwIDQwQzMwIDQxLjEwNDYgMzAuODk1NCA0MiAzMiA0MloiIGZpbGw9IndoaXRlIi8+Cjwvc3ZnPgo=" alt="无报警">
+                    <p>暂无报警信息</p>
+                </div>
+            </div>
+            
+            <div v-if="hasMoreAlerts" class="load-more">
+                <button class="load-more-btn" @click="loadMore">加载更多报警</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp, ref, computed, onMounted } = Vue;
+        
+        createApp({
+            setup() {
+                // 模拟报警数据
+                const alerts = ref([
+                    {
+                        id: 1,
+                        type: "人员入侵",
+                        image: "https://images.unsplash.com/photo-1598300042247-d088f8ab3a91?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=60",
+                        time: new Date(Date.now() - 5 * 60 * 1000),
+                        camera: "摄像头A",
+                        cameraId: "CAM-001",
+                        location: "A区入口",
+                        description: "检测到未授权人员进入限制区域，人员身着黑色上衣蓝色裤子",
+                        confidence: 92,
+                        status: "待处理",
+                        read: false
+                    },
+                    {
+                        id: 2,
+                        type: "火灾检测",
+                        image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=60",
+                        time: new Date(Date.now() - 15 * 60 * 1000),
+                        camera: "摄像头B",
+                        cameraId: "CAM-002",
+                        location: "B区仓库",
+                        description: "检测到疑似火源，烟雾浓度较高，建议立即检查",
+                        confidence: 87,
+                        status: "处理中",
+                        read: true
+                    },
+                    {
+                        id: 3,
+                        type: "车辆违停",
+                        image: "https://images.unsplash.com/photo-1556740749-887f6717d7e4?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=60",
+                        time: new Date(Date.now() - 2 * 60 * 60 * 1000),
+                        camera: "摄像头C",
+                        cameraId: "CAM-003",
+                        location: "C区停车场",
+                        description: "检测到车辆在禁停区域停放，车牌号：京A·12345",
+                        confidence: 95,
+                        status: "已处理",
+                        read: false
+                    },
+                    {
+                        id: 4,
+                        type: "物品遗留",
+                        image: "https://images.unsplash.com/photo-1581094794329-c8112a42d784?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=60",
+                        time: new Date(Date.now() - 4 * 60 * 60 * 1000),
+                        camera: "摄像头D",
+                        cameraId: "CAM-004",
+                        location: "D区大厅",
+                        description: "检测到可疑遗留物品，黑色背包，尺寸约40x30cm",
+                        confidence: 78,
+                        status: "待处理",
+                        read: true
+                    },
+                    {
+                        id: 5,
+                        type: "人员入侵",
+                        image: "https://images.unsplash.com/photo-1581094794329-c8112a42d784?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=60",
+                        time: new Date(Date.now() - 6 * 60 * 60 * 1000),
+                        camera: "摄像头E",
+                        cameraId: "CAM-005",
+                        location: "E区走廊",
+                        description: "检测到未授权人员进入，人员行为异常，徘徊时间超过5分钟",
+                        confidence: 89,
+                        status: "处理中",
+                        read: false
+                    },
+                    {
+                        id: 6,
+                        type: "火灾检测",
+                        image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=60",
+                        time: new Date(Date.now() - 8 * 60 * 60 * 1000),
+                        camera: "摄像头F",
+                        cameraId: "CAM-006",
+                        location: "F区厨房",
+                        description: "检测到烟雾，温度异常升高，建议立即检查厨房设备",
+                        confidence: 83,
+                        status: "已处理",
+                        read: true
+                    },
+                    {
+                        id: 7,
+                        type: "阿悬",
+                        image: "https://images.unsplash.com/photo-1519452635268-aa109a3dd8d7?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=60",
+                        time: new Date(Date.now() - 10 * 60 * 1000),
+                        camera: "摄像头G",
+                        cameraId: "CAM-007",
+                        location: "G区广场",
+                        description: "检测到高空悬挂物异常，存在安全隐患",
+                        confidence: 76,
+                        status: "待处理",
+                        read: false
+                    },
+                    {
+                        id: 8,
+                        type: "阿悬",
+                        image: "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=60",
+                        time: new Date(Date.now() - 25 * 60 * 1000),
+                        camera: "摄像头H",
+                        cameraId: "CAM-008",
+                        location: "H区外墙",
+                        description: "检测到外墙悬挂物松动，建议立即处理",
+                        confidence: 91,
+                        status: "处理中",
+                        read: false
+                    },
+                    {
+                        id: 9,
+                        type: "阿悬",
+                        image: "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=60",
+                        time: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2天前
+                        camera: "摄像头I",
+                        cameraId: "CAM-009",
+                        location: "I区楼顶",
+                        description: "检测到楼顶悬挂物异常摆动，风力较大时存在风险",
+                        confidence: 85,
+                        status: "已处理",
+                        read: true
+                    },
+                    {
+                        id: 10,
+                        type: "人员入侵",
+                        image: "https://images.unsplash.com/photo-1598300042247-d088f8ab3a91?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=60",
+                        time: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3天前
+                        camera: "摄像头J",
+                        cameraId: "CAM-010",
+                        location: "J区后门",
+                        description: "检测到未授权人员试图进入后门区域",
+                        confidence: 88,
+                        status: "已处理",
+                        read: true
+                    }
+                ]);
+                
+                const currentFilter = ref('all');
+                const searchQuery = ref('');
+                const timeRange = ref('today');
+                const selectedLocation = ref('all');
+                const startDate = ref('');
+                const endDate = ref('');
+                const itemsPerPage = 8;
+                const displayedItems = ref(itemsPerPage);
+                
+                // 初始化日期
+                onMounted(() => {
+                    const today = new Date();
+                    const oneWeekAgo = new Date(today);
+                    oneWeekAgo.setDate(today.getDate() - 7);
+                    
+                    startDate.value = oneWeekAgo.toISOString().split('T')[0];
+                    endDate.value = today.toISOString().split('T')[0];
+                });
+                
+                // 计算属性：位置选项
+                const locationOptions = computed(() => {
+                    const locations = [...new Set(alerts.value.map(alert => alert.location))];
+                    return locations.sort();
+                });
+                
+                // 计算属性：未读报警数量
+                const unreadCount = computed(() => {
+                    return alerts.value.filter(alert => !alert.read).length;
+                });
+                
+                // 计算属性：今日报警数量
+                const todayCount = computed(() => {
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    return alerts.value.filter(alert => new Date(alert.time) >= today).length;
+                });
+                
+                // 计算属性：过滤后的报警列表
+                const filteredAlerts = computed(() => {
+                    let result = alerts.value;
+                    
+                    // 应用筛选条件
+                    if (currentFilter.value === 'unread') {
+                        result = result.filter(alert => !alert.read);
+                    } else if (currentFilter.value === 'intrusion') {
+                        result = result.filter(alert => alert.type === '人员入侵');
+                    } else if (currentFilter.value === 'fire') {
+                        result = result.filter(alert => alert.type === '火灾检测');
+                    } else if (currentFilter.value === 'parking') {
+                        result = result.filter(alert => alert.type === '车辆违停');
+                    } else if (currentFilter.value === 'suspension') {
+                        result = result.filter(alert => alert.type === '阿悬');
+                    }
+                    
+                    // 应用时间范围筛选
+                    if (timeRange.value === 'today') {
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        result = result.filter(alert => new Date(alert.time) >= today);
+                    } else if (timeRange.value === 'week') {
+                        const oneWeekAgo = new Date();
+                        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+                        result = result.filter(alert => new Date(alert.time) >= oneWeekAgo);
+                    } else if (timeRange.value === 'month') {
+                        const oneMonthAgo = new Date();
+                        oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+                        result = result.filter(alert => new Date(alert.time) >= oneMonthAgo);
+                    } else if (timeRange.value === 'custom' && startDate.value && endDate.value) {
+                        const start = new Date(startDate.value);
+                        const end = new Date(endDate.value);
+                        end.setHours(23, 59, 59, 999); // 包含结束日期当天
+                        
+                        result = result.filter(alert => {
+                            const alertTime = new Date(alert.time);
+                            return alertTime >= start && alertTime <= end;
+                        });
+                    }
+                    
+                    // 应用位置筛选
+                    if (selectedLocation.value !== 'all') {
+                        result = result.filter(alert => alert.location === selectedLocation.value);
+                    }
+                    
+                    // 应用搜索条件
+                    if (searchQuery.value) {
+                        const query = searchQuery.value.toLowerCase();
+                        result = result.filter(alert => 
+                            alert.type.toLowerCase().includes(query) ||
+                            alert.location.toLowerCase().includes(query) ||
+                            alert.camera.toLowerCase().includes(query) ||
+                            alert.description.toLowerCase().includes(query)
+                        );
+                    }
+                    
+                    // 按时间倒序排列
+                    return result.sort((a, b) => new Date(b.time) - new Date(a.time));
+                });
+                
+                // 计算属性：分页后的报警列表
+                const paginatedAlerts = computed(() => {
+                    return filteredAlerts.value.slice(0, displayedItems.value);
+                });
+                
+                // 计算属性：是否还有更多报警可加载
+                const hasMoreAlerts = computed(() => {
+                    return displayedItems.value < filteredAlerts.value.length;
+                });
+                
+                // 设置筛选条件
+                const setFilter = (filter) => {
+                    currentFilter.value = filter;
+                    displayedItems.value = itemsPerPage;
+                };
+                
+                // 设置时间范围
+                const setTimeRange = (range) => {
+                    timeRange.value = range;
+                    displayedItems.value = itemsPerPage;
+                };
+                
+                // 应用自定义时间范围
+                const applyCustomTimeRange = () => {
+                    if (startDate.value && endDate.value) {
+                        timeRange.value = 'custom';
+                        displayedItems.value = itemsPerPage;
+                    }
+                };
+                
+                // 标记为已读
+                const markAsRead = (id) => {
+                    const alert = alerts.value.find(a => a.id === id);
+                    if (alert) {
+                        alert.read = true;
+                    }
+                };
+                
+                // 格式化时间
+                const formatTime = (time) => {
+                    const now = new Date();
+                    const diff = now - time;
+                    
+                    if (diff < 60 * 1000) {
+                        return '刚刚';
+                    } else if (diff < 60 * 60 * 1000) {
+                        return `${Math.floor(diff / (60 * 1000))}分钟前`;
+                    } else if (diff < 24 * 60 * 60 * 1000) {
+                        return `${Math.floor(diff / (60 * 60 * 1000))}小时前`;
+                    } else {
+                        return time.toLocaleDateString();
+                    }
+                };
+                
+                // 加载更多报警
+                const loadMore = () => {
+                    displayedItems.value += itemsPerPage;
+                };
+                
+                return {
+                    alerts,
+                    currentFilter,
+                    searchQuery,
+                    timeRange,
+                    selectedLocation,
+                    startDate,
+                    endDate,
+                    unreadCount,
+                    todayCount,
+                    locationOptions,
+                    filteredAlerts,
+                    paginatedAlerts,
+                    hasMoreAlerts,
+                    setFilter,
+                    setTimeRange,
+                    applyCustomTimeRange,
+                    markAsRead,
+                    formatTime,
+                    loadMore
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

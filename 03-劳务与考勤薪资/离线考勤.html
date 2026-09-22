@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>考勤系统 - 离线登记</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.5;
+        }
+        
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            position: relative;
+        }
+        
+        /* 顶部导航栏 */
+        .header {
+            background-color: #1a73e8;
+            color: white;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .header-icons {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .network-status {
+            display: flex;
+            align-items: center;
+            font-size: 12px;
+            background: rgba(255,255,255,0.2);
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+        
+        .network-status.online {
+            background: rgba(76, 175, 80, 0.3);
+        }
+        
+        .network-status.offline {
+            background: rgba(244, 67, 54, 0.3);
+        }
+        
+        /* 日期选择区域 */
+        .date-selector {
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .month-nav {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .nav-btn {
+            background: none;
+            border: none;
+            font-size: 16px;
+            color: #1a73e8;
+            cursor: pointer;
+        }
+        
+        .current-month {
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        /* 日历区域 */
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            text-align: center;
+            padding: 10px 15px;
+            background: white;
+        }
+        
+        .day-header {
+            font-size: 12px;
+            color: #666;
+            padding: 5px 0;
+        }
+        
+        .day {
+            padding: 8px 0;
+            font-size: 14px;
+        }
+        
+        .day.weekend {
+            color: #f44336;
+        }
+        
+        .day.today {
+            background: #1a73e8;
+            color: white;
+            border-radius: 50%;
+        }
+        
+        /* 班次选择 */
+        .shift-selector {
+            padding: 10px 15px;
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            background: white;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .shift-btn {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+            white-space: nowrap;
+            font-size: 14px;
+        }
+        
+        .shift-btn.active {
+            background: #e8f0fe;
+            border-color: #1a73e8;
+            color: #1a73e8;
+        }
+        
+        /* 员工列表 */
+        .employee-list {
+            padding: 15px;
+        }
+        
+        .employee-card {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .employee-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .employee-name {
+            font-weight: 600;
+            font-size: 16px;
+        }
+        
+        .sync-status {
+            font-size: 12px;
+            padding: 2px 6px;
+            border-radius: 10px;
+        }
+        
+        .sync-status.pending {
+            background: #ffecb3;
+            color: #f57c00;
+        }
+        
+        .sync-status.synced {
+            background: #c8e6c9;
+            color: #388e3c;
+        }
+        
+        .attendance-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            font-size: 14px;
+        }
+        
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .info-label {
+            color: #666;
+        }
+        
+        .edit-btn {
+            background: #1a73e8;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 6px 12px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 10px;
+            width: 100%;
+        }
+        
+        /* 登记弹窗 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 400px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+        }
+        
+        .modal-body {
+            padding: 15px;
+        }
+        
+        .time-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .input-group {
+            margin-bottom: 15px;
+        }
+        
+        .input-label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .input-field {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .number-input {
+            display: flex;
+            align-items: center;
+        }
+        
+        .number-btn {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        
+        .number-value {
+            flex: 1;
+            text-align: center;
+            padding: 0 10px;
+        }
+        
+        .submit-btn {
+            background: #1a73e8;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 16px;
+            width: 100%;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        
+        .offline-notice {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            color: #856404;
+        }
+        
+        /* 底部同步按钮 */
+        .sync-container {
+            position: sticky;
+            bottom: 0;
+            background: white;
+            padding: 15px;
+            border-top: 1px solid #eee;
+            display: none;
+        }
+        
+        .sync-btn {
+            background: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 16px;
+            width: 100%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 顶部导航栏 -->
+        <div class="header">
+            <div class="header-title">考勤</div>
+            <div class="header-icons">
+                <div class="network-status online" id="networkStatus">
+                    <span>在线</span>
+                </div>
+                <div>📷</div>
+            </div>
+        </div>
+        
+        <!-- 日期选择区域 -->
+        <div class="date-selector">
+            <div class="month-nav">
+                <button class="nav-btn">上一月</button>
+                <div class="current-month">2025-10</div>
+                <button class="nav-btn">下一月</button>
+            </div>
+            <div>📅</div>
+        </div>
+        
+        <!-- 日历 -->
+        <div class="calendar">
+            <div class="day-header">三</div>
+            <div class="day-header">四</div>
+            <div class="day-header">五</div>
+            <div class="day-header">六</div>
+            <div class="day-header">日</div>
+            <div class="day-header">一</div>
+            <div class="day-header">二</div>
+            
+            <div class="day">1</div>
+            <div class="day">2</div>
+            <div class="day">3</div>
+            <div class="day weekend">4</div>
+            <div class="day weekend">5</div>
+            <div class="day">6</div>
+            <div class="day">7</div>
+            <div class="day">8</div>
+            <div class="day">9</div>
+            <div class="day">10</div>
+            <div class="day weekend">11</div>
+            <div class="day weekend">12</div>
+            <div class="day">13</div>
+            <div class="day today">14</div>
+        </div>
+        
+        <!-- 班次选择 -->
+        <div class="shift-selector">
+            <button class="shift-btn active">白班 - D - (STAFF)</button>
+            <button class="shift-btn">夜班1 - N - (HUNTER)</button>
+            <button class="shift-btn">夜班2 - N - (SECURITY)</button>
+            <button class="shift-btn">夜班3 - N - (STAFF)</button>
+        </div>
+        
+        <!-- 员工列表 -->
+        <div class="employee-list">
+            <div class="employee-card">
+                <div class="employee-header">
+                    <div class="employee-name">测试人员</div>
+                    <div class="sync-status synced">已同步</div>
+                </div>
+                <div class="attendance-info">
+                    <div class="info-item">
+                        <span class="info-label">上班:</span>
+                        <span>09:12</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">下班:</span>
+                        <span>14:20</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">记工:</span>
+                        <span>4h</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">加班:</span>
+                        <span>0h</span>
+                    </div>
+                </div>
+                <div class="attendance-info">
+                    <div class="info-item">
+                        <span class="info-label">今日奖励:</span>
+                        <span>0 NGN</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">今日罚款:</span>
+                        <span>0 NGN</span>
+                    </div>
+                </div>
+                <div class="attendance-info">
+                    <div class="info-item">
+                        <span class="info-label">本月出勤:</span>
+                        <span>0d</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">本月奖励:</span>
+                        <span>0 NGN</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">本月罚款:</span>
+                        <span>0 NGN</span>
+                    </div>
+                </div>
+                <button class="edit-btn" data-employee="测试人员">编辑</button>
+            </div>
+            
+            <div class="employee-card">
+                <div class="employee-header">
+                    <div class="employee-name">AARON BULUS</div>
+                    <div class="sync-status pending">待同步</div>
+                </div>
+                <div class="attendance-info">
+                    <div class="info-item">
+                        <span class="info-label">上班:</span>
+                        <span>00:00</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">下班:</span>
+                        <span>00:00</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">记工:</span>
+                        <span>0h</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">加班:</span>
+                        <span>0h</span>
+                    </div>
+                </div>
+                <div class="attendance-info">
+                    <div class="info-item">
+                        <span class="info-label">今日奖励:</span>
+                        <span>0 NGN</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">今日罚款:</span>
+                        <span>0 NGN</span>
+                    </div>
+                </div>
+                <div class="attendance-info">
+                    <div class="info-item">
+                        <span class="info-label">本月出勤:</span>
+                        <span>0d</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">本月奖励:</span>
+                        <span>0 NGN</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">本月罚款:</span>
+                        <span>0 NGN</span>
+                    </div>
+                </div>
+                <button class="edit-btn" data-employee="AARON BULUS">编辑</button>
+            </div>
+        </div>
+        
+        <!-- 同步按钮容器（仅在有离线数据时显示） -->
+        <div class="sync-container" id="syncContainer">
+            <button class="sync-btn" id="syncBtn">
+                <span>📡</span>
+                <span>同步离线数据 (1条)</span>
+            </button>
+        </div>
+        
+        <!-- 登记弹窗 -->
+        <div class="modal" id="attendanceModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="modal-title" id="modalEmployeeName">测试人员</div>
+                    <button class="close-btn" id="closeModal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="offline-notice" id="offlineNotice">
+                        当前处于离线状态，数据将保存在本地，网络恢复后自动同步。
+                    </div>
+                    
+                    <div class="time-inputs">
+                        <div class="input-group">
+                            <label class="input-label">上班时间</label>
+                            <input type="time" class="input-field" id="startTime" value="09:12">
+                        </div>
+                        <div class="input-group">
+                            <label class="input-label">下班时间</label>
+                            <input type="time" class="input-field" id="endTime" value="14:20">
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label class="input-label">记工 (小时)</label>
+                        <div class="number-input">
+                            <button class="number-btn" id="decreaseWorkHours">-</button>
+                            <div class="number-value" id="workHoursValue">4</div>
+                            <button class="number-btn" id="increaseWorkHours">+</button>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label class="input-label">加班 (小时)</label>
+                        <div class="number-input">
+                            <button class="number-btn" id="decreaseOvertime">-</button>
+                            <div class="number-value" id="overtimeValue">0</div>
+                            <button class="number-btn" id="increaseOvertime">+</button>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label class="input-label">今日奖励 (NGN)</label>
+                        <div class="number-input">
+                            <button class="number-btn" id="decreaseReward">-</button>
+                            <div class="number-value" id="rewardValue">0</div>
+                            <button class="number-btn" id="increaseReward">+</button>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label class="input-label">今日罚款 (NGN)</label>
+                        <div class="number-input">
+                            <button class="number-btn" id="decreasePenalty">-</button>
+                            <div class="number-value" id="penaltyValue">0</div>
+                            <button class="number-btn" id="increasePenalty">+</button>
+                        </div>
+                    </div>
+                    
+                    <button class="submit-btn" id="submitAttendance">提交</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 模拟网络状态
+        let isOnline = true;
+        let pendingSyncCount = 1; // 模拟有待同步的数据
+        
+        // DOM元素
+        const networkStatus = document.getElementById('networkStatus');
+        const offlineNotice = document.getElementById('offlineNotice');
+        const syncContainer = document.getElementById('syncContainer');
+        const syncBtn = document.getElementById('syncBtn');
+        const attendanceModal = document.getElementById('attendanceModal');
+        const closeModal = document.getElementById('closeModal');
+        const editButtons = document.querySelectorAll('.edit-btn');
+        const modalEmployeeName = document.getElementById('modalEmployeeName');
+        const submitBtn = document.getElementById('submitAttendance');
+        
+        // 初始化
+        function init() {
+            updateNetworkStatus();
+            updateSyncButton();
+            
+            // 模拟网络状态变化（实际应用中应监听浏览器事件）
+            setInterval(() => {
+                // 随机切换网络状态用于演示
+                if (Math.random() > 0.7) {
+                    isOnline = !isOnline;
+                    updateNetworkStatus();
+                }
+            }, 5000);
+        }
+        
+        // 更新网络状态显示
+        function updateNetworkStatus() {
+            if (isOnline) {
+                networkStatus.textContent = '在线';
+                networkStatus.className = 'network-status online';
+                offlineNotice.style.display = 'none';
+            } else {
+                networkStatus.textContent = '离线';
+                networkStatus.className = 'network-status offline';
+                offlineNotice.style.display = 'block';
+            }
+            
+            // 更新提交按钮文本
+            submitBtn.textContent = isOnline ? '提交' : '保存离线';
+        }
+        
+        // 更新同步按钮
+        function updateSyncButton() {
+            if (pendingSyncCount > 0) {
+                syncContainer.style.display = 'block';
+                syncBtn.innerHTML = `<span>📡</span><span>同步离线数据 (${pendingSyncCount}条)</span>`;
+            } else {
+                syncContainer.style.display = 'none';
+            }
+        }
+        
+        // 打开编辑模态框
+        editButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const employeeName = this.getAttribute('data-employee');
+                modalEmployeeName.textContent = employeeName;
+                attendanceModal.classList.add('active');
+            });
+        });
+        
+        // 关闭模态框
+        closeModal.addEventListener('click', function() {
+            attendanceModal.classList.remove('active');
+        });
+        
+        // 提交考勤数据
+        submitBtn.addEventListener('click', function() {
+            if (isOnline) {
+                // 在线状态：直接提交到服务器
+                alert('数据已成功提交到服务器！');
+            } else {
+                // 离线状态：保存到本地
+                pendingSyncCount++;
+                updateSyncButton();
+                alert('数据已保存到本地，网络恢复后将自动同步。');
+            }
+            
+            // 关闭模态框
+            attendanceModal.classList.remove('active');
+        });
+        
+        // 同步离线数据
+        syncBtn.addEventListener('click', function() {
+            if (isOnline) {
+                // 模拟同步过程
+                alert(`正在同步 ${pendingSyncCount} 条离线数据...`);
+                setTimeout(() => {
+                    pendingSyncCount = 0;
+                    updateSyncButton();
+                    alert('所有离线数据已成功同步到服务器！');
+                }, 1500);
+            } else {
+                alert('当前处于离线状态，无法同步数据，请检查网络连接。');
+            }
+        });
+        
+        // 数字输入控件
+        function setupNumberInput(decBtnId, incBtnId, valueId) {
+            const decBtn = document.getElementById(decBtnId);
+            const incBtn = document.getElementById(incBtnId);
+            const valueElem = document.getElementById(valueId);
+            
+            decBtn.addEventListener('click', function() {
+                let value = parseInt(valueElem.textContent);
+                if (value > 0) {
+                    valueElem.textContent = value - 1;
+                }
+            });
+            
+            incBtn.addEventListener('click', function() {
+                let value = parseInt(valueElem.textContent);
+                valueElem.textContent = value + 1;
+            });
+        }
+        
+        // 设置所有数字输入控件
+        setupNumberInput('decreaseWorkHours', 'increaseWorkHours', 'workHoursValue');
+        setupNumberInput('decreaseOvertime', 'increaseOvertime', 'overtimeValue');
+        setupNumberInput('decreaseReward', 'increaseReward', 'rewardValue');
+        setupNumberInput('decreasePenalty', 'increasePenalty', 'penaltyValue');
+        
+        // 初始化应用
+        init();
+    </script>
+</body>
+</html>

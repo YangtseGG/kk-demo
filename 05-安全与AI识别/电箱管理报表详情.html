@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>电工电箱工单管理系统 - 工单详情</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Noto Sans SC', sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            padding: 30px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e0e6ed;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+        
+        h1 i {
+            color: #4CAF50;
+            margin-right: 15px;
+        }
+        
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 1.1rem;
+        }
+        
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 30px;
+        }
+        
+        .order-list {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+        }
+        
+        .order-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+            cursor: pointer;
+            transition: all 0.3s;
+            border-left: 4px solid #4CAF50;
+        }
+        
+        .order-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px dashed #e0e6ed;
+        }
+        
+        .order-id {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 1.1rem;
+        }
+        
+        .order-status {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: inline-block;
+        }
+        
+        .status-pending {
+            background: #fef9e7;
+            color: #d35400;
+        }
+        
+        .status-in-progress {
+            background: #ebf5fb;
+            color: #2980b9;
+        }
+        
+        .status-completed {
+            background: #eafaf1;
+            color: #27ae60;
+        }
+        
+        .card-content {
+            color: #555;
+        }
+        
+        .info-row {
+            display: flex;
+            margin-bottom: 10px;
+            font-size: 0.95rem;
+        }
+        
+        .info-label {
+            width: 100px;
+            font-weight: 500;
+            color: #5a6773;
+        }
+        
+        .info-value {
+            flex: 1;
+            color: #2c3e50;
+        }
+        
+        /* 详情弹窗样式 */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        
+        .modal.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 800px;
+            max-width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            animation: modalAppear 0.3s ease-out;
+            border: 1px dashed #4CAF50;
+        }
+        
+        @keyframes modalAppear {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .modal-header {
+            padding: 15px 20px;
+            background: #4CAF50;
+            color: white;
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .modal-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.8rem;
+            cursor: pointer;
+            line-height: 1;
+        }
+        
+        .modal-body {
+            padding: 25px;
+        }
+        
+        .info-section {
+            margin-bottom: 25px;
+            padding-bottom: 25px;
+            border-bottom: 1px dashed #e0e6ed;
+        }
+        
+        .info-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            color: #2c3e50;
+            position: relative;
+        }
+        
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: 
+                repeating-linear-gradient(
+                    to right,
+                    #4CAF50,
+                    #4CAF50 5px,
+                    transparent 5px,
+                    transparent 10px
+                );
+        }
+        
+        .detail-row {
+            display: flex;
+            margin-bottom: 12px;
+            font-size: 0.95rem;
+        }
+        
+        .detail-label {
+            width: 120px;
+            font-weight: 500;
+            color: #5a6773;
+        }
+        
+        .detail-value {
+            flex: 1;
+            color: #2c3e50;
+        }
+        
+        .status-label {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 15px;
+            background: #E0E0E0;
+            color: #5a6773;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .status-pending {
+            background: #fef9e7;
+            color: #d35400;
+        }
+        
+        .status-completed {
+            background: #eafaf1;
+            color: #27ae60;
+        }
+        
+        .status-confirmed {
+            background: #C8E6C9;
+            color: #1B5E20;
+        }
+        
+        .status-in-progress {
+            background: #E3F2FD;
+            color: #1565C0;
+        }
+        
+        .timeline-section {
+            margin-top: 20px;
+        }
+        
+        .timeline-item {
+            position: relative;
+            margin-bottom: 25px;
+            padding-left: 30px;
+        }
+        
+        .timeline-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            top: 5px;
+            left: 0;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: white;
+            border: 3px solid;
+            z-index: 2;
+        }
+        
+        .item-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .item-title {
+            font-weight: 600;
+            font-size: 1.05rem;
+        }
+        
+        .item-date {
+            margin-left: 10px;
+            color: #7f8c8d;
+            font-size: 0.85rem;
+        }
+        
+        .item-content {
+            margin-bottom: 8px;
+            color: #2c3e50;
+            line-height: 1.5;
+            font-size: 0.95rem;
+        }
+        
+        .item-operator {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            display: flex;
+        }
+        
+        .operator-label {
+            margin-right: 5px;
+        }
+        
+        /* 不同状态的颜色 */
+        .timeline-pending::before { border-color: #BDBDBD; }
+        .timeline-pending .item-title { color: #757575; }
+        
+        .timeline-received::before { border-color: #42A5F5; }
+        .timeline-received .item-title { color: #1565C0; }
+        
+        .timeline-progress::before { border-color: #7E57C2; }
+        .timeline-progress .item-title { color: #5E35B1; }
+        
+        .timeline-completed::before { border-color: #4CAF50; }
+        .timeline-completed .item-title { color: #2E7D32; }
+        
+        .timeline-confirmed::before { border-color: #FBC02D; }
+        .timeline-confirmed .item-title { color: #F57F17; }
+        
+        @media (max-width: 900px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .detail-row {
+                flex-direction: column;
+            }
+            
+            .detail-label {
+                width: 100%;
+                margin-bottom: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-bolt"></i>电工电箱工单管理系统</h1>
+            <p class="subtitle">高效管理工地用电需求，实时跟踪工单处理状态</p>
+        </header>
+        
+        <div class="content">
+            <div class="order-list">
+                <h2 style="margin-bottom: 20px; color: #2c3e50;">
+                    <i class="fas fa-list"></i> 工单列表
+                </h2>
+                
+                <!-- 工单卡片1 -->
+                <div class="order-card" data-order-id="EC2023072208">
+                    <div class="card-header">
+                        <div class="order-id">#EC2023072208</div>
+                        <div class="order-status status-pending">待处理</div>
+                    </div>
+                    <div class="card-content">
+                        <div class="info-row">
+                            <div class="info-label">申请人:</div>
+                            <div class="info-value">王工长（钢筋班组）</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">位置:</div>
+                            <div class="info-value">2号楼三层施工区</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">设备:</div>
+                            <div class="info-value">大型焊机 (45kW)</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">状态:</div>
+                            <div class="info-value">待电工接单</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 工单卡片2 -->
+                <div class="order-card" data-order-id="EC2023072207">
+                    <div class="card-header">
+                        <div class="order-id">#EC2023072207</div>
+                        <div class="order-status status-in-progress">处理中</div>
+                    </div>
+                    <div class="card-content">
+                        <div class="info-row">
+                            <div class="info-label">申请人:</div>
+                            <div class="info-value">孙工长（水电班组）</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">位置:</div>
+                            <div class="info-value">1号楼地下二层</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">设备:</div>
+                            <div class="info-value">排水泵 (22kW)</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">状态:</div>
+                            <div class="info-value">电工已开始处理</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 工单卡片3 -->
+                <div class="order-card" data-order-id="EC2023072209">
+                    <div class="card-header">
+                        <div class="order-id">#EC2023072209</div>
+                        <div class="order-status status-completed">已完成</div>
+                    </div>
+                    <div class="card-content">
+                        <div class="info-row">
+                            <div class="info-label">申请人:</div>
+                            <div class="info-value">张保安（安保部）</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">位置:</div>
+                            <div class="info-value">工地入口安保亭</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">设备:</div>
+                            <div class="info-value">空调设备 (3.5kW)</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">状态:</div>
+                            <div class="info-value">已完成并验收</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="instructions">
+                <h2 style="margin-bottom: 20px; color: #2c3e50;">
+                    <i class="fas fa-info-circle"></i> 操作说明
+                </h2>
+                <div style="background: #f8f9fa; border-radius: 10px; padding: 20px;">
+                    <p style="margin-bottom: 15px;">
+                        <i class="fas fa-mouse-pointer" style="color: #4CAF50; margin-right: 10px;"></i>
+                        点击工单卡片查看详细信息
+                    </p>
+                    <p style="margin-bottom: 15px;">
+                        <i class="fas fa-sync-alt" style="color: #3498db; margin-right: 10px;"></i>
+                        系统每5分钟自动刷新工单状态
+                    </p>
+                    <p style="margin-bottom: 15px;">
+                        <i class="fas fa-plus-circle" style="color: #9b59b6; margin-right: 10px;"></i>
+                        点击右上角"+"按钮创建新工单
+                    </p>
+                    <p>
+                        <i class="fas fa-filter" style="color: #f39c12; margin-right: 10px;"></i>
+                        使用筛选功能快速定位工单
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 工单详情弹窗 -->
+    <div class="modal" id="orderDetailModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">工单详情</div>
+                <button class="close-modal">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="info-section">
+                    <div class="section-title">工单信息</div>
+                    
+                    <div class="detail-row">
+                        <div class="detail-label">工单编号：</div>
+                        <div class="detail-value">#EC2023072208</div>
+                    </div>
+                    
+                    <div class="detail-row">
+                        <div class="detail-label">申请时间：</div>
+                        <div class="detail-value">2023-07-22 09:15:23</div>
+                    </div>
+                    
+                    <div class="detail-row">
+                        <div class="detail-label">当前状态：</div>
+                        <div class="detail-value">
+                            <span class="status-label status-pending">待处理</span>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-row">
+                        <div class="detail-label">申请说明：</div>
+                        <div class="detail-value">
+                            急需在中午前完成焊接设备供电，以便下午开始重要节点施工
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="info-section">
+                    <div class="section-title">位置信息</div>
+                    
+                    <div class="detail-row">
+                        <div class="detail-label">区域：</div>
+                        <div class="detail-value">2号楼</div>
+                    </div>
+                    
+                    <div class="detail-row">
+                        <div class="detail-label">具体位置：</div>
+                        <div class="detail-value">
+                            三层施工区东侧，靠近电梯井位置
+                        </div>
+                    </div>
+                    
+                    <div class="detail-row">
+                        <div class="detail-label">附近电箱：</div>
+                        <div class="detail-value">DBX-2-3-E</div>
+                    </div>
+                </div>
+                
+                <div class="info-section">
+                    <div class="section-title">用电需求</div>
+                    
+                    <div class="detail-row">
+                        <div class="detail-label">用电设施：</div>
+                        <div class="detail-value">
+                            大型焊机(型号：HD-3800)
+                        </div>
+                    </div>
+                    
+                    <div class="detail-row">
+                        <div class="detail-label">使用时间：</div>
+                        <div class="detail-value">2025/3/10 12:00-2025/6/10 12:00</div>
+                    </div>
+                </div>
+                
+                <div class="info-section">
+                    <div class="section-title">申请人信息</div>
+                    
+                    <div class="detail-row">
+                        <div class="detail-label">姓名：</div>
+                        <div class="detail-value">王工长</div>
+                    </div>
+                    
+                    <div class="detail-row">
+                        <div class="detail-label">部门：</div>
+                        <div class="detail-value">钢筋班组</div>
+                    </div>
+                    
+                    <div class="detail-row">
+                        <div class="detail-label">联系方式：</div>
+                        <div class="detail-value">138*​**​*5678</div>
+                    </div>
+                </div>
+                
+                <div class="info-section">
+                    <div class="section-title">处理过程</div>
+                    
+                    <div class="timeline-section">
+                        <div class="timeline-item timeline-confirmed">
+                            <div class="item-header">
+                                <div class="item-title">完成确认</div>
+                                <div class="item-date">2025-05-20 13:30</div>
+                            </div>
+                            <div class="item-operator">
+                                <span class="operator-label">操作人：</span>
+                                <span class="operator-name">李强</span>
+                            </div>
+                        </div>
+                        
+                        <div class="timeline-item timeline-completed">
+                            <div class="item-header">
+                                <div class="item-title">工单完成</div>
+                                <div class="item-date">2025-05-20 12:30</div>
+                            </div>
+                            <div class="item-operator">
+                                <span class="operator-label">操作人：</span>
+                                <span class="operator-name">李强</span>
+                            </div>
+                        </div>
+                        
+                        <div class="timeline-item timeline-progress">
+                            <div class="item-header">
+                                <div class="item-title">进度更新</div>
+                                <div class="item-date">2025-05-20 11:20</div>
+                            </div>
+                            <div class="item-content">
+                                电箱位置确认，准备布线施工
+                            </div>
+                            <div class="item-operator">
+                                <span class="operator-label">操作人：</span>
+                                <span class="operator-name">李强</span>
+                            </div>
+                        </div>
+                        
+                        <div class="timeline-item timeline-progress">
+                            <div class="item-header">
+                                <div class="item-title">进度更新</div>
+                                <div class="item-date">2025-05-20 10:45</div>
+                            </div>
+                            <div class="item-content">
+                                已到达现场，正在检查线路和电箱
+                            </div>
+                            <div class="item-operator">
+                                <span class="operator-label">操作人：</span>
+                                <span class="operator-name">李强</span>
+                            </div>
+                        </div>
+                        
+                        <div class="timeline-item timeline-received">
+                            <div class="item-header">
+                                <div class="item-title">工单接收</div>
+                                <div class="item-date">2025-05-20 09:45</div>
+                            </div>
+                            <div class="item-operator">
+                                <span class="operator-label">操作人：</span>
+                                <span class="operator-name">李强</span>
+                            </div>
+                        </div>
+                        
+                        <div class="timeline-item timeline-pending">
+                            <div class="item-header">
+                                <div class="item-title">工单发布</div>
+                                <div class="item-date">2025-05-20 09:15</div>
+                            </div>
+                            <div class="item-operator">
+                                <span class="operator-label">操作人：</span>
+                                <span class="operator-name">王工长</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 工单详情弹窗功能
+        const modal = document.getElementById('orderDetailModal');
+        const closeBtn = document.querySelector('.close-modal');
+        
+        // 点击工单卡片打开详情弹窗
+        document.querySelectorAll('.order-card').forEach(card => {
+            card.addEventListener('click', function() {
+                modal.classList.add('active');
+            });
+        });
+        
+        // 关闭弹窗
+        closeBtn.addEventListener('click', function() {
+            modal.classList.remove('active');
+        });
+        
+        // 点击模态框背景关闭
+        window.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                modal.classList.remove('active');
+            }
+        });
+        
+        // 按ESC键关闭
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape' && modal.classList.contains('active')) {
+                modal.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>

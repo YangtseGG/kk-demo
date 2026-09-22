@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智慧工地SOS报警系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background-color: #f0f2f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        /* 侧边栏样式 */
+        .sidebar {
+            width: 260px;
+            background: linear-gradient(180deg, #1e3c72, #2a5298);
+            color: white;
+            padding: 20px 0;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 10;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            padding: 0 20px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .logo i {
+            font-size: 28px;
+            margin-right: 10px;
+            color: #4CAF50;
+        }
+        
+        .logo h1 {
+            font-size: 22px;
+            font-weight: 600;
+        }
+        
+        .nav-links {
+            margin-top: 30px;
+        }
+        
+        .nav-item {
+            padding: 15px 25px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-left: 4px solid transparent;
+        }
+        
+        .nav-item:hover, .nav-item.active {
+            background: rgba(255, 255, 255, 0.1);
+            border-left: 4px solid #4CAF50;
+        }
+        
+        .nav-item i {
+            margin-right: 15px;
+            font-size: 18px;
+        }
+        
+        /* 主内容区样式 */
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .header h2 {
+            font-size: 24px;
+            color: #1e3c72;
+            font-weight: 600;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            background: #1e3c72;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.3s;
+        }
+        
+        .btn:hover {
+            background: #2a5298;
+        }
+        
+        .btn-primary {
+            background: #4CAF50;
+        }
+        
+        .btn-primary:hover {
+            background: #45a049;
+        }
+        
+        .btn-danger {
+            background: #f44336;
+        }
+        
+        .btn-danger:hover {
+            background: #d32f2f;
+        }
+        
+        .stats-container {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            flex: 1;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            display: flex;
+            align-items: center;
+        }
+        
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 24px;
+        }
+        
+        .stat-info h3 {
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+        
+        .stat-info p {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .card-1 .stat-icon {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4CAF50;
+        }
+        
+        .card-2 .stat-icon {
+            background: rgba(244, 67, 54, 0.2);
+            color: #f44336;
+        }
+        
+        .card-3 .stat-icon {
+            background: rgba(33, 150, 243, 0.2);
+            color: #2196F3;
+        }
+        
+        .card-4 .stat-icon {
+            background: rgba(255, 152, 0, 0.2);
+            color: #FF9800;
+        }
+        
+        /* 地图区域样式 */
+        .map-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+            overflow: hidden;
+            position: relative;
+            height: 500px;
+        }
+        
+        #map {
+            width: 100%;
+            height: 100%;
+            background: #e9ecef;
+            position: relative;
+        }
+        
+        .map-overlay {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 5;
+        }
+        
+        .map-overlay h3 {
+            margin-bottom: 10px;
+            color: #1e3c72;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        
+        .location-marker {
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transform: translate(-50%, -50%);
+            transition: all 0.3s;
+            z-index: 2;
+        }
+        
+        .location-marker:hover {
+            transform: translate(-50%, -50%) scale(1.2);
+        }
+        
+        .marker-normal {
+            background: #2196F3;
+            box-shadow: 0 0 0 6px rgba(33, 150, 243, 0.3);
+        }
+        
+        .marker-medical {
+            background: #4CAF50;
+            box-shadow: 0 0 0 6px rgba(76, 175, 80, 0.3);
+        }
+        
+        .marker-safety {
+            background: #f44336;
+            box-shadow: 0 0 0 6px rgba(244, 67, 54, 0.3);
+        }
+        
+        .marker-outfence {
+            background: #FF9800;
+            box-shadow: 0 0 0 6px rgba(255, 152, 0, 0.3);
+        }
+        
+        .marker-medical i, .marker-safety i, .marker-outfence i {
+            color: white;
+            font-size: 14px;
+        }
+        
+        .fence-area {
+            position: absolute;
+            border: 2px dashed #1e3c72;
+            background-color: rgba(30, 60, 114, 0.1);
+            z-index: 1;
+        }
+        
+        /* 报警列表样式 */
+        .alerts-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            padding: 20px;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .section-header h3 {
+            font-size: 20px;
+            color: #1e3c72;
+        }
+        
+        .alert-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .alert-card {
+            border-radius: 8px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-left: 4px solid #2196F3;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .alert-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .alert-card.medical {
+            border-left-color: #4CAF50;
+        }
+        
+        .alert-card.safety {
+            border-left-color: #f44336;
+        }
+        
+        .alert-card.outfence {
+            border-left-color: #FF9800;
+        }
+        
+        .alert-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        
+        .alert-title {
+            font-weight: 600;
+            font-size: 16px;
+        }
+        
+        .alert-time {
+            color: #666;
+            font-size: 13px;
+        }
+        
+        .alert-type {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: white;
+            margin-bottom: 10px;
+        }
+        
+        .type-normal {
+            background: #2196F3;
+        }
+        
+        .type-medical {
+            background: #4CAF50;
+        }
+        
+        .type-safety {
+            background: #f44336;
+        }
+        
+        .type-outfence {
+            background: #FF9800;
+        }
+        
+        .alert-content {
+            color: #555;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        .alert-media {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .media-item {
+            width: 60px;
+            height: 60px;
+            border-radius: 4px;
+            overflow: hidden;
+            background: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+        }
+        
+        /* 弹窗样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: white;
+            width: 90%;
+            max-width: 800px;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .modal-header {
+            padding: 20px;
+            background: #1e3c72;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-header h3 {
+            font-size: 20px;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        
+        .modal-body {
+            padding: 20px;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        
+        .alert-detail {
+            margin-bottom: 20px;
+        }
+        
+        .detail-row {
+            display: flex;
+            margin-bottom: 15px;
+        }
+        
+        .detail-label {
+            width: 120px;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        .detail-value {
+            flex: 1;
+        }
+        
+        .media-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .media-container img {
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 5px;
+        }
+        
+        .audio-player {
+            width: 100%;
+            margin-top: 10px;
+        }
+        
+        /* 围栏设置面板 */
+        .fence-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 5;
+            width: 300px;
+        }
+        
+        .fence-panel h3 {
+            margin-bottom: 15px;
+            color: #1e3c72;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .fence-form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-group label {
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        
+        .form-group input, .form-group select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .fence-list {
+            margin-top: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .fence-item {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .fence-item:last-child {
+            border-bottom: none;
+        }
+        
+        .fence-actions {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .fence-actions button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #666;
+        }
+        
+        .fence-actions button:hover {
+            color: #1e3c72;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 992px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: auto;
+            }
+            
+            .stats-container {
+                flex-direction: column;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .alert-list {
+                grid-template-columns: 1fr;
+            }
+            
+            .map-overlay {
+                position: relative;
+                top: 0;
+                right: 0;
+                margin: 15px;
+            }
+            
+            .fence-panel {
+                position: relative;
+                width: 100%;
+                top: 0;
+                left: 0;
+                margin-bottom: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 侧边导航 -->
+        <div class="sidebar">
+            <div class="logo">
+                <i class="fas fa-hard-hat"></i>
+                <h1>智慧工地管理平台</h1>
+            </div>
+            
+            <div class="nav-links">
+                <div class="nav-item active">
+                    <i class="fas fa-map-marked-alt"></i>
+                    <span>报警地图</span>
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-list"></i>
+                    <span>报警记录</span>
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-users"></i>
+                    <span>人员管理</span>
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-chart-line"></i>
+                    <span>数据分析</span>
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-cog"></i>
+                    <span>系统设置</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <div class="header">
+                <h2>SOS报警监控中心</h2>
+                <div class="header-actions">
+                    <button class="btn"><i class="fas fa-sync-alt"></i> 刷新数据</button>
+                    <button class="btn btn-primary" id="toggleFencePanel">
+                        <i class="fas fa-draw-polygon"></i> 电子围栏
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 统计卡片 -->
+            <div class="stats-container">
+                <div class="stat-card card-1">
+                    <div class="stat-icon">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>42</h3>
+                        <p>今日定位上报</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card card-2">
+                    <div class="stat-icon">
+                        <i class="fas fa-heartbeat"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>3</h3>
+                        <p>医疗急救报警</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card card-3">
+                    <div class="stat-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>2</h3>
+                        <p>人身安全报警</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card card-4">
+                    <div class="stat-icon">
+                        <i class="fas fa-map-signs"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>5</h3>
+                        <p>围栏报警</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 地图区域 -->
+            <div class="map-container">
+                <div id="map">
+                    <!-- 电子围栏 -->
+                    <div class="fence-area" id="mainFence" style="top: 20%; left: 15%; width: 70%; height: 60%;"></div>
+                    
+                    <!-- 地图标记点 -->
+                    <div class="location-marker marker-normal" style="top: 30%; left: 25%;" onclick="showAlertDetails(1)"></div>
+                    <div class="location-marker marker-medical" style="top: 45%; left: 60%;" onclick="showAlertDetails(2)">
+                        <i class="fas fa-plus"></i>
+                    </div>
+                    <div class="location-marker marker-safety" style="top: 70%; left: 40%;" onclick="showAlertDetails(3)">
+                        <i class="fas fa-exclamation"></i>
+                    </div>
+                    <div class="location-marker marker-outfence" style="top: 15%; left: 20%;" onclick="showAlertDetails(4)">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="location-marker marker-outfence" style="top: 85%; left: 50%;" onclick="showAlertDetails(5)">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="location-marker marker-medical" style="top: 35%; left: 70%;" onclick="showAlertDetails(6)">
+                        <i class="fas fa-plus"></i>
+                    </div>
+                    <div class="location-marker marker-outfence" style="top: 30%; left: 85%;" onclick="showAlertDetails(7)">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    
+                    <div class="map-overlay">
+                        <h3>图例</h3>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #2196F3;"></div>
+                            <span>常规定位上报</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #4CAF50;"></div>
+                            <span>医疗急救报警</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #f44336;"></div>
+                            <span>人身安全报警</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #FF9800;"></div>
+                            <span>超出电子围栏</span>
+                        </div>
+                    </div>
+                    
+                    <!-- 围栏设置面板 -->
+                    <div class="fence-panel" id="fencePanel">
+                        <h3>
+                            电子围栏设置
+                            <button id="closeFencePanel"><i class="fas fa-times"></i></button>
+                        </h3>
+                        
+                        <div class="fence-form">
+                            <div class="form-group">
+                                <label for="fenceName">围栏名称</label>
+                                <input type="text" id="fenceName" placeholder="主施工区域">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="fenceType">围栏类型</label>
+                                <select id="fenceType">
+                                    <option>矩形围栏</option>
+                                    <option>多边形围栏</option>
+                                    <option>圆形围栏</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="fenceColor">围栏颜色</label>
+                                <select id="fenceColor">
+                                    <option value="#1e3c72">蓝色</option>
+                                    <option value="#4CAF50">绿色</option>
+                                    <option value="#f44336">红色</option>
+                                    <option value="#FF9800">橙色</option>
+                                </select>
+                            </div>
+                            
+                            <button class="btn btn-primary" id="addFenceBtn">
+                                <i class="fas fa-plus"></i> 添加新围栏
+                            </button>
+                        </div>
+                        
+                        <div class="fence-list">
+                            <div class="fence-item">
+                                <span>主施工区域</span>
+                                <div class="fence-actions">
+                                    <button title="编辑"><i class="fas fa-edit"></i></button>
+                                    <button title="删除"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </div>
+                            <div class="fence-item">
+                                <span>材料堆放区</span>
+                                <div class="fence-actions">
+                                    <button title="编辑"><i class="fas fa-edit"></i></button>
+                                    <button title="删除"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </div>
+                            <div class="fence-item">
+                                <span>危险作业区</span>
+                                <div class="fence-actions">
+                                    <button title="编辑"><i class="fas fa-edit"></i></button>
+                                    <button title="删除"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 报警列表 -->
+            <div class="alerts-container">
+                <div class="section-header">
+                    <h3>最新报警记录</h3>
+                    <div class="filter">
+                        <select>
+                            <option>全部类型</option>
+                            <option>常规上报</option>
+                            <option>医疗急救</option>
+                            <option>人身安全</option>
+                            <option>围栏报警</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="alert-list">
+                    <!-- 报警项 -->
+                    <div class="alert-card medical" onclick="showAlertDetails(2)">
+                        <div class="alert-header">
+                            <div class="alert-title">王工突发晕倒</div>
+                            <div class="alert-time">10:25:42</div>
+                        </div>
+                        <div class="alert-type type-medical">医疗急救</div>
+                        <div class="alert-content">3号塔吊附近，工人突然晕倒，需要紧急医疗救助</div>
+                        <div class="alert-media">
+                            <div class="media-item"><i class="fas fa-image"></i></div>
+                            <div class="media-item"><i class="fas fa-microphone"></i></div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert-card safety" onclick="showAlertDetails(3)">
+                        <div class="alert-header">
+                            <div class="alert-title">脚手架坍塌风险</div>
+                            <div class="alert-time">09:42:15</div>
+                        </div>
+                        <div class="alert-type type-safety">人身安全</div>
+                        <div class="alert-content">B区脚手架出现松动，有坍塌风险，请求紧急疏散</div>
+                        <div class="alert-media">
+                            <div class="media-item"><i class="fas fa-image"></i></div>
+                            <div class="media-item"><i class="fas fa-video"></i></div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert-card outfence" onclick="showAlertDetails(4)">
+                        <div class="alert-header">
+                            <div class="alert-title">人员超出安全区域</div>
+                            <div class="alert-time">08:55:30</div>
+                        </div>
+                        <div class="alert-type type-outfence">围栏报警</div>
+                        <div class="alert-content">张工超出主施工区域，进入未授权区域</div>
+                    </div>
+                    
+                    <div class="alert-card" onclick="showAlertDetails(1)">
+                        <div class="alert-header">
+                            <div class="alert-title">日常位置上报</div>
+                            <div class="alert-time">08:15:30</div>
+                        </div>
+                        <div class="alert-type type-normal">常规上报</div>
+                        <div class="alert-content">李工在材料仓库进行日常位置上报</div>
+                    </div>
+                    
+                    <div class="alert-card outfence" onclick="showAlertDetails(7)">
+                        <div class="alert-header">
+                            <div class="alert-title">人员超出危险区域</div>
+                            <div class="alert-time">14:20:18</div>
+                        </div>
+                        <div class="alert-type type-outfence">围栏报警</div>
+                        <div class="alert-content">刘工进入危险作业区，未佩戴安全装备</div>
+                    </div>
+                    
+                    <div class="alert-card medical" onclick="showAlertDetails(6)">
+                        <div class="alert-header">
+                            <div class="alert-title">手部严重割伤</div>
+                            <div class="alert-time">14:05:22</div>
+                        </div>
+                        <div class="alert-type type-medical">医疗急救</div>
+                        <div class="alert-content">切割作业时手部严重割伤，出血量大，急需医疗救助</div>
+                        <div class="alert-media">
+                            <div class="media-item"><i class="fas fa-image"></i></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 报警详情弹窗 -->
+    <div class="modal" id="alertModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>报警详情</h3>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="alert-detail">
+                    <div class="detail-row">
+                        <div class="detail-label">报警类型：</div>
+                        <div class="detail-value">
+                            <span class="alert-type type-outfence">围栏报警</span>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">上报人员：</div>
+                        <div class="detail-value">张工 (ID: Z0238)</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">上报时间：</div>
+                        <div class="detail-value">2023-10-15 08:55:30</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">位置信息：</div>
+                        <div class="detail-value">工地北侧未授权区域</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">围栏信息：</div>
+                        <div class="detail-value">主施工区域 (围栏ID: F001)</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">报警描述：</div>
+                        <div class="detail-value">工作人员张工在上午8:55离开主施工区域，进入未授权区域。系统检测到位置超出电子围栏范围，自动触发报警。</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">位置轨迹：</div>
+                        <div class="detail-value">
+                            <div style="width: 100%; height: 150px; background: #f0f0f0; border-radius: 5px; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-map-marked-alt fa-2x" style="color: #666;"></i>
+                                <span style="margin-left: 10px;">位置轨迹图</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 显示报警详情弹窗
+        function showAlertDetails(alertId) {
+            document.getElementById('alertModal').style.display = 'flex';
+            
+            // 根据报警ID更新弹窗内容
+            if (alertId === 4 || alertId === 5 || alertId === 7) {
+                // 围栏报警详情
+                const modal = document.querySelector('.modal-body .alert-detail');
+                modal.innerHTML = `
+                    <div class="detail-row">
+                        <div class="detail-label">报警类型：</div>
+                        <div class="detail-value">
+                            <span class="alert-type type-outfence">围栏报警</span>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">上报人员：</div>
+                        <div class="detail-value">张工 (ID: Z0238)</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">上报时间：</div>
+                        <div class="detail-value">2023-10-15 08:55:30</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">位置信息：</div>
+                        <div class="detail-value">工地北侧未授权区域</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">围栏信息：</div>
+                        <div class="detail-value">主施工区域 (围栏ID: F001)</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">报警描述：</div>
+                        <div class="detail-value">工作人员张工在上午8:55离开主施工区域，进入未授权区域。系统检测到位置超出电子围栏范围，自动触发报警。</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">位置轨迹：</div>
+                        <div class="detail-value">
+                            <div style="width: 100%; height: 150px; background: #f0f0f0; border-radius: 5px; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-map-marked-alt fa-2x" style="color: #666;"></i>
+                                <span style="margin-left: 10px;">位置轨迹图</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                // 其他类型报警详情
+                const modal = document.querySelector('.modal-body .alert-detail');
+                modal.innerHTML = `
+                    <div class="detail-row">
+                        <div class="detail-label">报警类型：</div>
+                        <div class="detail-value">
+                            <span class="alert-type type-medical">医疗急救</span>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">上报人员：</div>
+                        <div class="detail-value">王工 (ID: W0235)</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">上报时间：</div>
+                        <div class="detail-value">2023-10-15 10:25:42</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">位置信息：</div>
+                        <div class="detail-value">3号塔吊东南侧15米处</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">报警描述：</div>
+                        <div class="detail-value">在3号塔吊附近作业时突然晕倒，意识模糊，疑似中暑。附近工友已进行初步急救，请求医疗支援。</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">附加信息：</div>
+                        <div class="detail-value">
+                            <p>工人年龄：45岁</p>
+                            <p>已知病史：高血压</p>
+                        </div>
+                    </div>
+                    
+                    <div class="media-container">
+                        <img src="https://via.placeholder.com/150" alt="现场照片">
+                        <img src="https://via.placeholder.com/150" alt="现场照片">
+                        <div style="width: 150px; height: 150px; background: #f0f0f0; border-radius: 5px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-video fa-2x" style="color: #666;"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="audio-player">
+                        <p>现场录音：</p>
+                        <audio controls style="width: 100%;">
+                            <source src="#" type="audio/mpeg">
+                            您的浏览器不支持音频播放
+                        </audio>
+                    </div>
+                `;
+            }
+        }
+        
+        // 关闭弹窗
+        function closeModal() {
+            document.getElementById('alertModal').style.display = 'none';
+        }
+        
+        // 点击弹窗外区域关闭弹窗
+        window.onclick = function(event) {
+            const modal = document.getElementById('alertModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+        
+        // 电子围栏面板控制
+        document.getElementById('toggleFencePanel').addEventListener('click', function() {
+            const panel = document.getElementById('fencePanel');
+            panel.style.display = panel.style.display === 'none' ? 'block' : 'block';
+        });
+        
+        document.getElementById('closeFencePanel').addEventListener('click', function() {
+            document.getElementById('fencePanel').style.display = 'none';
+        });
+        
+        // 添加新围栏
+        document.getElementById('addFenceBtn').addEventListener('click', function() {
+            const name = document.getElementById('fenceName').value || '新围栏';
+            const type = document.getElementById('fenceType').value;
+            const color = document.getElementById('fenceColor').value;
+            
+            // 在实际应用中，这里会添加新的围栏到地图
+            alert(`已添加新围栏: ${name} (${type})`);
+            
+            // 添加到围栏列表
+            const fenceList = document.querySelector('.fence-list');
+            const newFence = document.createElement('div');
+            newFence.className = 'fence-item';
+            newFence.innerHTML = `
+                <span>${name}</span>
+                <div class="fence-actions">
+                    <button title="编辑"><i class="fas fa-edit"></i></button>
+                    <button title="删除"><i class="fas fa-trash"></i></button>
+                </div>
+            `;
+            fenceList.appendChild(newFence);
+        });
+        
+        // 初始隐藏围栏面板
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('fencePanel').style.display = 'none';
+        });
+    </script>
+</body>
+</html>

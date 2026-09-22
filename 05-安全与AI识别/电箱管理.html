@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>电工工单管理 - 接电处理端</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1a5276, #3498db);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            background: #5dade2;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            margin-right: 15px;
+        }
+        
+        .user-details {
+            text-align: left;
+        }
+        
+        .user-name {
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        
+        .user-title {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-top: 3px;
+            font-weight: 500;
+        }
+        
+        .status-available {
+            background: rgba(46, 204, 113, 0.2);
+            color: #27ae60;
+        }
+        
+        .status-busy {
+            background: rgba(231, 76, 60, 0.2);
+            color: #c0392b;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            justify-content: space-around;
+            background: white;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+            position: relative;
+        }
+        
+        .tab.active {
+            border-bottom: 3px solid #3498db;
+            color: #3498db;
+        }
+        
+        .tab-badge {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #e74c3c;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .tab-content {
+            padding: 15px;
+            min-height: calc(100vh - 220px);
+        }
+        
+        .page {
+            display: none;
+        }
+        
+        .page.active {
+            display: block;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid #3498db;
+            transition: transform 0.3s;
+        }
+        
+        .card:hover {
+            transform: translateY(-3px);
+        }
+        
+        .card.pending {
+            border-left-color: #f39c12;
+        }
+        
+        .card.in-progress {
+            border-left-color: #3498db;
+        }
+        
+        .card.completed {
+            border-left-color: #2ecc71;
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            align-items: flex-start;
+        }
+        
+        .order-id {
+            font-weight: bold;
+            color: #3498db;
+        }
+        
+        .order-urgency {
+            padding: 3px 8px;
+            border-radius: 15px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin-left: 8px;
+        }
+        
+        .urgency-high {
+            background: #fce4e3;
+            color: #e74c3c;
+        }
+        
+        .urgency-normal {
+            background: #e8f4fc;
+            color: #3498db;
+        }
+        
+        .order-status {
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        .status-pending {
+            background: #fef9e7;
+            color: #d35400;
+        }
+        
+        .status-in-progress {
+            background: #ebf5fb;
+            color: #2980b9;
+        }
+        
+        .status-completed {
+            background: #eafaf1;
+            color: #27ae60;
+        }
+        
+        .card-body {
+            margin: 10px 0;
+        }
+        
+        .card-row {
+            margin: 8px 0;
+            display: flex;
+            align-items: flex-start;
+        }
+        
+        .card-icon {
+            width: 24px;
+            text-align: center;
+            color: #7f8c8d;
+            margin-right: 10px;
+            font-size: 0.9rem;
+        }
+        
+        .card-text {
+            flex: 1;
+            font-size: 0.9rem;
+        }
+        
+        .card-footer {
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .btn {
+            padding: 8px 15px;
+            border-radius: 5px;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+        }
+        
+        .btn i {
+            margin-right: 5px;
+        }
+        
+        .btn-accept {
+            background: #2ecc71;
+            color: white;
+        }
+        
+        .btn-start {
+            background: #3498db;
+            color: white;
+        }
+        
+        .btn-report {
+            background: #9b59b6;
+            color: white;
+        }
+        
+        .btn-complete {
+            background: #2ecc71;
+            color: white;
+        }
+        
+        .btn-details {
+            background: #ecf0f1;
+            color: #7f8c8d;
+        }
+        
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stats-card {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            text-align: center;
+            border-top: 4px solid;
+        }
+        
+        .stats-card.pending {
+            border-top-color: #f39c12;
+        }
+        
+        .stats-card.processing {
+            border-top-color: #3498db;
+        }
+        
+        .stats-card.completed {
+            border-top-color: #2ecc71;
+        }
+        
+        .stats-card.rating {
+            border-top-color: #9b59b6;
+        }
+        
+        .stats-value {
+            font-size: 2rem;
+            font-weight: 700;
+            line-height: 1.2;
+            margin: 10px 0;
+        }
+        
+        .stats-pending {
+            color: #f39c12;
+        }
+        
+        .stats-processing {
+            color: #3498db;
+        }
+        
+        .stats-completed {
+            color: #2ecc71;
+        }
+        
+        .stats-rating {
+            color: #9b59b6;
+        }
+        
+        .stats-label {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+        
+        .detail-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .detail-section {
+            margin-bottom: 20px;
+        }
+        
+        .detail-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .detail-title i {
+            margin-right: 8px;
+            color: #3498db;
+        }
+        
+        .detail-content {
+            padding-left: 26px;
+            font-size: 0.95rem;
+        }
+        
+        .progress-steps {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            margin: 30px 0;
+            padding: 0 20px;
+        }
+        
+        .progress-steps::before {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            right: 20px;
+            height: 4px;
+            background: #ecf0f1;
+            z-index: 1;
+        }
+        
+        .progress-bar {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            height: 4px;
+            background: #2ecc71;
+            z-index: 2;
+            transition: width 0.5s;
+        }
+        
+        .step {
+            text-align: center;
+            z-index: 3;
+            position: relative;
+        }
+        
+        .step-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: #ecf0f1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 8px;
+            font-size: 0.9rem;
+        }
+        
+        .step.active .step-icon {
+            background: #3498db;
+            color: white;
+        }
+        
+        .step.completed .step-icon {
+            background: #2ecc71;
+            color: white;
+        }
+        
+        .step-text {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+        }
+        
+        .step.active .step-text {
+            color: #3498db;
+            font-weight: 500;
+        }
+        
+        .step.completed .step-text {
+            color: #2ecc71;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            height: 120px;
+            resize: none;
+        }
+        
+        .action-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .btn-block {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            text-align: center;
+        }
+        
+        .btn-save {
+            background: #3498db;
+            color: white;
+        }
+        
+        .btn-cancel {
+            background: #ecf0f1;
+            color: #7f8c8d;
+        }
+        
+        .photo-upload {
+            border: 2px dashed #3498db;
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 20px;
+            background: #f8f9fa;
+        }
+        
+        .photo-upload i {
+            font-size: 2rem;
+            color: #3498db;
+            margin-bottom: 10px;
+        }
+        
+        .back-button {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            position: absolute;
+            left: 15px;
+            top: 15px;
+            color: white;
+            cursor: pointer;
+        }
+        
+        .page-title {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f5f7fa;
+            font-size: 1.3rem;
+        }
+        
+        .history-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+        }
+        
+        .history-item:last-child {
+            border-bottom: none;
+        }
+        
+        .history-icon {
+            font-size: 1.2rem;
+            margin-right: 15px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .history-icon.pending {
+            background: #fef9e7;
+            color: #f39c12;
+        }
+        
+        .history-icon.in-progress {
+            background: #ebf5fb;
+            color: #3498db;
+        }
+        
+        .history-icon.completed {
+            background: #eafaf1;
+            color: #2ecc71;
+        }
+        
+        .history-info {
+            flex: 1;
+        }
+        
+        .history-arrow {
+            color: #7f8c8d;
+            font-size: 1.2rem;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #95a5a6;
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+        
+        .status-change {
+            display: inline-block;
+            padding: 5px 10px;
+            margin-top: 5px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 电工工作状态页面 -->
+        <div class="page active" id="work-status-page">
+            <div class="header">
+                <div class="app-title">电工工单管理</div>
+                <div class="user-info">
+                    <div class="user-avatar">李</div>
+                    <div class="user-details">
+                        <div class="user-name">李强 电工</div>
+                        <div class="user-title">高级电工 | 工号: ELE-2023</div>
+                        <div class="status-badge status-busy">处理工单中</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="nav-tabs">
+                <div class="tab active" data-page="new-orders">
+                    <i class="fas fa-list"></i> 待接工单
+                    <div class="tab-badge">3</div>
+                </div>
+                <div class="tab" data-page="my-orders">
+                    <i class="fas fa-tools"></i> 处理中
+                    <div class="tab-badge">1</div>
+                </div>
+                <div class="tab" data-page="completed">
+                    <i class="fas fa-check-circle"></i> 已完成
+                </div>
+            </div>
+            
+            <div class="tab-content">
+                <!-- 待接工单页面 -->
+                <div class="page active" id="new-orders">
+                    <div class="card pending">
+                        <div class="card-header">
+                            <div>
+                                <span class="order-id">#EC2023072208</span>
+                                <span class="order-urgency urgency-high">紧急</span>
+                            </div>
+                            <div class="order-status status-pending">待接单</div>
+                        </div>
+                        <div class="card-body">
+                            <div class="card-row">
+                                <div class="card-icon"><i class="fas fa-map-marker-alt"></i></div>
+                                <div class="card-text">2号楼 - 三层施工区东侧</div>
+                            </div>
+                            <div class="card-row">
+                                <div class="card-icon"><i class="fas fa-plug"></i></div>
+                                <div class="card-text">大型焊机设备供电 (380V, 45kW)</div>
+                            </div>
+                            <div class="card-row">
+                                <div class="card-icon"><i class="fas fa-clock"></i></div>
+                                <div class="card-text">申请时间: 07/22 09:15 | 要求完成: 今天12:00前</div>
+                            </div>
+                            <div class="card-row">
+                                <div class="card-icon"><i class="fas fa-user"></i></div>
+                                <div class="card-text">申请人: 王工长 (钢筋组)</div>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <button class="btn btn-details"><i class="fas fa-info-circle"></i> 详情</button>
+                            <button class="btn btn-accept"><i class="fas fa-check"></i> 接受工单</button>
+                        </div>
+                    </div>
+                    
+                    <div class="card pending">
+                        <div class="card-header">
+                            <div>
+                                <span class="order-id">#EC2023072209</span>
+                                <span class="order-urgency urgency-normal">一般</span>
+                            </div>
+                            <div class="order-status status-pending">待接单</div>
+                        </div>
+                        <div class="card-body">
+                            <div class="card-row">
+                                <div class="card-icon"><i class="fas fa-map-marker-alt"></i></div>
+                                <div class="card-text">工地入口 - 安保亭</div>
+                            </div>
+                            <div class="card-row">
+                                <div class="card-icon"><i class="fas fa-plug"></i></div>
+                                <div class="card-text">空调供电 (220V, 3.5kW)</div>
+                            </div>
+                            <div class="card-row">
+                                <div class="card-icon"><i class="fas fa-clock"></i></div>
+                                <div class="card-text">申请时间: 07/22 10:30 | 要求完成: 今天18:00前</div>
+                            </div>
+                            <div class="card-row">
+                                <div class="card-icon"><i class="fas fa-user"></i></div>
+                                <div class="card-text">申请人: 张保安</div>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <button class="btn btn-details"><i class="fas fa-info-circle"></i> 详情</button>
+                            <button class="btn btn-accept"><i class="fas fa-check"></i> 接受工单</button>
+                        </div>
+                    </div>
+                    
+                    <div class="card pending">
+                        <div class="card-header">
+                            <div>
+                                <span class="order-id">#EC2023072210</span>
+                                <span class="order-urgency urgency-normal">一般</span>
+                            </div>
+                            <div class="order-status status-pending">待接单</div>
+                        </div>
+                        <div class="card-body">
+                            <div class="card-row">
+                                <div class="card-icon"><i class="fas fa-map-marker-alt"></i></div>
+                                <div class="card-text">3号楼 - 材料临时存放区</div>
+                            </div>
+                            <div class="card-row">
+                                <div class="card-icon"><i class="fas fa-plug"></i></div>
+                                <div class="card-text">照明及小型设备供电 (220V, 8kW)</div>
+                            </div>
+                            <div class="card-row">
+                                <div class="card-icon"><i class="fas fa-clock"></i></div>
+                                <div class="card-text">申请时间: 07/22 11:05 | 要求完成: 明天12:00前</div>
+                            </div>
+                            <div class="card-row">
+                                <div class="card-icon"><i class="fas fa-user"></i></div>
+                                <div class="card-text">申请人: 赵材料员</div>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <button class="btn btn-details"><i class="fas fa-info-circle"></i> 详情</button>
+                            <button class="btn btn-accept"><i class="fas fa-check"></i> 接受工单</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 处理中工单页面 -->
+                <div class="page" id="my-orders">
+                    <div class="card in-progress">
+                        <div class="card-header">
+                            <div>
+                                <span class="order-id">#EC2023072207</span>
+                                <span class="order-urgency urgency-high">紧急</span>
+                            </div>
+                            <div class="order-status status-in-progress">处理中</div>
+                        </div>
+                        <div class="card-body">
+                            <div class="card-row">
+                                <div class="card-icon"><i class="fas fa-map-marker-alt"></i></div>
+                                <div class="card-text">1号楼 - 地下二层水泵房</div>
+                            </div>
+                            <div class="card-row">
+                                <div class="card-icon"><i class="fas fa-plug"></i></div>
+                                <div class="card-text">排水泵供电 (380V, 22kW)</div>
+                            </div>
+                            <div class="card-row">
+                                <div class="card-icon"><i class="fas fa-clock"></i></div>
+                                <div class="card-text">接受时间: 07/22 08:45 | 要求完成: 今天14:00前</div>
+                            </div>
+                            <div class="card-row">
+                                <div class="card-icon"><i class="fas fa-user"></i></div>
+                                <div class="card-text">申请人: 孙工长 (水电组)</div>
+                            </div>
+                        </div>
+                        <div class="progress-steps">
+                            <div class="progress-bar" style="width: 33%;"></div>
+                            <div class="step completed">
+                                <div class="step-icon"><i class="fas fa-check"></i></div>
+                                <div class="step-text">已接单</div>
+                            </div>
+                            <div class="step active">
+                                <div class="step-icon"><i class="fas fa-tools"></i></div>
+                                <div class="step-text">处理中</div>
+                            </div>
+                            <div class="step">
+                                <div class="step-icon">3</div>
+                                <div class="step-text">待完成</div>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <button class="btn btn-report"><i class="fas fa-edit"></i> 更新进度</button>
+                            <button class="btn btn-complete"><i class="fas fa-check-circle"></i> 完成工单</button>
+                        </div>
+                    </div>
+                    
+                    <div class="section-title">最近进度记录</div>
+                    <div class="detail-container">
+                        <div class="detail-content">
+                            <p><i class="fas fa-clock"></i> <strong>07/22 08:50：</strong> 已到达水泵房现场，正在检查线路和电箱位置</p>
+                            <p><i class="fas fa-clock"></i> <strong>07/22 09:30：</strong> 电箱位置确认，准备布线施工</p>
+                            <p><i class="fas fa-clock"></i> <strong>07/22 10:15：</strong> 线路布置完成80%，需采购连接器配件</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 已完成工单页面 -->
+                <div class="page" id="completed">
+                    <div class="stats-container">
+                        <div class="stats-card pending">
+                            <div class="stats-value stats-pending">2</div>
+                            <div class="stats-label">今日完成工单</div>
+                        </div>
+                        <div class="stats-card processing">
+                            <div class="stats-value stats-processing">4.8</div>
+                            <div class="stats-label">平均评分</div>
+                        </div>
+                        <div class="stats-card completed">
+                            <div class="stats-value stats-completed">92%</div>
+                            <div class="stats-label">按时完成率</div>
+                        </div>
+                        <div class="stats-card rating">
+                            <div class="stats-value stats-rating">18</div>
+                            <div class="stats-label">本月累计工单</div>
+                        </div>
+                    </div>
+                    
+                    <div class="card completed">
+                        <div class="card-header">
+                            <div>
+                                <span class="order-id">#EC2023072206</span>
+                                <span class="order-urgency urgency-normal">一般</span>
+                            </div>
+                            <div class="order-status status-completed">已完成</div>
+                        </div>
+                        <div class="card-body">
+                            <div class="card-row">
+                                <div class="card-icon"><i class="fas fa-map-marker-alt"></i></div>
+                                <div class="card-text">工地办公室 - 临时会议室</div>
+                            </div>
+                            <div class="card-row">
+                                <div class="card-icon"><i class="fas fa-plug"></i></div>
+                                <div class="card-text">投影仪及空调供电 (220V, 5kW)</div>
+                            </div>
+                            <div class="card-row">
+                                <div class="card-icon"><i class="fas fa-clock"></i></div>
+                                <div class="card-text">完成时间: 07/22 09:00 (提前1小时)</div>
+                            </div>
+                            <div class="card-row">
+                                <div class="card-icon"><i class="fas fa-star"></i></div>
+                                <div class="card-text">用户评分: 5.0 | 评语: 非常专业，提前完成！</div>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <button class="btn btn-details"><i class="fas fa-file-alt"></i> 查看详情</button>
+                        </div>
+                    </div>
+                    
+                    <div class="card completed">
+                        <div class="card-header">
+                            <div>
+                                <span class="order-id">#EC2023072205</span>
+                                <span class="order-urgency urgency-high">紧急</span>
+                            </div>
+                            <div class="order-status status-completed">已完成</div>
+                        </div>
+                        <div class="card-body">
+                            <div class="card-row">
+                                <div class="card-icon"><i class="fas fa-map-marker-alt"></i></div>
+                                <div class="card-text">材料加工区 - 钢筋切割区</div>
+                            </div>
+                            <div class="card-row">
+                                <div class="card-icon"><i class="fas fa-plug"></i></div>
+                                <div class="card-text">切割机供电 (380V, 30kW)</div>
+                            </div>
+                            <div class="card-row">
+                                <div class="card-icon"><i class="fas fa-clock"></i></div>
+                                <div class="card-text">完成时间: 07/22 08:20 (准时完成)</div>
+                            </div>
+                            <div class="card-row">
+                                <div class="card-icon"><i class="fas fa-star"></i></div>
+                                <div class="card-text">用户评分: 4.5 | 评语: 解决及时，态度很好</div>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <button class="btn btn-details"><i class="fas fa-file-alt"></i> 查看详情</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 工单详情页面 -->
+        <div class="page" id="order-detail-page">
+            <div class="header">
+                <button class="back-button" id="backButton">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <div class="app-title">工单详情</div>
+            </div>
+            
+            <div class="tab-content">
+                <div class="detail-container">
+                    <div class="detail-section">
+                        <div class="detail-title">
+                            <i class="fas fa-info-circle"></i> 工单信息
+                        </div>
+                        <div class="detail-content">
+                            <p><strong>工单编号：</strong> #EC2023072208</p>
+                            <p><strong>申请时间：</strong> 2023-07-22 09:15:23</p>
+                            <p><strong>要求完成时间：</strong> 2023-07-22 12:00:00</p>
+                            <p><strong>当前状态：</strong> <span class="status-change status-pending">待接单</span></p>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-section">
+                        <div class="detail-title">
+                            <i class="fas fa-map-marker-alt"></i> 位置信息
+                        </div>
+                        <div class="detail-content">
+                            <p><strong>区域：</strong> 2号楼</p>
+                            <p><strong>具体位置：</strong> 三层施工区东侧，靠近电梯井位置</p>
+                            <p><strong>电箱编号：</strong> DBX-2-3-E</p>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-section">
+                        <div class="detail-title">
+                            <i class="fas fa-plug"></i> 用电需求
+                        </div>
+                            <div class="detail-content">
+                            <p><strong>用电设备：</strong> 大型焊机（型号：HD-3800）</p>
+                            <p><strong>电压要求：</strong> 380V</p>
+                            <p><strong>功率要求：</strong> 45kW</p>
+                            <p><strong>使用时长：</strong> 约6小时/天（连续3天）</p>
+                            <p><strong>特殊要求：</strong> 需要专用接地保护装置</p>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-section">
+                        <div class="detail-title">
+                            <i class="fas fa-user"></i> 申请人信息
+                        </div>
+                        <div class="detail-content">
+                            <p><strong>姓名：</strong> 王工长</p>
+                            <p><strong>部门：</strong> 钢筋班组</p>
+                            <p><strong>联系方式：</strong> 138*​**​*5678</p>
+                            <p><strong>申请说明：</strong> 急需在中午前完成焊接设备供电，以便下午开始重要节点施工</p>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-section">
+                        <div class="detail-title">
+                            <i class="fas fa-file-alt"></i> 处理过程
+                        </div>
+                        <div class="detail-content">
+                            <p><i class="fas fa-exclamation-circle" style="color:#f39c12"></i> 尚未有电工接单处理</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="btn btn-cancel btn-block">关闭</button>
+                    <button class="btn btn-accept btn-block">接受此工单</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 上报进度页面 -->
+        <div class="page" id="report-progress-page">
+            <div class="header">
+                <button class="back-button" id="backButton2">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <div class="app-title">上报进度</div>
+            </div>
+            
+            <div class="tab-content">
+                <div class="detail-container">
+                    <div class="page-title">#EC2023072207 - 水泵房排水泵供电</div>
+                    
+                    <div class="form-group">
+                        <label for="progress-report"><i class="fas fa-edit"></i> 进度报告</label>
+                        <textarea id="progress-report" placeholder="请详细描述当前工作进度、遇到的问题或需要的支持...">已完成排水泵主线路连接，正在测试运行情况。发现电箱接地电阻偏高（5.2Ω），需要重新做接地处理。</textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label><i class="fas fa-camera"></i> 现场照片</label>
+                        <div class="photo-upload">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>点击或拖放上传现场照片</p>
+                            <p class="stats-label">最多可上传4张，每张不超过5MB</p>
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-top: 15px;">
+                            <div style="width: 70px; height: 70px; border-radius: 8px; background: url('https://via.placeholder.com/70x70/f0f8ff/3498db?text=现场') center/cover;"></div>
+                            <div style="width: 70px; height: 70px; border-radius: 8px; background: url('https://via.placeholder.com/70x70/f0f8ff/3498db?text=电箱') center/cover;"></div>
+                            <div style="width: 70px; height: 70px; border-radius: 8px; background: url('https://via.placeholder.com/70x70/f0f8ff/3498db?text=线路') center/cover;"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label><i class="fas fa-check-circle"></i> 当前进度</label>
+                        <div class="progress-steps">
+                            <div class="progress-bar" style="width: 66%;"></div>
+                            <div class="step completed">
+                                <div class="step-icon"><i class="fas fa-check"></i></div>
+                                <div class="step-text">已接单</div>
+                            </div>
+                            <div class="step completed">
+                                <div class="step-icon"><i class="fas fa-tools"></i></div>
+                                <div class="step-text">处理中</div>
+                            </div>
+                            <div class="step active">
+                                <div class="step-icon">3</div>
+                                <div class="step-text">待完成</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button class="btn btn-cancel btn-block">取消</button>
+                        <button class="btn btn-save btn-block">提交进度报告</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 完成工单页面 -->
+        <div class="page" id="complete-order-page">
+            <div class="header">
+                <button class="back-button" id="backButton3">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <div class="app-title">完成工单</div>
+            </div>
+            
+            <div class="tab-content">
+                <div class="detail-container">
+                    <div class="page-title">#EC2023072207 - 水泵房排水泵供电</div>
+                    
+                    <div class="form-group">
+                        <label for="work-report"><i class="fas fa-file-alt"></i> 工作完成报告</label>
+                        <textarea id="work-report" placeholder="请描述工单完成情况、现场测试结果和注意事项...">已完成排水泵供电线路连接并完成接地优化（现接地电阻1.8Ω）。已进行1小时带载测试，设备运行稳定，电压波动正常范围。建议每季度检查接地情况。</textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label><i class="fas fa-camera"></i> 完成照片</label>
+                        <div class="photo-upload">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>点击或拖放上传完成照片</p>
+                            <p class="stats-label">请包含至少2张现场照片</p>
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-top: 15px;">
+                            <div style="width: 70px; height: 70px; border-radius: 8px; background: url('https://via.placeholder.com/70x70/f0f8ff/3498db?text=完工') center/cover;"></div>
+                            <div style="width: 70px; height: 70px; border-radius: 8px; background: url('https://via.placeholder.com/70x70/f0f8ff/3498db?text=测试') center/cover;"></div>
+                            <div style="width: 70px; height: 70px; border-radius: 8px; background: url('https://via.placeholder.com/70x70/f0f8ff/3498db?text=电箱') center/cover;"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label><i class="fas fa-bolt"></i> 实际用电参数</label>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <div>
+                                <label>电压 (V)</label>
+                                <input type="text" value="382" style="padding: 10px; border: 1px solid #ddd; border-radius: 5px; width: 100%;">
+                            </div>
+                            <div>
+                                <label>电流 (A)</label>
+                                <input type="text" value="32.5" style="padding: 10px; border: 1px solid #ddd; border-radius: 5px; width: 100%;">
+                            </div>
+                            <div>
+                                <label>功率 (kW)</label>
+                                <input type="text" value="21.8" style="padding: 10px; border: 1px solid #ddd; border-radius: 5px; width: 100%;">
+                            </div>
+                            <div>
+                                <label>接地电阻 (Ω)</label>
+                                <input type="text" value="1.8" style="padding: 10px; border: 1px solid #ddd; border-radius: 5px; width: 100%;">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button class="btn btn-cancel btn-block">取消</button>
+                        <button class="btn btn-complete btn-block">提交完成报告</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 标签切换功能
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                if(tab.classList.contains('active')) return;
+                
+                const targetPage = tab.dataset.page;
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                document.querySelectorAll('#new-orders, #my-orders, #completed').forEach(page => {
+                    page.style.display = 'none';
+                });
+                
+                document.getElementById(targetPage).style.display = 'block';
+            });
+        });
+        
+        // 模拟工单详情点击
+        document.querySelectorAll('.btn-details').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.getElementById('work-status-page').classList.remove('active');
+                document.getElementById('order-detail-page').classList.add('active');
+            });
+        });
+        
+        // 模拟进度上报点击
+        document.querySelector('.btn-report').addEventListener('click', () => {
+            document.getElementById('work-status-page').classList.remove('active');
+            document.getElementById('report-progress-page').classList.add('active');
+        });
+        
+        // 模拟工单完成点击
+        document.querySelector('.btn-complete').addEventListener('click', () => {
+            document.getElementById('work-status-page').classList.remove('active');
+            document.getElementById('complete-order-page').classList.add('active');
+        });
+        
+        // 返回按钮功能
+        document.querySelectorAll('.back-button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.page').forEach(page => {
+                    page.classList.remove('active');
+                });
+                document.getElementById('work-status-page').classList.add('active');
+            });
+        });
+        
+        // 工单接受功能
+        document.querySelectorAll('.btn-accept').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const card = btn.closest('.card');
+                const orderId = card.querySelector('.order-id').textContent;
+                
+                if(confirm(`确定接受工单 ${orderId} 吗？`)) {
+                    card.querySelector('.order-status').textContent = '已接受';
+                    card.querySelector('.order-status').className = 'order-status status-in-progress';
+                    
+                    card.querySelector('.card-footer').innerHTML = `
+                        <button class="btn btn-start"><i class="fas fa-play-circle"></i> 开始处理</button>
+                        <button class="btn btn-report"><i class="fas fa-edit"></i> 更新进度</button>
+                    `;
+                    
+                    alert('工单已成功接受！请尽快前往处理。');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

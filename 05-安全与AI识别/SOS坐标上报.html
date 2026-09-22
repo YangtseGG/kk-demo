@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>坐标持续上报系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #333;
+            line-height: 1.5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 450px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 25px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: rgba(255, 255, 255, 0.1);
+            transform: rotate(30deg);
+        }
+        
+        .title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            position: relative;
+        }
+        
+        .subtitle {
+            font-size: 14px;
+            opacity: 0.9;
+            position: relative;
+        }
+        
+        .content {
+            padding: 25px;
+        }
+        
+        .btn-container {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .btn {
+            display: flex;
+            align-items: center;
+            padding: 18px 20px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            border: none;
+            color: white;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn-icon {
+            margin-right: 12px;
+            font-size: 20px;
+            width: 24px;
+            text-align: center;
+        }
+        
+        .btn-coordinates {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+        }
+        
+        .btn-safety {
+            background: linear-gradient(135deg, #e67e22, #d35400);
+        }
+        
+        .btn-medical {
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+        }
+        
+        .btn-cancel {
+            background: #ecf0f1;
+            color: #7f8c8d;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        
+        .status-container {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            border-left: 4px solid #3498db;
+        }
+        
+        .status-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .status-title {
+            font-weight: 700;
+            color: #2c3e50;
+            font-size: 18px;
+        }
+        
+        .status-indicator {
+            display: flex;
+            align-items: center;
+        }
+        
+        .indicator-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .indicator-off {
+            background: #e74c3c;
+        }
+        
+        .indicator-on {
+            background: #2ecc71;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .indicator-text {
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+        
+        .stat-value {
+            font-weight: 700;
+            font-size: 20px;
+            color: #3498db;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+        
+        .reporting-panel {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            display: none;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e9ecef;
+        }
+        
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .panel-title {
+            font-weight: 700;
+            color: #2c3e50;
+            font-size: 18px;
+        }
+        
+        .panel-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn-stop {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.2s;
+        }
+        
+        .btn-stop:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+        }
+        
+        .btn-clear {
+            background: #95a5a6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.2s;
+        }
+        
+        .btn-clear:hover {
+            background: #7f8c8d;
+            transform: translateY(-2px);
+        }
+        
+        .progress-container {
+            margin: 15px 0;
+        }
+        
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        
+        .progress-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .progress-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: #3498db;
+        }
+        
+        .progress-bar {
+            height: 10px;
+            background: #e9ecef;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #2ecc71);
+            width: 0%;
+            transition: width 0.5s ease;
+            border-radius: 5px;
+        }
+        
+        .report-details {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+        
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #f1f3f4;
+        }
+        
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        
+        .detail-label {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 14px;
+        }
+        
+        .detail-value {
+            font-weight: 600;
+            color: #3498db;
+            font-size: 14px;
+        }
+        
+        .history-container {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            display: none;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e9ecef;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .history-title {
+            font-weight: 700;
+            color: #2c3e50;
+            font-size: 18px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .history-item {
+            background: white;
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            border-left: 4px solid #3498db;
+        }
+        
+        .history-item.failed {
+            border-left-color: #e74c3c;
+        }
+        
+        .history-time {
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+        
+        .history-coords {
+            font-family: monospace;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .history-status {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        
+        .status-success {
+            background: #d5f4e6;
+            color: #27ae60;
+        }
+        
+        .status-failed {
+            background: #fadbd8;
+            color: #e74c3c;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 30px;
+            color: #7f8c8d;
+        }
+        
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            color: #bdc3c7;
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .toast.show {
+            opacity: 1;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 15px;
+            color: #7f8c8d;
+            font-size: 12px;
+            border-top: 1px solid #ecf0f1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="title">坐标持续上报系统</div>
+            <div class="subtitle">实时监控与上报您的位置信息</div>
+        </div>
+        
+        <div class="content">
+            <div class="btn-container">
+                <button class="btn btn-coordinates" id="coordinatesBtn">
+                    <span class="btn-icon"><i class="fas fa-location-dot"></i></span>
+                    <span>上报坐标</span>
+                </button>
+                
+                <button class="btn btn-safety" id="safetyBtn">
+                    <span class="btn-icon"><i class="fas fa-running"></i></span>
+                    <span>人身安全求救</span>
+                </button>
+                
+                <button class="btn btn-medical" id="medicalBtn">
+                    <span class="btn-icon"><i class="fas fa-briefcase-medical"></i></span>
+                    <span>医疗支援求救</span>
+                </button>
+                
+                <button class="btn btn-cancel" id="cancelBtn">取消</button>
+            </div>
+            
+            <div class="status-container">
+                <div class="status-header">
+                    <div class="status-title">系统状态</div>
+                    <div class="status-indicator">
+                        <div class="indicator-dot indicator-off" id="statusIndicator"></div>
+                        <div class="indicator-text" id="statusText">系统就绪</div>
+                    </div>
+                </div>
+                
+                <div class="status-grid">
+                    <div class="stat-item">
+                        <div class="stat-value" id="totalReports">0</div>
+                        <div class="stat-label">总上报次数</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="successRate">100%</div>
+                        <div class="stat-label">成功率</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="lastReport">--:--</div>
+                        <div class="stat-label">最后上报</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="reporting-panel" id="reportingPanel">
+                <div class="panel-header">
+                    <div class="panel-title">坐标上报中</div>
+                    <div class="panel-actions">
+                        <button class="btn-stop" id="stopBtn">
+                            <i class="fas fa-stop"></i> 停止上报
+                        </button>
+                        <button class="btn-clear" id="clearBtn">
+                            <i class="fas fa-trash"></i> 清除记录
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="progress-container">
+                    <div class="progress-header">
+                        <div class="progress-label">上报进度</div>
+                        <div class="progress-value" id="progressValue">0%</div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                </div>
+                
+                <div class="report-details">
+                    <div class="detail-row">
+                        <div class="detail-label">当前坐标</div>
+                        <div class="detail-value" id="currentCoords">--, --</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">上报精度</div>
+                        <div class="detail-value" id="currentAccuracy">-- 米</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">上报状态</div>
+                        <div class="detail-value" id="currentStatus">等待中</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="history-container" id="historyContainer">
+                <div class="history-title">
+                    <span>上报历史</span>
+                    <span id="historyCount">0 条记录</span>
+                </div>
+                <div class="history-list" id="historyList">
+                    <div class="empty-state">
+                        <div class="empty-icon"><i class="fas fa-inbox"></i></div>
+                        <div>暂无上报记录</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            坐标持续上报系统 &copy; 2023
+        </div>
+    </div>
+    
+    <div class="toast" id="toast"></div>
+    
+    <script>
+        // DOM元素
+        const coordinatesBtn = document.getElementById('coordinatesBtn');
+        const safetyBtn = document.getElementById('safetyBtn');
+        const medicalBtn = document.getElementById('medicalBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const statusIndicator = document.getElementById('statusIndicator');
+        const statusText = document.getElementById('statusText');
+        const totalReports = document.getElementById('totalReports');
+        const successRate = document.getElementById('successRate');
+        const lastReport = document.getElementById('lastReport');
+        const reportingPanel = document.getElementById('reportingPanel');
+        const stopBtn = document.getElementById('stopBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const progressValue = document.getElementById('progressValue');
+        const progressFill = document.getElementById('progressFill');
+        const currentCoords = document.getElementById('currentCoords');
+        const currentAccuracy = document.getElementById('currentAccuracy');
+        const currentStatus = document.getElementById('currentStatus');
+        const historyContainer = document.getElementById('historyContainer');
+        const historyCount = document.getElementById('historyCount');
+        const historyList = document.getElementById('historyList');
+        const toast = document.getElementById('toast');
+        
+        // 状态变量
+        let isReporting = false;
+        let reportInterval = null;
+        let reportCounter = 0;
+        let successCounter = 0;
+        let reportHistory = [];
+        let pressTimer;
+        
+        // 初始化事件监听
+        function init() {
+            // 坐标上报按钮（长按）
+            coordinatesBtn.addEventListener('mousedown', startPressTimer);
+            coordinatesBtn.addEventListener('touchstart', startPressTimer);
+            coordinatesBtn.addEventListener('mouseup', clearPressTimer);
+            coordinatesBtn.addEventListener('touchend', clearPressTimer);
+            coordinatesBtn.addEventListener('mouseleave', clearPressTimer);
+            
+            // 安全求救按钮（长按）
+            safetyBtn.addEventListener('mousedown', startSafetyPress);
+            safetyBtn.addEventListener('touchstart', startSafetyPress);
+            safetyBtn.addEventListener('mouseup', clearSafetyPress);
+            safetyBtn.addEventListener('touchend', clearSafetyPress);
+            safetyBtn.addEventListener('mouseleave', clearSafetyPress);
+            
+            // 医疗求救按钮（长按）
+            medicalBtn.addEventListener('mousedown', startMedicalPress);
+            medicalBtn.addEventListener('touchstart', startMedicalPress);
+            medicalBtn.addEventListener('mouseup', clearMedicalPress);
+            medicalBtn.addEventListener('touchend', clearMedicalPress);
+            medicalBtn.addEventListener('mouseleave', clearMedicalPress);
+            
+            // 取消按钮
+            cancelBtn.addEventListener('click', () => {
+                showToast('操作已取消');
+            });
+            
+            // 停止上报按钮
+            stopBtn.addEventListener('click', stopReporting);
+            
+            // 清除记录按钮
+            clearBtn.addEventListener('click', clearHistory);
+        }
+        
+        // 长按计时器
+        function startPressTimer(e) {
+            if (isReporting) return;
+            
+            clearPressTimer();
+            
+            pressTimer = setTimeout(() => {
+                coordinatesBtn.classList.add('active');
+                setTimeout(() => {
+                    coordinatesBtn.classList.remove('active');
+                    startReporting();
+                }, 1000);
+            }, 1000);
+        }
+        
+        function clearPressTimer() {
+            if (pressTimer) {
+                clearTimeout(pressTimer);
+                pressTimer = null;
+            }
+        }
+        
+        // 安全求救长按计时器
+        let safetyPressTimer;
+        
+        function startSafetyPress(e) {
+            clearSafetyPress();
+            
+            safetyPressTimer = setTimeout(() => {
+                safetyBtn.classList.add('active');
+                setTimeout(() => {
+                    safetyBtn.classList.remove('active');
+                    handleSafetyEmergency();
+                }, 1000);
+            }, 1000);
+        }
+        
+        function clearSafetyPress() {
+            if (safetyPressTimer) {
+                clearTimeout(safetyPressTimer);
+                safetyPressTimer = null;
+            }
+        }
+        
+        // 医疗求救长按计时器
+        let medicalPressTimer;
+        
+        function startMedicalPress(e) {
+            clearMedicalPress();
+            
+            medicalPressTimer = setTimeout(() => {
+                medicalBtn.classList.add('active');
+                setTimeout(() => {
+                    medicalBtn.classList.remove('active');
+                    handleMedicalEmergency();
+                }, 1000);
+            }, 1000);
+        }
+        
+        function clearMedicalPress() {
+            if (medicalPressTimer) {
+                clearTimeout(medicalPressTimer);
+                medicalPressTimer = null;
+            }
+        }
+        
+        // 开始上报
+        function startReporting() {
+            if (isReporting) return;
+            
+            isReporting = true;
+            statusIndicator.className = 'indicator-dot indicator-on';
+            statusText.textContent = '上报中';
+            reportingPanel.style.display = 'block';
+            historyContainer.style.display = 'block';
+            
+            // 重置计数器
+            reportCounter = 0;
+            successCounter = 0;
+            updateProgress();
+            
+            // 开始定时上报
+            reportInterval = setInterval(reportCoordinates, 5000);
+            
+            // 立即上报一次
+            reportCoordinates();
+            
+            showToast('坐标持续上报已启动');
+        }
+        
+        // 停止上报
+        function stopReporting() {
+            if (!isReporting) return;
+            
+            isReporting = false;
+            clearInterval(reportInterval);
+            statusIndicator.className = 'indicator-dot indicator-off';
+            statusText.textContent = '已停止';
+            reportingPanel.style.display = 'none';
+            
+            showToast('坐标上报已停止');
+        }
+        
+        // 上报坐标
+        function reportCoordinates() {
+            // 模拟获取坐标
+            const latitude = (34 + Math.random() * 10).toFixed(6);
+            const longitude = (108 + Math.random() * 10).toFixed(6);
+            const accuracy = Math.round(Math.random() * 50);
+            
+            // 随机决定成功或失败
+            const success = Math.random() > 0.2; // 80%成功率
+            
+            // 更新计数器
+            reportCounter++;
+            if (success) successCounter++;
+            
+            // 更新状态
+            updateProgress();
+            currentCoords.textContent = `${latitude}, ${longitude}`;
+            currentAccuracy.textContent = `${accuracy} 米`;
+            currentStatus.textContent = success ? '成功' : '失败';
+            currentStatus.style.color = success ? '#2ecc71' : '#e74c3c';
+            
+            // 更新最后上报时间
+            lastReport.textContent = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            // 添加到历史记录
+            addToHistory({
+                timestamp: new Date(),
+                latitude: latitude,
+                longitude: longitude,
+                accuracy: accuracy,
+                success: success
+            });
+            
+            // 模拟上报到服务器
+            console.log(`上报坐标: ${latitude}, ${longitude}, 精度: ${accuracy}米, 状态: ${success ? '成功' : '失败'}`);
+        }
+        
+        // 更新进度
+        function updateProgress() {
+            totalReports.textContent = reportCounter;
+            const rate = reportCounter > 0 ? Math.round((successCounter / reportCounter) * 100) : 100;
+            successRate.textContent = `${rate}%`;
+            
+            // 更新进度条（基于时间，每5秒增加5%）
+            const progress = Math.min(100, Math.floor((reportCounter * 5) / 3));
+            progressValue.textContent = `${progress}%`;
+            progressFill.style.width = `${progress}%`;
+        }
+        
+        // 添加到历史记录
+        function addToHistory(report) {
+            reportHistory.unshift(report);
+            
+            // 更新历史记录计数
+            historyCount.textContent = `${reportHistory.length} 条记录`;
+            
+            // 创建历史记录项
+            const historyItem = document.createElement('div');
+            historyItem.className = `history-item ${report.success ? '' : 'failed'}`;
+            
+            historyItem.innerHTML = `
+                <div>
+                    <div class="history-time">${report.timestamp.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+                    <div class="history-coords">${report.latitude}, ${report.longitude}</div>
+                </div>
+                <div class="history-status ${report.success ? 'status-success' : 'status-failed'}">
+                    ${report.success ? '成功' : '失败'}
+                </div>
+            `;
+            
+            // 移除空状态
+            const emptyState = historyList.querySelector('.empty-state');
+            if (emptyState) {
+                emptyState.remove();
+            }
+            
+            // 添加到列表顶部
+            historyList.insertBefore(historyItem, historyList.firstChild);
+            
+            // 限制历史记录数量
+            if (reportHistory.length > 10) {
+                reportHistory.pop();
+                if (historyList.children.length > 10) {
+                    historyList.removeChild(historyList.lastChild);
+                }
+            }
+        }
+        
+        // 清除历史记录
+        function clearHistory() {
+            if (reportHistory.length === 0) {
+                showToast('没有可清除的记录');
+                return;
+            }
+            
+            if (confirm('确定要清除所有上报记录吗？')) {
+                reportHistory = [];
+                historyCount.textContent = '0 条记录';
+                historyList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon"><i class="fas fa-inbox"></i></div>
+                        <div>暂无上报记录</div>
+                    </div>
+                `;
+                showToast('所有上报记录已清除');
+            }
+        }
+        
+        // 处理安全求救
+        function handleSafetyEmergency() {
+            showToast('人身安全求救已发送');
+        }
+        
+        // 处理医疗求救
+        function handleMedicalEmergency() {
+            showToast('医疗支援求救已发送');
+        }
+        
+        // 显示提示消息
+        function showToast(message) {
+            toast.textContent = message;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+        
+        // 初始化
+        window.onload = init;
+    </script>
+</body>
+</html>
