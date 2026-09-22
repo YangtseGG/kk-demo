@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>工程指令管理系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: #f4f6f9; }
+        .app-container { max-width: 480px; margin: 0 auto; background-color: #f4f6f9; min-height: 100vh; position: relative; }
+        .status-badge { padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+        .btn-primary { background-color: #2563eb; color: white; padding: 12px 20px; border-radius: 8px; font-weight: 600; }
+        .btn-warning { background-color: #f59e0b; color: white; padding: 12px 20px; border-radius: 8px; font-weight: 600; }
+        .btn-danger { background-color: #dc2626; color: white; padding: 12px 20px; border-radius: 8px; font-weight: 600; }
+        .btn-success { background-color: #16a34a; color: white; padding: 12px 20px; border-radius: 8px; font-weight: 600; }
+        .input-field { width: 100%; padding: 12px 16px; border: 1px solid #d1d5db; border-radius: 8px; background-color: white; font-size: 16px; }
+        .card { background-color: white; border-radius: 12px; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1); }
+        .signature-box { border: 2px dashed #cbd5e1; border-radius: 8px; height: 120px; display: flex; align-items: center; justify-content: center; color: #64748b; cursor: pointer; }
+        .signature-box.signed { border-style: solid; border-color: #22c55e; background-color: #f0fdf4; color: #15803d; }
+    </style>
+</head>
+<body class="app-container pb-24">
+
+    <!-- 顶部导航 -->
+    <header class="bg-white px-4 py-4 flex justify-between items-center shadow-sm sticky top-0 z-50">
+        <div class="flex items-center gap-2">
+            <i class="fa-solid fa-clipboard-list text-blue-600 text-xl"></i>
+            <h1 class="text-lg font-bold text-gray-800">工程指令单</h1>
+        </div>
+        <div id="current-user-role" class="text-xs bg-blue-100 text-blue-800 px-3 py-1 rounded-full font-semibold">施工单位</div>
+    </header>
+
+    <!-- 主内容 -->
+    <main class="p-4">
+        
+        <!-- ================= 场景一：指令列表 ================= -->
+        <section id="list-view">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-gray-900">指令单列表</h2>
+                <!-- 仅施工单位可见 -->
+                <button id="create-btn" onclick="switchView('create-view')" class="bg-blue-600 text-white p-2 rounded-full shadow-md">
+                    <i class="fa-solid fa-plus"></i>
+                </button>
+            </div>
+
+            <!-- 状态筛选 -->
+            <div class="flex gap-4 mb-4 overflow-x-auto pb-2">
+                <button class="whitespace-nowrap tab-active">全部</button>
+                <button class="whitespace-nowrap text-gray-500">待审核</button>
+                <button class="whitespace-nowrap text-gray-500">待签字</button>
+                <button class="whitespace-nowrap text-gray-500">已完结</button>
+            </div>
+
+            <!-- 列表数据 -->
+            <div class="space-y-3">
+                <!-- 单据 1：待监理审核 (施工单位视角) -->
+                <div class="card p-4" onclick="openDetail('pending_review')">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-bold text-gray-800">关于3号楼模板加固的指令</h3>
+                        <span class="status-badge bg-orange-100 text-orange-700">待监理审核</span>
+                    </div>
+                    <p class="text-sm text-gray-500">编号: GC-20260509-001</p>
+                    <div class="mt-3 flex gap-2">
+                        <button class="flex-1 text-xs bg-gray-200 text-gray-700 py-1.5 rounded-md" onclick="event.stopPropagation(); openDetail('rejected')">查看驳回意见</button>
+                    </div>
+                </div>
+
+                <!-- 单据 2：已驳回，需修改 (施工单位视角) -->
+                <div class="card p-4" onclick="openDetail('rejected')">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-bold text-gray-800">地下室外墙防水修补</h3>
+                        <span class="status-badge bg-red-100 text-red-700">已驳回</span>
+                    </div>
+                    <p class="text-sm text-gray-500">编号: GC-20260508-015</p>
+                    <div class="mt-3">
+                        <button class="w-full text-xs bg-yellow-500 text-white py-1.5 rounded-md" onclick="event.stopPropagation(); editOrder()">修改并重提</button>
+                    </div>
+                </div>
+
+                <!-- 单据 3：待施工单位签字 (监理视角) -->
+                <div class="card p-4" onclick="openDetail('pending_sign')">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-bold text-gray-800">场地材料清理指令</h3>
+                        <span class="status-badge bg-blue-100 text-blue-700">待施工单位签字</span>
+                    </div>
+                    <p class="text-sm text-gray-500">编号: GC-20260507-022</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= 场景二：发起/编辑指令 ================= -->
+        <section id="create-view" class="hidden">
+            <div class="flex items-center justify-between mb-4">
+                <button onclick="switchView('list-view')" class="text-blue-600 text-lg"><i class="fa-solid fa-arrow-left"></i> 返回</button>
+                <h2 class="text-lg font-bold">发起工程指令</h2>
+                <div class="w-8"></div>
+            </div>
+            <form onsubmit="event.preventDefault(); submitForReview();">
+                <div class="card p-4 mb-4 space-y-3">
+                    <input type="text" class="input-field" placeholder="指令主题 (必填)" required>
+                    <textarea class="input-field h-32" placeholder="指令详细内容..." required></textarea>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">上传附件</label>
+                        <div class="border-2 border-dashed rounded-lg p-4 text-center text-gray-500">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> 上传照片或PDF
+                        </div>
+                    </div>
+                </div>
+                <div class="fixed bottom-0 left-0 right-0 max-w-2xl mx-auto bg-white border-t p-3 flex gap-3">
+                    <button type="button" onclick="saveDraft()" class="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-bold">存草稿</button>
+                    <button type="submit" class="flex-1 btn-primary">提交审核</button>
+                </div>
+            </form>
+        </section>
+
+        <!-- ================= 场景三：指令详情与操作 ================= -->
+        <section id="detail-view" class="hidden">
+            <div class="flex items-center justify-between mb-4">
+                <button onclick="switchView('list-view')" class="text-blue-600 text-lg"><i class="fa-solid fa-arrow-left"></i> 返回</button>
+                <h2 class="text-lg font-bold truncate">指令详情</h2>
+                <div class="w-8"></div>
+            </div>
+
+            <div class="card p-4 mb-4">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="status-badge bg-orange-100 text-orange-700" id="detail-status">待监理审核</span>
+                </div>
+                <h3 class="font-bold text-lg mb-2">关于3号楼模板加固的指令</h3>
+                <p class="text-sm text-gray-600 leading-relaxed mb-4">
+                    因3号楼东侧剪力墙模板支撑间距过大，存在涨模风险，现指令你部立即停工整改，加密支撑间距至600mm以内...
+                </p>
+                
+                <!-- 驳回原因 (仅驳回时显示) -->
+                <div id="reject-reason" class="hidden bg-red-50 border-l-4 border-red-500 p-3 mb-4">
+                    <p class="font-bold text-red-700 text-sm">驳回原因：</p>
+                    <p class="text-sm text-red-600">未明确具体整改完成时间，请补充后重提。</p>
+                </div>
+
+                <!-- 签名区域 -->
+                <div class="grid grid-cols-2 gap-4 mt-4">
+                    <div>
+                        <p class="text-xs font-semibold mb-1">发起单位 (施工单位)</p>
+                        <div class="signature-box" id="sig-construct">
+                            <span>已签: 张工</span>
+                        </div>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold mb-1">审核单位 (监理单位)</p>
+                        <div class="signature-box" id="sig-supervisor">
+                            <span>点击此处签字</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 流转记录 -->
+            <div class="card p-4 mb-20">
+                <h3 class="font-semibold mb-3">流转记录</h3>
+                <div class="text-sm text-gray-600 space-y-2">
+                    <p>05-09 09:30 施工单位 张工 发起指令</p>
+                    <p id="review-log" class="text-orange-600">05-09 10:00 等待监理单位审核...</p>
+                </div>
+            </div>
+
+            <!-- 底部操作栏 (动态渲染) -->
+            <div id="detail-action-bar" class="fixed bottom-0 left-0 right-0 max-w-2xl mx-auto bg-white border-t border-gray-200 p-3 flex gap-3">
+                <!-- JS 动态填充按钮 -->
+            </div>
+        </section>
+    </main>
+
+    <!-- 底部角色切换 -->
+    <nav class="fixed bottom-0 left-0 right-0 max-w-2xl mx-auto bg-white border-t border-gray-200 flex justify-around py-2 px-4 z-50">
+        <button id="role-construct" onclick="switchRole('construct')" class="flex flex-col items-center text-blue-600">
+            <i class="fa-solid fa-hard-hat text-xl"></i>
+            <span class="text-[10px] mt-1">施工单位</span>
+        </button>
+        <button id="role-supervisor" onclick="switchRole('supervisor')" class="flex flex-col items-center text-gray-400">
+            <i class="fa-solid fa-clipboard-check text-xl"></i>
+            <span class="text-[10px] mt-1">监理单位</span>
+        </button>
+    </nav>
+
+    <script>
+        let currentRole = 'construct'; // 'construct' or 'supervisor'
+        let currentStatus = 'pending_review';
+
+        function switchView(viewId) {
+            ['list-view', 'create-view', 'detail-view'].forEach(id => {
+                document.getElementById(id).classList.toggle('hidden', id !== viewId);
+            });
+        }
+
+        function switchRole(role) {
+            currentRole = role;
+            document.getElementById('current-user-role').textContent = (role === 'construct' ? '施工单位' : '监理单位');
+            
+            // Update nav style
+            document.getElementById('role-construct').className = `flex flex-col items-center ${role === 'construct' ? 'text-blue-600' : 'text-gray-400'}`;
+            document.getElementById('role-supervisor').className = `flex flex-col items-center ${role === 'supervisor' ? 'text-blue-600' : 'text-gray-400'}`;
+            
+            // Show/Hide create button based on role
+            document.getElementById('create-btn').style.display = (role === 'construct' ? '' : 'none');
+            
+            switchView('list-view');
+        }
+
+        function openDetail(status) {
+            currentStatus = status;
+            switchView('detail-view');
+            renderDetailActions();
+        }
+        
+        function editOrder() {
+            alert("进入编辑模式，加载原数据...");
+            switchView('create-view');
+        }
+
+        function renderDetailActions() {
+            const bar = document.getElementById('detail-action-bar');
+            const statusBadge = document.getElementById('detail-status');
+            const rejectReason = document.getElementById('reject-reason');
+            const reviewLog = document.getElementById('review-log');
+            const sigSupervisor = document.getElementById('sig-supervisor');
+
+            // Reset
+            rejectReason.classList.add('hidden');
+            sigSupervisor.className = 'signature-box';
+            sigSupervisor.innerHTML = '<span>点击此处签字</span>';
+
+            let buttons = '';
+            
+            if (currentRole === 'supervisor') {
+                if (currentStatus === 'pending_review') {
+                    statusBadge.className = 'status-badge bg-orange-100 text-orange-700';
+                    statusBadge.textContent = '待监理审核';
+                    reviewLog.textContent = '05-09 10:00 等待监理单位审核...';
+                    buttons = `
+                        <button onclick="rejectOrder()" class="flex-1 btn-danger">驳回</button>
+                        <button onclick="approveAndSign()" class="flex-1 btn-success">审核通过并签字</button>
+                    `;
+                }
+            } else if (currentRole === 'construct') {
+                if (currentStatus === 'rejected') {
+                    statusBadge.className = 'status-badge bg-red-100 text-red-700';
+                    statusBadge.textContent = '已驳回';
+                    rejectReason.classList.remove('hidden');
+                    reviewLog.textContent = '05-08 14:00 监理工程师 李工 已驳回';
+                    buttons = `<button onclick="editOrder()" class="flex-1 btn-warning">修改指令</button>`;
+                } else if (currentStatus === 'pending_sign') {
+                    statusBadge.className = 'status-badge bg-blue-100 text-blue-700';
+                    statusBadge.textContent = '待施工单位签字';
+                    reviewLog.textContent = '05-07 16:00 监理工程师 李工 已签发';
+                    sigSupervisor.className = 'signature-box signed';
+                    sigSupervisor.innerHTML = '<span>已签: 李工</span>';
+                    buttons = `<button onclick="signAsConstruct()" class="flex-1 btn-primary">确认接收并签字</button>`;
+                }
+            }
+            bar.innerHTML = buttons;
+        }
+
+        function approveAndSign() {
+            alert("签名成功！指令已签发给施工单位。");
+            currentStatus = 'pending_sign';
+            renderDetailActions();
+        }
+
+        function rejectOrder() {
+            const reason = prompt("请输入驳回原因：");
+            if (reason) {
+                alert("指令已驳回给施工单位。");
+                currentStatus = 'rejected';
+                renderDetailActions();
+            }
+        }
+
+        function signAsConstruct() {
+            alert("施工单位签字成功！指令归档。");
+            switchView('list-view');
+        }
+        
+        function submitForReview() {
+            alert("指令已提交给监理单位审核！");
+            switchView('list-view');
+        }
+
+        function saveDraft() {
+            alert("草稿已保存。");
+        }
+
+        // Init
+        switchView('list-view');
+    </script>
+</body>
+</html>

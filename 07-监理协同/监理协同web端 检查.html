@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工程检查表单系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #1a73e8;
+            --engineer-color: #4285f4;
+            --manager-color: #34a853;
+            --approved-color: #0d6efd;
+            --not-approved-color: #dc3545;
+            --approved-as-noted-color: #fd7e14;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            padding-top: 20px;
+            padding-bottom: 40px;
+        }
+        
+        .container {
+            max-width: 1200px;
+        }
+        
+        .header-card {
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            margin-bottom: 25px;
+        }
+        
+        .role-badge {
+            font-size: 0.9rem;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+        
+        .engineer-badge {
+            background-color: rgba(66, 133, 244, 0.1);
+            color: var(--engineer-color);
+            border: 1px solid rgba(66, 133, 244, 0.3);
+        }
+        
+        .manager-badge {
+            background-color: rgba(52, 168, 83, 0.1);
+            color: var(--manager-color);
+            border: 1px solid rgba(52, 168, 83, 0.3);
+        }
+        
+        .check-tabs {
+            border-bottom: none;
+            margin-bottom: 20px;
+        }
+        
+        .check-tabs .nav-link {
+            border: 1px solid #dee2e6;
+            border-radius: 8px 8px 0 0;
+            margin-right: 8px;
+            font-weight: 500;
+            color: #495057;
+            transition: all 0.2s;
+        }
+        
+        .check-tabs .nav-link.active {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        
+        .form-card {
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            border: none;
+        }
+        
+        .form-section {
+            border-bottom: 1px solid #eee;
+            padding: 20px 0;
+        }
+        
+        .form-section:last-child {
+            border-bottom: none;
+        }
+        
+        .form-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+        
+        .form-check-option {
+            padding: 12px 15px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .form-check-option:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .form-check-option.selected {
+            border-width: 2px;
+        }
+        
+        .option-approved {
+            border-left: 4px solid var(--approved-color);
+        }
+        
+        .option-approved.selected {
+            background-color: rgba(13, 110, 253, 0.05);
+            border-color: var(--approved-color);
+        }
+        
+        .option-not-approved {
+            border-left: 4px solid var(--not-approved-color);
+        }
+        
+        .option-not-approved.selected {
+            background-color: rgba(220, 53, 69, 0.05);
+            border-color: var(--not-approved-color);
+        }
+        
+        .option-approved-as-noted {
+            border-left: 4px solid var(--approved-as-noted-color);
+        }
+        
+        .option-approved-as-noted.selected {
+            background-color: rgba(253, 126, 20, 0.05);
+            border-color: var(--approved-as-noted-color);
+        }
+        
+        .comment-box {
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            margin-top: 20px;
+            background-color: #f8f9fa;
+        }
+        
+        .comment-header {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .submission-history {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        .history-item {
+            padding: 10px 0;
+            border-bottom: 1px dashed #ddd;
+        }
+        
+        .history-item:last-child {
+            border-bottom: none;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-pending {
+            background-color: #6c757d;
+        }
+        
+        .status-engineer-submitted {
+            background-color: var(--engineer-color);
+        }
+        
+        .status-completed {
+            background-color: var(--manager-color);
+        }
+        
+        .btn-submit {
+            padding: 10px 30px;
+            font-weight: 500;
+        }
+        
+        .tab-status {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-left: 5px;
+        }
+        
+        .progress-container {
+            margin-top: 20px;
+        }
+        
+        .checklist-item {
+            padding: 8px 0;
+            border-bottom: 1px dashed #eee;
+        }
+        
+        .checklist-item:last-child {
+            border-bottom: none;
+        }
+        
+        .final-submit-section {
+            background-color: rgba(13, 110, 253, 0.05);
+            border-radius: 10px;
+            padding: 25px;
+            margin-top: 30px;
+            border: 2px dashed rgba(13, 110, 253, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-card card">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h2 class="mb-1">工程检查表单系统</h2>
+                        <p class="text-muted mb-0">工程师与现场经理协同工作流程 - 根据表单要求开发</p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <div class="d-flex justify-content-end align-items-center">
+                            <div class="me-3">
+                                <span>当前角色：</span>
+                                <div class="btn-group" role="group">
+                                    <button type="button" id="role-engineer" class="btn btn-outline-primary active">工程师</button>
+                                    <button type="button" id="role-manager" class="btn btn-outline-success">现场经理</button>
+                                </div>
+                            </div>
+                            <div>
+                                <span class="role-badge engineer-badge" id="current-role-badge">工程师</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card form-card mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">检查项目</h5>
+                        <p class="text-muted mb-0">请选择检查类型，填写检查结果和意见。每次只能提交一个类型。</p>
+                    </div>
+                    <div class="card-body">
+                        <ul class="nav nav-tabs check-tabs" id="checkTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="topography-tab" data-bs-toggle="tab" data-bs-target="#topography" type="button" role="tab">TOPOGRAPHY CHECK</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="geotechnical-tab" data-bs-toggle="tab" data-bs-target="#geotechnical" type="button" role="tab">GEOTECHNICAL CHECK</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="structural-tab" data-bs-toggle="tab" data-bs-target="#structural" type="button" role="tab">STRUCTURAL CHECK</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="architecture-tab" data-bs-toggle="tab" data-bs-target="#architecture" type="button" role="tab">ARCHITECTURE CHECK</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="permanent-tab" data-bs-toggle="tab" data-bs-target="#permanent" type="button" role="tab">PERMANENT WAY</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="mep-tab" data-bs-toggle="tab" data-bs-target="#mep" type="button" role="tab">MEP</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="sign-tel-tab" data-bs-toggle="tab" data-bs-target="#sign-tel" type="button" role="tab">SIG. & TEL.</button>
+                            </li>
+                        </ul>
+                        
+                        <div class="tab-content" id="checkTabContent">
+                            <!-- 每个检查类型的表单会通过JavaScript动态生成 -->
+                        </div>
+                        
+                        <div class="mt-4 pt-3 border-top">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <p class="text-muted mb-0" id="submit-instruction">工程师请选择检查结果并填写意见后提交。</p>
+                                </div>
+                                <div>
+                                    <button class="btn btn-primary btn-submit" id="submit-check" disabled>提交检查</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="final-submit-section">
+                    <h5 class="mb-3"><i class="fas fa-clipboard-check me-2"></i>最终提交</h5>
+                    <p>当所有需要检查的类型都已完成工程师和现场经理的提交后，可进行最终提交。</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="mb-0" id="completion-status">完成进度：0/7 个类型已完全检查</p>
+                            <div class="progress mt-2" style="height: 8px; width: 300px;">
+                                <div class="progress-bar" role="progressbar" style="width: 0%;"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <button class="btn btn-success btn-lg px-4" id="final-submit" disabled><i class="fas fa-paper-plane me-2"></i>最终提交所有检查</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="card form-card mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">检查进度</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="progress-container mb-4">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>总体进度</span>
+                                <span id="overall-progress">0%</span>
+                            </div>
+                            <div class="progress" style="height: 10px;">
+                                <div class="progress-bar" id="overall-progress-bar" role="progressbar" style="width: 0%;"></div>
+                            </div>
+                        </div>
+                        
+                        <h6 class="mb-3">检查状态</h6>
+                        <div id="check-status-list">
+                            <!-- 检查状态列表会通过JavaScript动态生成 -->
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card form-card">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">提交记录</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="submission-history">
+                            <p class="text-muted text-center mb-0">暂无提交记录</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 提交确认模态框 -->
+    <div class="modal fade" id="submitModal" tabindex="-1" aria-labelledby="submitModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="submitModalLabel">确认提交</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>您将提交 <strong id="modal-check-type">TOPOGRAPHY CHECK</strong> 的检查结果。</p>
+                    <div class="mb-3">
+                        <strong>检查结果：</strong> <span id="modal-check-result" class="badge bg-primary">APPROVED</span>
+                    </div>
+                    <div class="mb-3">
+                        <strong>检查意见：</strong>
+                        <p id="modal-check-comment" class="mt-1 p-2 bg-light rounded">无</p>
+                    </div>
+                    <p class="text-muted">提交后，<span id="modal-next-role">现场经理</span>将可以补充意见并提交。</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="confirm-submit">确认提交</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 最终提交确认模态框 -->
+    <div class="modal fade" id="finalSubmitModal" tabindex="-1" aria-labelledby="finalSubmitModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="finalSubmitModalLabel">最终提交确认</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>您将提交所有已完成的检查结果。提交后，所有检查将标记为完成。</p>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>请注意：</strong> 只有工程师和现场经理都已提交的检查类型才会被包含在最终提交中。
+                    </div>
+                    <div id="final-submit-list">
+                        <!-- 最终提交的检查列表会动态生成 -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-success" id="confirm-final-submit">确认最终提交</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 应用状态
+        const appState = {
+            currentRole: 'engineer', // 'engineer' 或 'manager'
+            currentCheckType: 'topography',
+            checkTypes: [
+                { id: 'topography', name: 'TOPOGRAPHY CHECK', status: 'pending' },
+                { id: 'geotechnical', name: 'GEOTECHNICAL CHECK', status: 'pending' },
+                { id: 'structural', name: 'STRUCTURAL CHECK', status: 'pending' },
+                { id: 'architecture', name: 'ARCHITECTURE CHECK', status: 'pending' },
+                { id: 'permanent', name: 'PERMANENT WAY', status: 'pending' },
+                { id: 'mep', name: 'MEP', status: 'pending' },
+                { id: 'sign-tel', name: 'SIG. & TEL.', status: 'pending' }
+            ],
+            submissions: [],
+            // 存储每个检查类型的数据
+            checkData: {}
+        };
+        
+        // 初始化检查数据
+        function initializeCheckData() {
+            appState.checkTypes.forEach(type => {
+                appState.checkData[type.id] = {
+                    engineer: { result: null, comment: '', submitted: false },
+                    manager: { result: null, comment: '', submitted: false },
+                    completed: false
+                };
+            });
+        }
+        
+        // 角色切换
+        document.getElementById('role-engineer').addEventListener('click', function() {
+            if (appState.currentRole !== 'engineer') {
+                appState.currentRole = 'engineer';
+                updateRoleUI();
+                updateFormsForRole();
+            }
+        });
+        
+        document.getElementById('role-manager').addEventListener('click', function() {
+            if (appState.currentRole !== 'manager') {
+                appState.currentRole = 'manager';
+                updateRoleUI();
+                updateFormsForRole();
+            }
+        });
+        
+        function updateRoleUI() {
+            const engineerBtn = document.getElementById('role-engineer');
+            const managerBtn = document.getElementById('role-manager');
+            const roleBadge = document.getElementById('current-role-badge');
+            const submitInstruction = document.getElementById('submit-instruction');
+            
+            if (appState.currentRole === 'engineer') {
+                engineerBtn.classList.add('active');
+                engineerBtn.classList.remove('btn-outline-primary');
+                engineerBtn.classList.add('btn-primary');
+                
+                managerBtn.classList.remove('active');
+                managerBtn.classList.remove('btn-success');
+                managerBtn.classList.add('btn-outline-success');
+                
+                roleBadge.textContent = '工程师';
+                roleBadge.className = 'role-badge engineer-badge';
+                submitInstruction.textContent = '工程师请选择检查结果并填写意见后提交。';
+            } else {
+                managerBtn.classList.add('active');
+                managerBtn.classList.remove('btn-outline-success');
+                managerBtn.classList.add('btn-success');
+                
+                engineerBtn.classList.remove('active');
+                engineerBtn.classList.remove('btn-primary');
+                engineerBtn.classList.add('btn-outline-primary');
+                
+                roleBadge.textContent = '现场经理';
+                roleBadge.className = 'role-badge manager-badge';
+                submitInstruction.textContent = '现场经理请补充检查意见后提交。';
+            }
+            
+            updateSubmitButtonState();
+        }
+        
+        // 生成检查类型表单
+        function generateCheckForms() {
+            const tabContent = document.getElementById('checkTabContent');
+            
+            appState.checkTypes.forEach((type, index) => {
+                const isActive = index === 0;
+                const formHtml = `
+                    <div class="tab-pane fade ${isActive ? 'show active' : ''}" id="${type.id}" role="tabpanel">
+                        <div class="form-section">
+                            <div class="form-title">${type.name}</div>
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="mb-4">
+                                        <p class="mb-2"><strong>选择检查结果:</strong></p>
+                                        <div class="form-check-option option-approved" data-result="approved">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="${type.id}-result" id="${type.id}-approved" value="approved">
+                                                <label class="form-check-label fw-medium" for="${type.id}-approved">
+                                                    APPROVED
+                                                </label>
+                                            </div>
+                                            <p class="text-muted mb-0 small">检查通过，无需修改</p>
+                                        </div>
+                                        
+                                        <div class="form-check-option option-not-approved" data-result="not-approved">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="${type.id}-result" id="${type.id}-not-approved" value="not-approved">
+                                                <label class="form-check-label fw-medium" for="${type.id}-not-approved">
+                                                    NOT APPROVED
+                                                </label>
+                                            </div>
+                                            <p class="text-muted mb-0 small">检查不通过，需要修改</p>
+                                        </div>
+                                        
+                                        <div class="form-check-option option-approved-as-noted" data-result="approved-as-noted">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="${type.id}-result" id="${type.id}-approved-as-noted" value="approved-as-noted">
+                                                <label class="form-check-label fw-medium" for="${type.id}-approved-as-noted">
+                                                    APPROVED AS NOTED
+                                                </label>
+                                            </div>
+                                            <p class="text-muted mb-0 small">有条件通过，需注意备注事项</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="comment-box">
+                                        <div class="comment-header">${appState.currentRole === 'engineer' ? '工程师检查意见' : '现场经理检查意见'}</div>
+                                        <div class="mb-3">
+                                            <textarea class="form-control" id="${type.id}-comment" rows="8" placeholder="请输入检查意见..."></textarea>
+                                        </div>
+                                        <div class="submission-history" id="${type.id}-history">
+                                            <div class="comment-header">提交历史</div>
+                                            <div id="${type.id}-history-content">
+                                                <p class="text-muted small mb-0">暂无提交记录</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                tabContent.innerHTML += formHtml;
+            });
+            
+            // 为所有单选按钮添加事件监听
+            document.querySelectorAll('.form-check-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    const radioInput = this.querySelector('input[type="radio"]');
+                    if (radioInput && !radioInput.disabled) {
+                        radioInput.checked = true;
+                        updateSelectedOptionUI(this);
+                        updateSubmitButtonState();
+                    }
+                });
+            });
+            
+            // 为所有单选按钮添加点击事件
+            document.querySelectorAll('input[type="radio"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    const parentOption = this.closest('.form-check-option');
+                    updateSelectedOptionUI(parentOption);
+                    updateSubmitButtonState();
+                });
+            });
+            
+            // 为所有文本区域添加输入事件
+            document.querySelectorAll('textarea').forEach(textarea => {
+                textarea.addEventListener('input', updateSubmitButtonState);
+            });
+        }
+        
+        // 更新选中选项的UI
+        function updateSelectedOptionUI(optionElement) {
+            // 移除同一组中其他选项的选中状态
+            const parent = optionElement.parentElement;
+            parent.querySelectorAll('.form-check-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            
+            // 添加当前选项的选中状态
+            optionElement.classList.add('selected');
+        }
+        
+        // 根据角色更新表单
+        function updateFormsForRole() {
+            const isEngineer = appState.currentRole === 'engineer';
+            const currentCheckId = appState.currentCheckType;
+            const currentCheckData = appState.checkData[currentCheckId];
+            
+            // 更新所有表单
+            appState.checkTypes.forEach(type => {
+                const checkData = appState.checkData[type.id];
+                const resultRadios = document.querySelectorAll(`input[name="${type.id}-result"]`);
+                const commentTextarea = document.getElementById(`${type.id}-comment`);
+                const historyContent = document.getElementById(`${type.id}-history-content`);
+                
+                // 更新提交历史
+                updateSubmissionHistory(type.id);
+                
+                // 如果工程师已提交，现场经理可以看到结果但不能修改
+                if (isEngineer) {
+                    // 工程师角色
+                    if (checkData.engineer.submitted) {
+                        // 工程师已提交，禁用表单
+                        resultRadios.forEach(radio => radio.disabled = true);
+                        commentTextarea.disabled = true;
+                        
+                        // 显示已选择的结果
+                        if (checkData.engineer.result) {
+                            const selectedRadio = document.querySelector(`input[name="${type.id}-result"][value="${checkData.engineer.result}"]`);
+                            if (selectedRadio) {
+                                selectedRadio.checked = true;
+                                const parentOption = selectedRadio.closest('.form-check-option');
+                                updateSelectedOptionUI(parentOption);
+                            }
+                        }
+                        
+                        // 显示已填写的意见
+                        commentTextarea.value = checkData.engineer.comment;
+                    } else {
+                        // 工程师未提交，启用表单
+                        resultRadios.forEach(radio => radio.disabled = false);
+                        commentTextarea.disabled = false;
+                        
+                        // 恢复已选择的结果（如果有）
+                        if (checkData.engineer.result) {
+                            const selectedRadio = document.querySelector(`input[name="${type.id}-result"][value="${checkData.engineer.result}"]`);
+                            if (selectedRadio) {
+                                selectedRadio.checked = true;
+                                const parentOption = selectedRadio.closest('.form-check-option');
+                                updateSelectedOptionUI(parentOption);
+                            }
+                        }
+                        
+                        // 恢复已填写的意见
+                        commentTextarea.value = checkData.engineer.comment;
+                    }
+                } else {
+                    // 现场经理角色
+                    if (checkData.engineer.submitted) {
+                        // 工程师已提交，现场经理可以填写意见
+                        commentTextarea.disabled = false;
+                        
+                        // 显示工程师选择的结果，但禁用单选按钮
+                        resultRadios.forEach(radio => {
+                            radio.disabled = true;
+                            if (radio.value === checkData.engineer.result) {
+                                radio.checked = true;
+                                const parentOption = radio.closest('.form-check-option');
+                                updateSelectedOptionUI(parentOption);
+                            }
+                        });
+                        
+                        // 如果现场经理已提交，禁用文本区域
+                        if (checkData.manager.submitted) {
+                            commentTextarea.disabled = true;
+                        }
+                        
+                        // 显示已填写的意见
+                        commentTextarea.value = checkData.manager.submitted ? checkData.manager.comment : checkData.manager.comment;
+                    } else {
+                        // 工程师未提交，现场经理不能操作
+                        resultRadios.forEach(radio => radio.disabled = true);
+                        commentTextarea.disabled = true;
+                        commentTextarea.placeholder = "等待工程师提交检查结果...";
+                    }
+                }
+            });
+            
+            // 更新提交按钮状态
+            updateSubmitButtonState();
+        }
+        
+        // 更新提交按钮状态
+        function updateSubmitButtonState() {
+            const currentCheckId = appState.currentCheckType;
+            const currentCheckData = appState.checkData[currentCheckId];
+            const submitButton = document.getElementById('submit-check');
+            const isEngineer = appState.currentRole === 'engineer';
+            
+            let canSubmit = false;
+            
+            if (isEngineer) {
+                // 工程师：必须选择结果并填写意见，且尚未提交
+                const selectedResult = document.querySelector(`input[name="${currentCheckId}-result"]:checked`);
+                const comment = document.getElementById(`${currentCheckId}-comment`).value.trim();
+                
+                canSubmit = selectedResult && comment.length > 0 && !currentCheckData.engineer.submitted;
+            } else {
+                // 现场经理：工程师必须已提交，现场经理尚未提交，且填写了意见
+                const comment = document.getElementById(`${currentCheckId}-comment`).value.trim();
+                
+                canSubmit = currentCheckData.engineer.submitted && 
+                           !currentCheckData.manager.submitted && 
+                           comment.length > 0;
+            }
+            
+            submitButton.disabled = !canSubmit;
+        }
+        
+        // 更新提交历史
+        function updateSubmissionHistory(checkId) {
+            const historyContent = document.getElementById(`${checkId}-history-content`);
+            const checkData = appState.checkData[checkId];
+            
+            let historyHtml = '';
+            
+            if (checkData.engineer.submitted) {
+                const resultText = getResultText(checkData.engineer.result);
+                const resultClass = getResultClass(checkData.engineer.result);
+                
+                historyHtml += `
+                    <div class="history-item">
+                        <div class="d-flex justify-content-between">
+                            <span><i class="fas fa-user-circle me-1" style="color: var(--engineer-color);"></i> 工程师</span>
+                            <span class="badge ${resultClass}">${resultText}</span>
+                        </div>
+                        <p class="small mb-1 mt-1">${checkData.engineer.comment || "无意见"}</p>
+                        <p class="text-muted small mb-0">${formatDate(new Date())}</p>
+                    </div>
+                `;
+            }
+            
+            if (checkData.manager.submitted) {
+                const resultText = getResultText(checkData.engineer.result); // 现场经理不选择结果，使用工程师的结果
+                const resultClass = getResultClass(checkData.engineer.result);
+                
+                historyHtml += `
+                    <div class="history-item">
+                        <div class="d-flex justify-content-between">
+                            <span><i class="fas fa-user-tie me-1" style="color: var(--manager-color);"></i> 现场经理</span>
+                            <span class="badge ${resultClass}">${resultText}</span>
+                        </div>
+                        <p class="small mb-1 mt-1">${checkData.manager.comment || "无补充意见"}</p>
+                        <p class="text-muted small mb-0">${formatDate(new Date())}</p>
+                    </div>
+                `;
+            }
+            
+            if (!checkData.engineer.submitted && !checkData.manager.submitted) {
+                historyHtml = '<p class="text-muted small mb-0">暂无提交记录</p>';
+            }
+            
+            historyContent.innerHTML = historyHtml;
+        }
+        
+        // 获取结果文本
+        function getResultText(result) {
+            switch(result) {
+                case 'approved': return 'APPROVED';
+                case 'not-approved': return 'NOT APPROVED';
+                case 'approved-as-noted': return 'APPROVED AS NOTED';
+                default: return '未选择';
+            }
+        }
+        
+        // 获取结果对应的CSS类
+        function getResultClass(result) {
+            switch(result) {
+                case 'approved': return 'bg-primary';
+                case 'not-approved': return 'bg-danger';
+                case 'approved-as-noted': return 'bg-warning text-dark';
+                default: return 'bg-secondary';
+            }
+        }
+        
+        // 格式化日期
+        function formatDate(date) {
+            return date.toLocaleDateString('zh-CN') + ' ' + date.toLocaleTimeString('zh-CN', {hour: '2-digit', minute:'2-digit'});
+        }
+        
+        // 更新检查状态列表
+        function updateCheckStatusList() {
+            const statusList = document.getElementById('check-status-list');
+            let completedCount = 0;
+            
+            let statusHtml = '';
+            
+            appState.checkTypes.forEach(type => {
+                const checkData = appState.checkData[type.id];
+                let statusText = '';
+                let statusClass = '';
+                let statusIcon = '';
+                
+                if (checkData.engineer.submitted && checkData.manager.submitted) {
+                    statusText = '已完成';
+                    statusClass = 'status-completed';
+                    statusIcon = '<i class="fas fa-check-circle me-1" style="color: var(--manager-color);"></i>';
+                    completedCount++;
+                } else if (checkData.engineer.submitted) {
+                    statusText = '工程师已提交';
+                    statusClass = 'status-engineer-submitted';
+                    statusIcon = '<i class="fas fa-user-circle me-1" style="color: var(--engineer-color);"></i>';
+                } else {
+                    statusText = '待提交';
+                    statusClass = 'status-pending';
+                    statusIcon = '<i class="fas fa-clock me-1" style="color: #6c757d;"></i>';
+                }
+                
+                statusHtml += `
+                    <div class="checklist-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                ${statusIcon}
+                                <span>${type.name}</span>
+                            </div>
+                            <div>
+                                <span class="badge bg-light text-dark">${statusText}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            statusList.innerHTML = statusHtml;
+            
+            // 更新进度条
+            const progress = Math.round((completedCount / appState.checkTypes.length) * 100);
+            document.getElementById('overall-progress').textContent = `${progress}%`;
+            document.getElementById('overall-progress-bar').style.width = `${progress}%`;
+            
+            // 更新完成状态
+            document.getElementById('completion-status').textContent = `完成进度：${completedCount}/${appState.checkTypes.length} 个类型已完全检查`;
+            
+            // 更新最终提交按钮状态
+            const finalSubmitButton = document.getElementById('final-submit');
+            finalSubmitButton.disabled = completedCount === 0;
+            
+            // 更新选项卡状态指示器
+            updateTabIndicators();
+        }
+        
+        // 更新选项卡指示器
+        function updateTabIndicators() {
+            appState.checkTypes.forEach(type => {
+                const tabButton = document.getElementById(`${type.id}-tab`);
+                const checkData = appState.checkData[type.id];
+                
+                // 移除现有指示器
+                const existingIndicator = tabButton.querySelector('.tab-status');
+                if (existingIndicator) {
+                    tabButton.removeChild(existingIndicator);
+                }
+                
+                // 添加新的指示器
+                if (checkData.engineer.submitted && checkData.manager.submitted) {
+                    const indicator = document.createElement('span');
+                    indicator.className = 'tab-status';
+                    indicator.style.backgroundColor = 'var(--manager-color)';
+                    tabButton.appendChild(indicator);
+                } else if (checkData.engineer.submitted) {
+                    const indicator = document.createElement('span');
+                    indicator.className = 'tab-status';
+                    indicator.style.backgroundColor = 'var(--engineer-color)';
+                    tabButton.appendChild(indicator);
+                }
+            });
+        }
+        
+        // 提交检查
+        document.getElementById('submit-check').addEventListener('click', function() {
+            const currentCheckId = appState.currentCheckType;
+            const currentCheckData = appState.checkData[currentCheckId];
+            const isEngineer = appState.currentRole === 'engineer';
+            
+            let result = null;
+            let comment = '';
+            
+            if (isEngineer) {
+                // 获取工程师选择的结果
+                const selectedRadio = document.querySelector(`input[name="${currentCheckId}-result"]:checked`);
+                if (!selectedRadio) {
+                    alert('请选择检查结果');
+                    return;
+                }
+                result = selectedRadio.value;
+                comment = document.getElementById(`${currentCheckId}-comment`).value.trim();
+                
+                if (!comment) {
+                    alert('请填写检查意见');
+                    return;
+                }
+                
+                // 更新数据
+                currentCheckData.engineer.result = result;
+                currentCheckData.engineer.comment = comment;
+                currentCheckData.engineer.submitted = true;
+                
+                // 更新检查状态
+                updateCheckStatus(currentCheckId, 'engineer-submitted');
+            } else {
+                // 现场经理
+                comment = document.getElementById(`${currentCheckId}-comment`).value.trim();
+                
+                if (!comment) {
+                    alert('请填写检查意见');
+                    return;
+                }
+                
+                // 更新数据
+                currentCheckData.manager.comment = comment;
+                currentCheckData.manager.submitted = true;
+                
+                // 更新检查状态
+                updateCheckStatus(currentCheckId, 'completed');
+            }
+            
+            // 记录提交
+            const submission = {
+                id: Date.now(),
+                checkType: appState.checkTypes.find(t => t.id === currentCheckId).name,
+                role: appState.currentRole === 'engineer' ? '工程师' : '现场经理',
+                result: isEngineer ? getResultText(result) : getResultText(currentCheckData.engineer.result),
+                comment: comment,
+                timestamp: new Date()
+            };
+            
+            appState.submissions.unshift(submission);
+            
+            // 更新UI
+            updateSubmissionHistory(currentCheckId);
+            updateCheckStatusList();
+            updateFormsForRole();
+            
+            // 显示成功消息
+            showSubmissionSuccess(isEngineer);
+            
+            // 清空表单（如果不是工程师已提交且现场经理未提交的情况）
+            if (!(isEngineer && !currentCheckData.manager.submitted)) {
+                clearCurrentForm();
+            }
+        });
+        
+        // 更新检查状态
+        function updateCheckStatus(checkId, status) {
+            const checkType = appState.checkTypes.find(t => t.id === checkId);
+            if (checkType) {
+                checkType.status = status;
+            }
+        }
+        
+        // 显示提交成功消息
+        function showSubmissionSuccess(isEngineer) {
+            const currentCheckName = appState.checkTypes.find(t => t.id === appState.currentCheckType).name;
+            
+            let message = '';
+            if (isEngineer) {
+                message = `工程师已成功提交 ${currentCheckName} 的检查结果。`;
+                message += ' 现在请现场经理补充检查意见。';
+            } else {
+                message = `现场经理已成功提交 ${currentCheckName} 的补充意见。`;
+                message += ' 该检查类型已完成。';
+            }
+            
+            // 创建提示消息
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert ${isEngineer ? 'alert-primary' : 'alert-success'} alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                <i class="fas ${isEngineer ? 'fa-user-circle' : 'fa-user-tie'} me-2"></i>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            // 将提示消息插入到页面顶部
+            const container = document.querySelector('.container');
+            container.insertBefore(alertDiv, container.firstChild);
+            
+            // 5秒后自动消失
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.classList.remove('show');
+                    setTimeout(() => {
+                        if (alertDiv.parentNode) {
+                            alertDiv.parentNode.removeChild(alertDiv);
+                        }
+                    }, 300);
+                }
+            }, 5000);
+        }
+        
+        // 清空当前表单
+        function clearCurrentForm() {
+            const currentCheckId = appState.currentCheckType;
+            const currentCheckData = appState.checkData[currentCheckId];
+            
+            // 如果不是工程师已提交且现场经理未提交的情况，清空表单
+            if (!(currentCheckData.engineer.submitted && !currentCheckData.manager.submitted)) {
+                // 清除选中的单选按钮
+                document.querySelectorAll(`input[name="${currentCheckId}-result"]`).forEach(radio => {
+                    radio.checked = false;
+                });
+                
+                // 清除选项的选中样式
+                document.querySelectorAll(`#${currentCheckId} .form-check-option`).forEach(option => {
+                    option.classList.remove('selected');
+                });
+                
+                // 清空文本区域
+                document.getElementById(`${currentCheckId}-comment`).value = '';
+            }
+            
+            // 更新提交按钮状态
+            updateSubmitButtonState();
+        }
+        
+        // 最终提交
+        document.getElementById('final-submit').addEventListener('click', function() {
+            // 检查是否有已完成的检查
+            const completedChecks = appState.checkTypes.filter(type => {
+                const checkData = appState.checkData[type.id];
+                return checkData.engineer.submitted && checkData.manager.submitted;
+            });
+            
+            if (completedChecks.length === 0) {
+                alert('没有已完成的检查类型，无法进行最终提交。');
+                return;
+            }
+            
+            // 显示最终提交确认模态框
+            const finalSubmitList = document.getElementById('final-submit-list');
+            let listHtml = '<p>以下检查类型将被提交：</p><ul class="list-group mb-3">';
+            
+            completedChecks.forEach(type => {
+                const checkData = appState.checkData[type.id];
+                listHtml += `
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        ${type.name}
+                        <div>
+                            <span class="badge ${getResultClass(checkData.engineer.result)} me-2">${getResultText(checkData.engineer.result)}</span>
+                            <span class="badge bg-success">已完成</span>
+                        </div>
+                    </li>
+                `;
+            });
+            
+            listHtml += '</ul>';
+            finalSubmitList.innerHTML = listHtml;
+            
+            const finalSubmitModal = new bootstrap.Modal(document.getElementById('finalSubmitModal'));
+            finalSubmitModal.show();
+        });
+        
+        // 确认最终提交
+        document.getElementById('confirm-final-submit').addEventListener('click', function() {
+            // 这里可以添加将数据提交到服务器的代码
+            alert('所有检查结果已成功提交！');
+            
+            // 关闭模态框
+            const finalSubmitModal = bootstrap.Modal.getInstance(document.getElementById('finalSubmitModal'));
+            finalSubmitModal.hide();
+            
+            // 重置所有数据（模拟提交成功后的状态）
+            // 在实际应用中，这里应该重定向到成功页面或显示成功消息
+        });
+        
+        // 选项卡切换事件
+        document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(tab => {
+            tab.addEventListener('shown.bs.tab', function(event) {
+                const targetId = event.target.getAttribute('data-bs-target').substring(1);
+                appState.currentCheckType = targetId;
+                updateSubmitButtonState();
+            });
+        });
+        
+        // 初始化应用
+        function initApp() {
+            initializeCheckData();
+            generateCheckForms();
+            updateRoleUI();
+            updateFormsForRole();
+            updateCheckStatusList();
+            
+            // 设置第一个选项卡为活动状态
+            appState.currentCheckType = 'topography';
+            
+            // 添加提交记录更新
+            updateSubmissionRecords();
+        }
+        
+        // 更新提交记录
+        function updateSubmissionRecords() {
+            const historyContainer = document.getElementById('submission-history');
+            
+            if (appState.submissions.length === 0) {
+                historyContainer.innerHTML = '<p class="text-muted text-center mb-0">暂无提交记录</p>';
+                return;
+            }
+            
+            let historyHtml = '';
+            appState.submissions.forEach(submission => {
+                const roleClass = submission.role === '工程师' ? 'engineer-badge' : 'manager-badge';
+                const roleIcon = submission.role === '工程师' ? 'fa-user-circle' : 'fa-user-tie';
+                
+                historyHtml += `
+                    <div class="history-item">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="badge ${roleClass}"><i class="fas ${roleIcon} me-1"></i>${submission.role}</span>
+                            <span class="text-muted small">${formatDate(submission.timestamp)}</span>
+                        </div>
+                        <p class="mb-1"><strong>${submission.checkType}</strong></p>
+                        <p class="small mb-1">${submission.comment}</p>
+                        <div class="d-flex justify-content-between">
+                            <span class="badge bg-light text-dark">${submission.result}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            historyContainer.innerHTML = historyHtml;
+        }
+        
+        // 页面加载完成后初始化应用
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>

@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>土方工程监控系统 - 历史运输路径</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background-color: #f0f2f5;
+            color: #333;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        
+        /* 顶部导航 */
+        .app-header {
+            height: 60px;
+            background: linear-gradient(90deg, #102d61 0%, #0a2049 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            z-index: 100;
+        }
+        
+        .app-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-right: 15px;
+        }
+        
+        .search-box {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.2);
+            height: 36px;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+        }
+        
+        .search-box input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: white;
+            padding-left: 8px;
+            font-size: 14px;
+            outline: none;
+        }
+        
+        .search-box input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        /* 地图容器 */
+        .map-container {
+            flex: 1;
+            position: relative;
+            background: #e2e8f0;
+            overflow: hidden;
+        }
+        
+        .map-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, rgba(32, 87, 157, 0.2) 0%, rgba(32, 87, 157, 0.1) 100%);
+            z-index: 1;
+        }
+        
+        .grid-lines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 45, 97, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 45, 97, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: 0;
+        }
+        
+        /* 热力图开关 */
+        .heatmap-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 12px 20px;
+            z-index: 50;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+            font-size: 15px;
+            font-weight: 500;
+            color: #102d61;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 46px;
+            height: 26px;
+            margin-left: 12px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: #0d5bac;
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+        
+        /* 图例 */
+        .map-legend {
+            position: absolute;
+            bottom: 100px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 18px;
+            z-index: 50;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+            font-size: 14px;
+            width: 170px;
+        }
+        
+        .legend-title {
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #102d61;
+            display: flex;
+            align-items: center;
+            font-size: 16px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        
+        .legend-title i {
+            margin-right: 10px;
+            font-size: 18px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .legend-color {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            margin-right: 12px;
+        }
+        
+        .legend-color.excavate {
+            background: #48b0fb;
+        }
+        
+        .legend-color.fill {
+            background: #ff6b6b;
+        }
+        
+        .legend-color.discard {
+            background: #ffc845;
+        }
+        
+        /* 筛选面板 */
+        .filter-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 20px;
+            z-index: 50;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+            width: 300px;
+        }
+        
+        .filter-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #102d61;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .filter-title i {
+            margin-right: 10px;
+            color: #0d5bac;
+            font-size: 20px;
+        }
+        
+        .filter-group {
+            margin-bottom: 20px;
+        }
+        
+        .filter-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .filter-select {
+            width: 100%;
+            padding: 12px 15px;
+            border-radius: 12px;
+            border: 1px solid #ddd;
+            background: white;
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        
+        .filter-select:focus {
+            border-color: #0d5bac;
+        }
+        
+        .date-range {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .date-input {
+            flex: 1;
+            padding: 12px 15px;
+            border-radius: 12px;
+            border: 1px solid #ddd;
+            background: white;
+            font-size: 15px;
+        }
+        
+        .filter-button {
+            width: 100%;
+            background: #0d5bac;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(13, 91, 172, 0.3);
+            transition: all 0.3s;
+        }
+        
+        .filter-button:hover {
+            background: #0b4b8e;
+            transform: translateY(-2px);
+        }
+        
+        /* 统计面板 */
+        .stat-panel {
+            position: absolute;
+            bottom: 30px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 18px;
+            z-index: 50;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+            font-size: 14px;
+            width: 200px;
+        }
+        
+        .panel-title {
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #102d61;
+            font-size: 16px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+        
+        .stat-label {
+            color: #666;
+        }
+        
+        .stat-value {
+            font-weight: 700;
+            color: #102d61;
+        }
+        
+        /* 作业区 */
+        .work-area {
+            position: absolute;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            color: white;
+            font-weight: 500;
+            z-index: 20;
+        }
+        
+        .excavate-area {
+            top: 150px;
+            left: 200px;
+            width: 180px;
+            height: 180px;
+            background: rgba(72, 176, 251, 0.45);
+            border: 3px solid #48b0fb;
+        }
+        
+        .fill-area {
+            top: 250px;
+            left: 400px;
+            width: 160px;
+            height: 160px;
+            background: rgba(255, 107, 107, 0.45);
+            border: 3px solid #ff6b6b;
+        }
+        
+        .discard-area {
+            top: 100px;
+            left: 500px;
+            width: 140px;
+            height: 140px;
+            background: rgba(255, 200, 69, 0.45);
+            border: 3px solid #ffc845;
+        }
+        
+        .area-value {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 5px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .area-label {
+            font-size: 14px;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* 历史路径 */
+        .history-routes {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 25;
+        }
+        
+        .route {
+            position: absolute;
+            height: 8px;
+            background: #e74c3c;
+            border-radius: 4px;
+            box-shadow: 0 2px 10px rgba(231, 76, 60, 0.4);
+            z-index: 25;
+            transform-origin: left center;
+        }
+        
+        .route-1 {
+            top: 180px;
+            left: 200px;
+            width: 300px;
+            transform: rotate(15deg);
+        }
+        
+        .route-2 {
+            top: 220px;
+            left: 250px;
+            width: 280px;
+            transform: rotate(25deg);
+        }
+        
+        .route-3 {
+            top: 280px;
+            left: 180px;
+            width: 320px;
+            transform: rotate(-10deg);
+        }
+        
+        .route-vehicle {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: #e74c3c;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            border: 3px solid white;
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.5);
+            z-index: 30;
+        }
+        
+        .vehicle-1 {
+            top: 170px;
+            left: 480px;
+        }
+        
+        .vehicle-2 {
+            top: 210px;
+            left: 510px;
+        }
+        
+        .vehicle-3 {
+            top: 270px;
+            left: 470px;
+        }
+        
+        /* 路径信息 */
+        .route-info {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 12px 15px;
+            font-size: 13px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+            z-index: 40;
+            max-width: 200px;
+        }
+        
+        .info-1 {
+            top: 150px;
+            left: 490px;
+        }
+        
+        .info-2 {
+            top: 190px;
+            left: 520px;
+        }
+        
+        .info-3 {
+            top: 250px;
+            left: 480px;
+        }
+        
+        .route-label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #102d61;
+        }
+        
+        .route-detail {
+            color: #666;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- 顶部导航 -->
+        <div class="app-header">
+            <div class="app-title">土方工程监控</div>
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="搜索车辆或设备号...">
+            </div>
+        </div>
+        
+        <!-- 地图区域 -->
+        <div class="map-container">
+            <!-- 背景网格 -->
+            <div class="grid-lines"></div>
+            <div class="map-overlay"></div>
+            
+            <!-- 热力图开关 -->
+            <div class="heatmap-toggle">
+                <span>显示热力图</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="heatmap-toggle" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+            
+            <!-- 筛选面板 -->
+            <div class="filter-panel">
+                <div class="filter-title">
+                    <i class="fas fa-filter"></i>历史路径筛选
+                </div>
+                
+                <div class="filter-group">
+                    <label class="filter-label">时间范围</label>
+                    <div class="date-range">
+                        <input type="date" class="date-input" value="2023-10-20">
+                        <input type="date" class="date-input" value="2023-10-25">
+                    </div>
+                </div>
+                
+                <div class="filter-group">
+                    <label class="filter-label">选择车辆</label>
+                    <select class="filter-select">
+                        <option>所有车辆</option>
+                        <option selected>鲁B-3427A</option>
+                        <option>鲁B-5K688</option>
+                        <option>鲁B-7386C</option>
+                        <option>鲁B-2895E</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label class="filter-label">作业区域</label>
+                    <select class="filter-select">
+                        <option>所有区域</option>
+                        <option selected>装土区</option>
+                        <option>填土区</option>
+                        <option>弃土区</option>
+                    </select>
+                </div>
+                
+                <button class="filter-button">
+                    <i class="fas fa-search"></i> 查询历史路径
+                </button>
+            </div>
+            
+            <!-- 图例 -->
+            <div class="map-legend">
+                <div class="legend-title">
+                    <i class="fas fa-map-marker-alt"></i>区域图例
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color excavate"></div>
+                    <div class="legend-text">装土区</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color fill"></div>
+                    <div class="legend-text">填土区</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color discard"></div>
+                    <div class="legend-text">弃土区</div>
+                </div>
+            </div>
+            
+            <!-- 统计面板 -->
+            <div class="stat-panel">
+                <div class="panel-title">工程统计概览</div>
+                <div class="stat-row">
+                    <div class="stat-label">完成土方量</div>
+                    <div class="stat-value">15,680方</div>
+                </div>
+                <div class="stat-row">
+                    <div class="stat-label">运输车辆</div>
+                    <div class="stat-value">18辆</div>
+                </div>
+                <div class="stat-row">
+                    <div class="stat-label">今日运输量</div>
+                    <div class="stat-value">3,720方</div>
+                </div>
+                <div class="stat-row">
+                    <div class="stat-label">历史路径</div>
+                    <div class="stat-value">3条</div>
+                </div>
+            </div>
+            
+            <!-- 作业区 -->
+            <div class="work-area excavate-area">
+                <div class="area-value">8,650方</div>
+                <div class="area-label">装土区</div>
+            </div>
+            
+            <div class="work-area fill-area">
+                <div class="area-value">7,230方</div>
+                <div class="area-label">填土区</div>
+            </div>
+            
+            <div class="work-area discard-area">
+                <div class="area-value">2,570方</div>
+                <div class="area-label">弃土区</div>
+            </div>
+            
+            <!-- 历史路径 -->
+            <div class="history-routes">
+                <div class="route route-1"></div>
+                <div class="route route-2"></div>
+                <div class="route route-3"></div>
+                
+                <div class="route-vehicle vehicle-1">🚛</div>
+                <div class="route-vehicle vehicle-2">🚛</div>
+                <div class="route-vehicle vehicle-3">🚛</div>
+                
+                <div class="route-info info-1">
+                    <div class="route-label">鲁B-3427A</div>
+                    <div class="route-detail">10月22日 08:30-09:45<br>装土区 → 填土区<br>载重: 24.6吨</div>
+                </div>
+                
+                <div class="route-info info-2">
+                    <div class="route-label">鲁B-5K688</div>
+                    <div class="route-detail">10月23日 10:15-11:30<br>装土区 → 弃土区<br>载重: 22.3吨</div>
+                </div>
+                
+                <div class="route-info info-3">
+                    <div class="route-label">鲁B-7386C</div>
+                    <div class="route-detail">10月24日 14:20-15:40<br>装土区 → 填土区<br>载重: 25.1吨</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 模拟筛选功能
+        document.querySelector('.filter-button').addEventListener('click', function() {
+            const vehicle = document.querySelector('.filter-select').value;
+            const dateFrom = document.querySelectorAll('.date-input')[0].value;
+            const dateTo = document.querySelectorAll('.date-input')[1].value;
+            
+            alert(`正在查询: ${vehicle} 在 ${dateFrom} 至 ${dateTo} 的历史路径`);
+            // 在实际应用中这里会执行筛选并更新地图显示
+        });
+        
+        // 热力图开关功能
+        document.getElementById('heatmap-toggle').addEventListener('change', function() {
+            const heatmapOn = this.checked;
+            console.log(`热力图已${heatmapOn ? '开启' : '关闭'}`);
+        });
+    </script>
+</body>
+</html>

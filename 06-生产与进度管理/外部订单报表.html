@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>外部订单生产量统计报表</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #2c80ff;
+            --border: #e1e4e8;
+            --danger: #ff4d4f;
+            --warning: #faad14;
+            --success: #52c41a;
+        }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        /* 头部样式 */
+        .header {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1f2d3d;
+        }
+        .data-refresh {
+            font-size: 13px;
+            color: #8492a6;
+        }
+        /* 统计卡片 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            border-left: 4px solid var(--primary);
+        }
+        .stat-title {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1f2d3d;
+        }
+        .stat-trend {
+            font-size: 13px;
+            color: #8492a6;
+            display: flex;
+            align-items: center;
+        }
+        .stat-trend.up { color: var(--success); }
+        .stat-trend.down { color: var(--danger); }
+        .trend-icon {
+            margin-right: 3px;
+        }
+        /* 筛选区域 */
+        .filter-section {
+            background: white;
+            padding: 18px 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+        }
+        .filter-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 12px;
+        }
+        .filter-group {
+            flex: 1;
+            min-width: 180px;
+        }
+        .filter-label {
+            display: block;
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 6px;
+        }
+        .filter-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #dcdfe6;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .filter-input:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+        .filter-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 8px;
+        }
+        .btn {
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .btn-reset {
+            background: #f5f7fa;
+            border: 1px solid #dcdfe6;
+            color: #666;
+        }
+        .btn-search {
+            background: var(--primary);
+            color: white;
+            border: none;
+        }
+        .btn:hover {
+            opacity: 0.9;
+        }
+        /* 数据表格 */
+        .data-table-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .data-table thead th {
+            background-color: #f8fafc;
+            padding: 14px 16px;
+            text-align: left;
+            font-size: 13px;
+            font-weight: 600;
+            color: #666;
+            border-bottom: 1px solid #eee;
+        }
+        .data-table tbody td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #f0f2f5;
+            font-size: 13px;
+        }
+        /* 状态标识 */
+        .status-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            background: #f0f2f5;
+            color: #666;
+        }
+        .status-planning { background: #e6f7ff; color: #1890ff; }
+        .status-producing { background: #fffbe6; color: #faad14; }
+        .status-delivered { background: #f6ffed; color: #52c41a; }
+        .status-canceled { background: #fff1f0; color: #ff4d4f; }
+        .status-overdue { background: #f9f0ff; color: #722ed1; }
+        /* 进度条 */
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background: #f0f2f5;
+            border-radius: 4px;
+            margin-top: 4px;
+        }
+        .progress-bar {
+            height: 100%;
+            border-radius: 4px;
+        }
+        .progress-planning { background: #1890ff; }
+        .progress-producing { background: #faad14; }
+        .progress-delivered { background: #52c41a; }
+        /* 数量指示 */
+        .numeric-cell {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            font-weight: 500;
+        }
+        .text-right { text-align: right; }
+        /* 附件图标 */
+        .attachment-link {
+            color: var(--primary);
+            cursor: pointer;
+            margin: 0 2px;
+        }
+        .attachment-link i {
+            margin-right: 3px;
+        }
+        /* 超期提示 */
+        .overdue-alert {
+            color: var(--danger);
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            margin-top: 3px;
+        }
+        .overdue-alert i {
+            margin-right: 3px;
+        }
+        /* 底部说明 */
+        .summary-section {
+            margin-top: 20px;
+            padding: 16px;
+            background: #f6f8fa;
+            border-radius: 8px;
+            font-size: 13px;
+        }
+        .summary-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <div class="header">
+            <div>
+                <div class="header-title">外部订单生产量统计报表</div>
+                <div class="data-refresh">数据更新时间：2023-07-17 11:20:45</div>
+            </div>
+            <div>
+                <button class="btn btn-reset">
+                    <i class="fas fa-file-export"></i> 导出数据
+                </button>
+            </div>
+        </div>
+        
+        <!-- 数据看板 -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-title">总订单数</div>
+                <div class="stat-value">86</div>
+                <div class="stat-trend up">
+                    <i class="fas fa-arrow-up trend-icon"></i> 本月新增12单
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">申领总量 (m³)</div>
+                <div class="stat-value">3,420</div>
+                <div class="stat-trend up">
+                    <i class="fas fa-arrow-up trend-icon"></i> 同比 +12.8%
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">完成生产量 (m³)</div>
+                <div class="stat-value">2,850</div>
+                <div class="stat-trend">已完成 83.3%</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">待生产量 (m³)</div>
+                <div class="stat-value">570</div>
+                <div class="stat-trend down">
+                    <i class="fas fa-exclamation-circle"></i> 14单未交付
+                </div>
+            </div>
+        </div>
+        
+        <!-- 筛选区域 -->
+        <div class="filter-section">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <div class="filter-label">申请时间</div>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="date" class="filter-input">
+                        <span style="line-height: 38px;">至</span>
+                        <input type="date" class="filter-input">
+                    </div>
+                </div>
+                <div class="filter-group">
+                    <div class="filter-label">送达时间</div>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="date" class="filter-input">
+                        <span style="line-height: 38px;">至</span>
+                        <input type="date" class="filter-input">
+                    </div>
+                </div>
+                <div class="filter-group">
+                    <div class="filter-label">交付状态</div>
+                    <select class="filter-input">
+                        <option>全部</option>
+                        <option>准时交付</option>
+                        <option>即将超期</option>
+                        <option>已超期</option>
+                    </select>
+                </div>
+            </div>
+            <div class="filter-row">
+                <div class="filter-group">
+                    <div class="filter-label">使用人/客户</div>
+                    <input type="text" class="filter-input" placeholder="输入客户名称">
+                </div>
+                <div class="filter-group">
+                    <div class="filter-label">物料名称</div>
+                    <input type="text" class="filter-input" placeholder="输入物料名称">
+                </div>
+                <div class="filter-group">
+                    <div class="filter-label">生产车间</div>
+                    <select class="filter-input">
+                        <option>全部车间</option>
+                        <option>60型生产车间</option>
+                        <option>750型生产车间</option>
+                    </select>
+                </div>
+            </div>
+            <div class="filter-actions">
+                <button class="btn btn-reset">重置条件</button>
+                <button class="btn btn-search">查询</button>
+            </div>
+        </div>
+        
+        <!-- 数据表格 -->
+        <div class="data-table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>申领单号</th>
+                        <th>申请日期</th>
+                        <th>送达日期</th>
+                        <th>客户信息</th>
+                        <th>物料信息</th>
+                        <th class="text-right">申领量 (m³)</th>
+                        <th class="text-right">已生产 (m³)</th>
+                        <th>完成率</th>
+                        <th class="text-right">已配送 (m³)</th>
+                        <th>生产车间</th>
+                        <th>生产状态</th>
+                        <th>附件</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- 已配送订单 -->
+                    <tr>
+                        <td>EXT20230717001</td>
+                        <td>2023-07-15</td>
+                        <td>2023-07-20</td>
+                        <td>八分部｜张工</td>
+                        <td>C30 P8 [70123456]</td>
+                        <td class="text-right numeric-cell">130.00</td>
+                        <td class="text-right numeric-cell">130.00</td>
+                        <td>
+                            <div class="status-badge status-delivered">100%</div>
+                            <div class="progress-container">
+                                <div class="progress-bar progress-delivered" style="width: 100%"></div>
+                            </div>
+                        </td>
+                        <td class="text-right numeric-cell">130.00</td>
+                        <td>750型车间</td>
+                        <td>
+                            <div class="status-badge status-delivered">已配送</div>
+                        </td>
+                        <td>
+                            <div>
+                                <span class="attachment-link"><i class="fas fa-file-alt"></i>合同</span>
+                                <span class="attachment-link"><i class="fas fa-file-signature"></i>签收单</span>
+                            </div>
+                        </td>
+                    </tr>
+                    
+                    <!-- 生产中订单 -->
+                    <tr>
+                        <td>EXT20230716005</td>
+                        <td>2023-07-14</td>
+                        <td>2023-07-18</td>
+                        <td>路桥集团｜王主任</td>
+                        <td>C40 [70567890]</td>
+                        <td class="text-right numeric-cell">80.00</td>
+                        <td class="text-right numeric-cell">45.00</td>
+                        <td>
+                            <div class="status-badge status-producing">56.2%</div>
+                            <div class="progress-container">
+                                <div class="progress-bar progress-producing" style="width: 56.2%"></div>
+                            </div>
+                        </td>
+                        <td class="text-right numeric-cell">0.00</td>
+                        <td>60型车间</td>
+                        <td>
+                            <div class="status-badge status-producing">生产中</div>
+                            <div class="overdue-alert">
+                                <i class="fas fa-exclamation-triangle"></i> 3天后到期
+                            </div>
+                        </td>
+                        <td>
+                            <div>
+                                <span class="attachment-link"><i class="fas fa-file-contract"></i>合同</span>
+                            </div>
+                        </td>
+                    </tr>
+                    
+                    <!-- 部分配送订单 -->
+                    <tr>
+                        <td>EXT20230715012</td>
+                        <td>2023-07-13</td>
+                        <td>2023-07-17</td>
+                        <td>市政公司｜李工</td>
+                        <td>C25 [70246801]</td>
+                        <td class="text-right numeric-cell">200.00</td>
+                        <td class="text-right numeric-cell">200.00</td>
+                        <td>
+                            <div class="status-badge status-delivered">100%</div>
+                            <div class="progress-container">
+                                <div class="progress-bar progress-delivered" style="width: 100%"></div>
+                            </div>
+                        </td>
+                        <td class="text-right numeric-cell">180.00</td>
+                        <td>750型车间</td>
+                        <td>
+                            <div class="status-badge status-producing">配送中</div>
+                        </td>
+                        <td>
+                            <div>
+                                <span class="attachment-link"><i class="fas fa-file-contract"></i>合同</span>
+                                <span class="attachment-link"><i class="fas fa-truck-loading"></i>配送单</span>
+                            </div>
+                        </td>
+                    </tr>
+                    
+                    <!-- 超期订单 -->
+                    <tr>
+                        <td>EXT20230710022</td>
+                        <td>2023-07-10</td>
+                        <td>2023-07-15</td>
+                        <td>开发区建设｜陈经理</td>
+                        <td>C35 [70135791]</td>
+                        <td class="text-right numeric-cell">150.00</td>
+                        <td class="text-right numeric-cell">90.00</td>
+                        <td>
+                            <div class="status-badge status-planning">60.0%</div>
+                            <div class="progress-container">
+                                <div class="progress-bar progress-planning" style="width: 60%"></div>
+                            </div>
+                        </td>
+                        <td class="text-right numeric-cell">90.00</td>
+                        <td>60型车间</td>
+                        <td>
+                            <div class="status-badge status-overdue">已超期</div>
+                            <div class="overdue-alert">
+                                <i class="fas fa-exclamation-circle"></i> 超期2天
+                            </div>
+                        </td>
+                        <td>
+                            <div>
+                                <span class="attachment-link"><i class="fas fa-file-invoice"></i>合同</span>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- 数据说明 -->
+        <div class="summary-section">
+            <div class="summary-title">数据说明</div>
+            <div>1. 外部订单指非内部使用的生产订单，包含客户订单和部分分项工程订单</div>
+            <div>2. 完成率 = 已生产量 ÷ 申领量 × 100%</div>
+            <div>3. 送达时间距当前不足3天的订单标记为"即将超期"状态</div>
+        </div>
+    </div>
+
+    <script>
+        // 查看附件功能
+        document.querySelectorAll('.attachment-link').forEach(link => {
+            link.addEventListener('click', function() {
+                const types = {
+                    '合同': 'sales-contract.pdf',
+                    '签收单': 'delivery-confirmation.pdf',
+                    '配送单': 'shipping-order.pdf'
+                };
+                const fileName = types[this.textContent.trim().split(' ').pop()];
+                alert('打开附件: ' + fileName);
+            });
+        });
+        
+        // 超期订单提示
+        const overdueItems = document.querySelectorAll('.status-overdue');
+        overdueItems.forEach(item => {
+            item.closest('tr').style.backgroundColor = '#fff9f9';
+        });
+    </script>
+</body>
+</html>

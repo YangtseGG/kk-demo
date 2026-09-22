@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>人员角色配置模块</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background-color: #f0f2f5;
+            color: #333;
+            padding: 20px;
+            line-height: 1.5;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        header {
+            background: #1890ff;
+            color: white;
+            padding: 20px 24px;
+        }
+        
+        h1 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        h1 i {
+            font-size: 22px;
+        }
+        
+        .subtitle {
+            opacity: 0.9;
+            font-size: 13px;
+        }
+        
+        .content {
+            padding: 20px;
+        }
+        
+        .section {
+            margin-bottom: 24px;
+        }
+        
+        h2 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #1d1d1d;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e8e8e8;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        h2 i {
+            color: #1890ff;
+            font-size: 16px;
+        }
+        
+        .search-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        
+        .search-input {
+            flex: 1;
+            min-width: 200px;
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: #1890ff;
+            box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+        }
+        
+        .filter-select {
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            font-size: 14px;
+            background-color: white;
+            min-width: 120px;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-size: 14px;
+        }
+        
+        .btn-primary {
+            background-color: #1890ff;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #096dd9;
+        }
+        
+        .btn-secondary {
+            background-color: #f5f5f5;
+            color: #333;
+            border: 1px solid #d9d9d9;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #e8e8e8;
+        }
+        
+        .personnel-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 16px;
+        }
+        
+        .person-card {
+            background: white;
+            border-radius: 6px;
+            padding: 16px;
+            border: 1px solid #f0f0f0;
+            transition: all 0.2s;
+        }
+        
+        .person-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .person-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 18px;
+            margin-right: 12px;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+        
+        .avatar-initial {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .avatar-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .person-info {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .person-info h3 {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #1d1d1d;
+        }
+        
+        .person-details {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            font-size: 12px;
+        }
+        
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: #666;
+        }
+        
+        .detail-item i {
+            font-size: 12px;
+            color: #8c8c8c;
+        }
+        
+        .role-selector {
+            margin-top: 12px;
+        }
+        
+        .role-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: #555;
+        }
+        
+        .role-options {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .role-option {
+            flex: 1;
+            padding: 6px 8px;
+            background: #f5f5f5;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+        
+        .role-option:hover {
+            background: #e8e8e8;
+        }
+        
+        .role-option.active {
+            background: #e6f7ff;
+            color: #1890ff;
+            border-color: #91d5ff;
+        }
+        
+        .role-engineer.active {
+            background: #f0f9ff;
+            color: #0066cc;
+            border-color: #91d5ff;
+        }
+        
+        .role-leader.active {
+            background: #f0fff3;
+            color: #009933;
+            border-color: #a7e6b3;
+        }
+        
+        .role-manager.active {
+            background: #fff7e6;
+            color: #d46b08;
+            border-color: #ffd591;
+        }
+        
+        .current-assignments {
+            margin-top: 24px;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            border-radius: 4px;
+            border: 1px solid #f0f0f0;
+        }
+        
+        .assignments-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 700px;
+        }
+        
+        .assignments-table th {
+            background-color: #fafafa;
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 13px;
+        }
+        
+        .assignments-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 13px;
+        }
+        
+        .assignments-table tr:hover {
+            background-color: #fafafa;
+        }
+        
+        .table-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .role-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+            display: inline-block;
+        }
+        
+        .badge-engineer {
+            background-color: #e6f7ff;
+            color: #0066cc;
+        }
+        
+        .badge-leader {
+            background-color: #f0fff3;
+            color: #009933;
+        }
+        
+        .badge-manager {
+            background-color: #fff7e6;
+            color: #d46b08;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 6px;
+        }
+        
+        .action-btn {
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            cursor: pointer;
+            border: 1px solid #d9d9d9;
+            background: white;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .action-btn:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .action-btn.remove {
+            color: #ff4d4f;
+            border-color: #ffa39e;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+        
+        .empty-state i {
+            font-size: 40px;
+            margin-bottom: 12px;
+            color: #d9d9d9;
+        }
+        
+        .footer {
+            padding: 16px 20px;
+            background-color: #fafafa;
+            border-top: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .stats {
+            font-size: 13px;
+            color: #666;
+        }
+        
+        .stats span {
+            font-weight: 600;
+            color: #1890ff;
+        }
+        
+        @media (max-width: 768px) {
+            .personnel-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .content {
+                padding: 16px;
+            }
+            
+            .search-bar {
+                flex-direction: column;
+            }
+            
+            .search-input, .filter-select, .btn {
+                width: 100%;
+            }
+            
+            .footer {
+                flex-direction: column;
+                gap: 12px;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-users-cog"></i> 人员角色配置</h1>
+            <p class="subtitle">分配咨询工程师、咨询负责人、咨询项目经理的角色</p>
+        </header>
+        
+        <div class="content">
+            <div class="section">
+                <h2><i class="fas fa-search"></i> 查找与筛选</h2>
+                <div class="search-bar">
+                    <input type="text" class="search-input" id="searchInput" placeholder="输入姓名、电话、班组或工种查找...">
+                    <select class="filter-select" id="roleFilter">
+                        <option value="">所有角色</option>
+                        <option value="engineer">咨询工程师</option>
+                        <option value="leader">咨询负责人</option>
+                        <option value="manager">咨询项目经理</option>
+                        <option value="none">未分配</option>
+                    </select>
+                    <select class="filter-select" id="teamFilter">
+                        <option value="">所有班组</option>
+                        <option value="技术咨询部">技术咨询部</option>
+                        <option value="项目管理部">项目管理部</option>
+                        <option value="战略咨询部">战略咨询部</option>
+                        <option value="工程咨询部">工程咨询部</option>
+                    </select>
+                    <button class="btn btn-primary" id="searchBtn">
+                        <i class="fas fa-search"></i> 搜索
+                    </button>
+                    <button class="btn btn-secondary" id="resetBtn">
+                        <i class="fas fa-redo"></i> 重置
+                    </button>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2><i class="fas fa-user-edit"></i> 人员角色分配</h2>
+                <div class="personnel-grid" id="personnelGrid">
+                    <!-- 人员卡片会通过JavaScript动态生成 -->
+                </div>
+            </div>
+            
+            <div class="section current-assignments">
+                <h2><i class="fas fa-list-check"></i> 当前角色分配</h2>
+                <div class="table-container">
+                    <table class="assignments-table">
+                        <thead>
+                            <tr>
+                                <th width="10%">头像</th>
+                                <th width="15%">姓名</th>
+                                <th width="15%">电话</th>
+                                <th width="15%">班组</th>
+                                <th width="15%">工种</th>
+                                <th width="15%">当前角色</th>
+                                <th width="15%">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="assignmentsTable">
+                            <!-- 分配表格会通过JavaScript动态生成 -->
+                        </tbody>
+                    </table>
+                    <div id="emptyState" class="empty-state" style="display: none;">
+                        <i class="fas fa-users-slash"></i>
+                        <p>暂无人员角色分配，请在上方为人员分配角色</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <div class="stats">
+                已分配: <span id="engineerCount">0</span> 位咨询工程师, 
+                <span id="leaderCount">0</span> 位咨询负责人, 
+                <span id="managerCount">0</span> 位咨询项目经理
+                | 总计: <span id="totalCount">0</span> 人
+            </div>
+            <div>
+                <button class="btn btn-secondary" id="exportBtn">
+                    <i class="fas fa-file-export"></i> 导出配置
+                </button>
+                <button class="btn btn-primary" id="saveBtn">
+                    <i class="fas fa-save"></i> 保存配置
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 模拟人员数据
+        let personnelData = [
+            { 
+                id: 1, 
+                name: "张明", 
+                phone: "13800138001", 
+                team: "技术咨询部", 
+                job: "技术咨询师",
+                avatar: "",
+                role: "engineer" 
+            },
+            { 
+                id: 2, 
+                name: "李华", 
+                phone: "13800138002", 
+                team: "项目管理部", 
+                job: "项目咨询师",
+                avatar: "",
+                role: "leader" 
+            },
+            { 
+                id: 3, 
+                name: "王芳", 
+                phone: "13800138003", 
+                team: "战略咨询部", 
+                job: "战略咨询师",
+                avatar: "",
+                role: "manager" 
+            },
+            { 
+                id: 4, 
+                name: "刘伟", 
+                phone: "13800138004", 
+                team: "技术咨询部", 
+                job: "高级咨询师",
+                avatar: "",
+                role: "engineer" 
+            },
+            { 
+                id: 5, 
+                name: "陈静", 
+                phone: "13800138005", 
+                team: "工程咨询部", 
+                job: "工程咨询师",
+                avatar: "",
+                role: "none" 
+            },
+            { 
+                id: 6, 
+                name: "杨帆", 
+                phone: "13800138006", 
+                team: "设计咨询部", 
+                job: "设计咨询师",
+                avatar: "",
+                role: "leader" 
+            },
+            { 
+                id: 7, 
+                name: "赵磊", 
+                phone: "13800138007", 
+                team: "评估咨询部", 
+                job: "评估咨询师",
+                avatar: "",
+                role: "none" 
+            },
+            { 
+                id: 8, 
+                name: "孙婷", 
+                phone: "13800138008", 
+                team: "项目管理部", 
+                job: "首席咨询师",
+                avatar: "",
+                role: "manager" 
+            }
+        ];
+
+        // 角色配置
+        const roles = [
+            { id: "engineer", name: "咨询工程师", color: "#0066cc", badgeClass: "badge-engineer", icon: "fa-user-cog" },
+            { id: "leader", name: "咨询负责人", color: "#009933", badgeClass: "badge-leader", icon: "fa-user-tie" },
+            { id: "manager", name: "咨询项目经理", color: "#d46b08", badgeClass: "badge-manager", icon: "fa-user-check" }
+        ];
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', function() {
+            renderPersonnelCards();
+            renderAssignmentsTable();
+            updateStats();
+            
+            // 搜索功能
+            document.getElementById('searchInput').addEventListener('input', function(e) {
+                filterPersonnel();
+            });
+            
+            // 角色筛选
+            document.getElementById('roleFilter').addEventListener('change', function() {
+                filterPersonnel();
+            });
+            
+            // 班组筛选
+            document.getElementById('teamFilter').addEventListener('change', function() {
+                filterPersonnel();
+            });
+            
+            // 搜索按钮
+            document.getElementById('searchBtn').addEventListener('click', function() {
+                filterPersonnel();
+            });
+            
+            // 重置按钮
+            document.getElementById('resetBtn').addEventListener('click', function() {
+                document.getElementById('searchInput').value = '';
+                document.getElementById('roleFilter').value = '';
+                document.getElementById('teamFilter').value = '';
+                filterPersonnel();
+            });
+            
+            // 保存配置
+            document.getElementById('saveBtn').addEventListener('click', function() {
+                saveAllConfig();
+            });
+            
+            // 导出配置
+            document.getElementById('exportBtn').addEventListener('click', function() {
+                exportConfig();
+            });
+        });
+
+        // 渲染人员卡片
+        function renderPersonnelCards(filteredData = null) {
+            const personnelGrid = document.getElementById('personnelGrid');
+            const data = filteredData || personnelData;
+            
+            personnelGrid.innerHTML = '';
+            
+            if (data.length === 0) {
+                personnelGrid.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1 / -1;">
+                        <i class="fas fa-search"></i>
+                        <p>未找到匹配的人员，请尝试其他搜索条件</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            data.forEach(person => {
+                const card = document.createElement('div');
+                card.className = 'person-card';
+                card.id = `person-card-${person.id}`;
+                
+                // 获取首字母作为头像
+                const firstChar = person.name.charAt(0);
+                const avatarColor = stringToColor(person.name);
+                
+                card.innerHTML = `
+                    <div class="person-header">
+                        <div class="avatar" style="background: ${avatarColor};">
+                            <div class="avatar-initial">${firstChar}</div>
+                        </div>
+                        <div class="person-info">
+                            <h3>${person.name}</h3>
+                            <div class="person-details">
+                                <div class="detail-item">
+                                    <i class="fas fa-phone"></i>
+                                    <span>${person.phone}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <i class="fas fa-users"></i>
+                                    <span>${person.team}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <i class="fas fa-briefcase"></i>
+                                    <span>${person.job}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="role-selector">
+                        <div class="role-label">分配角色：</div>
+                        <div class="role-options">
+                            <div class="role-option role-engineer ${person.role === 'engineer' ? 'active' : ''}" 
+                                 data-person-id="${person.id}" data-role="engineer">
+                                <i class="fas fa-user-cog"></i> 工程师
+                            </div>
+                            <div class="role-option role-leader ${person.role === 'leader' ? 'active' : ''}" 
+                                 data-person-id="${person.id}" data-role="leader">
+                                <i class="fas fa-user-tie"></i> 负责人
+                            </div>
+                            <div class="role-option role-manager ${person.role === 'manager' ? 'active' : ''}" 
+                                 data-person-id="${person.id}" data-role="manager">
+                                <i class="fas fa-user-check"></i> 项目经理
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                personnelGrid.appendChild(card);
+            });
+            
+            // 添加角色选择事件监听
+            document.querySelectorAll('.role-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    const personId = parseInt(this.getAttribute('data-person-id'));
+                    const role = this.getAttribute('data-role');
+                    assignRole(personId, role);
+                });
+            });
+        }
+
+        // 渲染分配表格
+        function renderAssignmentsTable() {
+            const assignmentsTable = document.getElementById('assignmentsTable');
+            const emptyState = document.getElementById('emptyState');
+            
+            // 获取已分配角色的人员
+            const assignedPersonnel = personnelData.filter(person => person.role !== 'none');
+            
+            if (assignedPersonnel.length === 0) {
+                assignmentsTable.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            emptyState.style.display = 'none';
+            assignmentsTable.innerHTML = '';
+            
+            assignedPersonnel.forEach(person => {
+                const role = roles.find(r => r.id === person.role);
+                const row = document.createElement('tr');
+                
+                // 获取首字母作为头像
+                const firstChar = person.name.charAt(0);
+                const avatarColor = stringToColor(person.name);
+                
+                row.innerHTML = `
+                    <td>
+                        <div class="table-avatar" style="background: ${avatarColor};">${firstChar}</div>
+                    </td>
+                    <td>${person.name}</td>
+                    <td>${person.phone}</td>
+                    <td>${person.team}</td>
+                    <td>${person.job}</td>
+                    <td>
+                        <span class="role-badge ${role.badgeClass}">
+                            <i class="fas ${role.icon}"></i>
+                            ${role.name}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="actions">
+                            <button class="action-btn remove" onclick="removeRole(${person.id})">
+                                <i class="fas fa-times"></i> 移除
+                            </button>
+                        </div>
+                    </td>
+                `;
+                
+                assignmentsTable.appendChild(row);
+            });
+        }
+
+        // 分配角色
+        function assignRole(personId, role) {
+            const personIndex = personnelData.findIndex(p => p.id === personId);
+            if (personIndex !== -1) {
+                personnelData[personIndex].role = role;
+                renderPersonnelCards();
+                renderAssignmentsTable();
+                updateStats();
+                
+                // 显示提示
+                const person = personnelData[personIndex];
+                const roleName = roles.find(r => r.id === role).name;
+                showNotification(`已为 ${person.name} 分配角色: ${roleName}`, 'success');
+            }
+        }
+
+        // 移除角色
+        function removeRole(personId) {
+            const personIndex = personnelData.findIndex(p => p.id === personId);
+            if (personIndex !== -1) {
+                personnelData[personIndex].role = 'none';
+                renderPersonnelCards();
+                renderAssignmentsTable();
+                updateStats();
+                
+                // 显示提示
+                const person = personnelData[personIndex];
+                showNotification(`已移除 ${person.name} 的角色分配`, 'info');
+            }
+        }
+
+        // 更新统计数据
+        function updateStats() {
+            const engineerCount = personnelData.filter(p => p.role === 'engineer').length;
+            const leaderCount = personnelData.filter(p => p.role === 'leader').length;
+            const managerCount = personnelData.filter(p => p.role === 'manager').length;
+            const totalCount = personnelData.length;
+            
+            document.getElementById('engineerCount').textContent = engineerCount;
+            document.getElementById('leaderCount').textContent = leaderCount;
+            document.getElementById('managerCount').textContent = managerCount;
+            document.getElementById('totalCount').textContent = totalCount;
+        }
+
+        // 过滤人员
+        function filterPersonnel() {
+            const keyword = document.getElementById('searchInput').value.toLowerCase();
+            const roleFilter = document.getElementById('roleFilter').value;
+            const teamFilter = document.getElementById('teamFilter').value;
+            
+            const filtered = personnelData.filter(person => {
+                // 关键词搜索
+                const keywordMatch = !keyword || 
+                    person.name.toLowerCase().includes(keyword) || 
+                    person.phone.includes(keyword) || 
+                    person.team.toLowerCase().includes(keyword) || 
+                    person.job.toLowerCase().includes(keyword);
+                
+                // 角色筛选
+                const roleMatch = !roleFilter || person.role === roleFilter;
+                
+                // 班组筛选
+                const teamMatch = !teamFilter || person.team === teamFilter;
+                
+                return keywordMatch && roleMatch && teamMatch;
+            });
+            
+            renderPersonnelCards(filtered);
+        }
+
+        // 保存所有配置
+        function saveAllConfig() {
+            const config = {
+                personnel: personnelData,
+                lastUpdated: new Date().toISOString()
+            };
+            
+            console.log('保存的配置：', config);
+            showNotification('配置已保存到本地存储', 'success');
+            
+            // 保存到localStorage
+            try {
+                localStorage.setItem('personnelRoleConfig', JSON.stringify(config));
+            } catch (e) {
+                console.error('保存到localStorage失败：', e);
+            }
+        }
+
+        // 导出配置
+        function exportConfig() {
+            const config = personnelData.map(person => {
+                const role = roles.find(r => r.id === person.role);
+                return {
+                    姓名: person.name,
+                    电话: person.phone,
+                    班组: person.team,
+                    工种: person.job,
+                    角色: role ? role.name : '未分配'
+                };
+            });
+            
+            const configStr = JSON.stringify(config, null, 2);
+            const blob = new Blob([configStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `人员角色配置_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showNotification('配置已导出为JSON文件', 'success');
+        }
+
+        // 生成基于姓名的颜色
+        function stringToColor(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                hash = str.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            
+            const colors = [
+                '#1890ff', '#52c41a', '#fa8c16', '#f5222d', 
+                '#722ed1', '#13c2c2', '#eb2f96', '#faad14',
+                '#2f54eb', '#a0d911', '#d4380d', '#d4b106'
+            ];
+            
+            return colors[Math.abs(hash) % colors.length];
+        }
+
+        // 显示通知
+        function showNotification(message, type = 'info') {
+            const colors = {
+                success: '#52c41a',
+                error: '#f5222d',
+                info: '#1890ff',
+                warning: '#faad14'
+            };
+            
+            const color = colors[type] || colors.info;
+            
+            // 移除现有的通知
+            const existingNotifications = document.querySelectorAll('.notification');
+            existingNotifications.forEach(notification => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            });
+            
+            // 创建通知元素
+            const notification = document.createElement('div');
+            notification.textContent = message;
+            notification.className = 'notification';
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${color};
+                color: white;
+                padding: 10px 16px;
+                border-radius: 4px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                z-index: 1000;
+                font-weight: 500;
+                animation: fadeInOut 3s ease-in-out;
+                font-size: 13px;
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // 3秒后移除通知
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 3000);
+        }
+        
+        // 尝试从localStorage加载配置
+        function loadFromLocalStorage() {
+            try {
+                const savedConfig = localStorage.getItem('personnelRoleConfig');
+                if (savedConfig) {
+                    const config = JSON.parse(savedConfig);
+                    if (config.personnel && Array.isArray(config.personnel)) {
+                        // 合并保存的数据，保留ID
+                        personnelData.forEach(person => {
+                            const savedPerson = config.personnel.find(p => p.id === person.id);
+                            if (savedPerson) {
+                                Object.assign(person, savedPerson);
+                            }
+                        });
+                        
+                        renderPersonnelCards();
+                        renderAssignmentsTable();
+                        updateStats();
+                        console.log('从本地存储加载配置成功');
+                    }
+                }
+            } catch (e) {
+                console.error('从localStorage加载配置失败：', e);
+            }
+        }
+        
+        // 页面加载时尝试从本地存储加载
+        window.addEventListener('load', loadFromLocalStorage);
+    </script>
+</body>
+</html>

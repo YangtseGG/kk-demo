@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智慧工地 - 问题上报管理系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        
+        :root {
+            --primary: #1a6e9e;
+            --primary-light: #3498db;
+            --secondary: #2c3e50;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+            --gray-light: #f5f7fa;
+            --gray: #95a5a6;
+            --gray-dark: #7f8c8d;
+            --white: #ffffff;
+            --border: #e0e7ee;
+            --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+        
+        body {
+            background-color: #f0f4f8;
+            color: #333;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        /* 顶部导航 */
+        .app-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: var(--white);
+            padding: 0 20px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .logo img {
+            height: 36px;
+        }
+        
+        .logo h1 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--primary-light);
+            color: var(--white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        /* 主容器 */
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 20px;
+            display: flex;
+            gap: 20px;
+        }
+        
+        /* 侧边栏 */
+        .sidebar {
+            width: 250px;
+            background: var(--white);
+            border-radius: 10px;
+            box-shadow: var(--card-shadow);
+            padding: 20px 0;
+            height: fit-content;
+        }
+        
+        .sidebar-title {
+            padding: 0 20px 15px;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--secondary);
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 15px;
+        }
+        
+        .nav-item {
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--gray-dark);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .nav-item:hover {
+            background: var(--gray-light);
+            color: var(--primary);
+        }
+        
+        .nav-item.active {
+            background: rgba(26, 110, 158, 0.1);
+            color: var(--primary);
+            border-left: 4px solid var(--primary);
+        }
+        
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+        }
+        
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        /* 顶部工具栏 */
+        .toolbar {
+            background: var(--white);
+            border-radius: 10px;
+            box-shadow: var(--card-shadow);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .page-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--secondary);
+        }
+        
+        .actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: var(--white);
+            border: none;
+        }
+        
+        .btn-outline {
+            background: var(--white);
+            border: 1px solid var(--border);
+            color: var(--gray-dark);
+        }
+        
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+        
+        .search-box {
+            position: relative;
+        }
+        
+        .search-box input {
+            padding: 8px 15px 8px 35px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            width: 250px;
+        }
+        
+        .search-box i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray);
+        }
+        
+        /* 问题列表 */
+        .problems-list {
+            background: var(--white);
+            border-radius: 10px;
+            box-shadow: var(--card-shadow);
+            overflow: hidden;
+        }
+        
+        .list-header {
+            display: grid;
+            grid-template-columns: 1fr 100px 120px 120px 100px 80px;
+            padding: 15px 20px;
+            background: var(--gray-light);
+            font-weight: 600;
+            color: var(--secondary);
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .list-row {
+            display: grid;
+            grid-template-columns: 1fr 100px 120px 120px 100px 80px;
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .list-row:hover {
+            background: rgba(26, 110, 158, 0.05);
+        }
+        
+        .problem-title {
+            font-weight: 500;
+            color: var(--secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .problem-title i {
+            color: var(--primary);
+        }
+        
+        .problem-type {
+            font-size: 12px;
+            padding: 3px 8px;
+            border-radius: 4px;
+            background: var(--gray-light);
+        }
+        
+        .type-safety { background: #f8d7da; color: #721c24; }
+        .type-quality { background: #fff3cd; color: #856404; }
+        .type-progress { background: #cce5ff; color: #004085; }
+        .type-compliance { background: #d4edda; color: #155724; }
+        
+        .problem-status {
+            font-size: 12px;
+            padding: 3px 8px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-approved { background: #d4edda; color: #155724; }
+        .status-rejected { background: #f8d7da; color: #721c24; }
+        .status-processing { background: #cce5ff; color: #004085; }
+        .status-completed { background: #d1ecf1; color: #0c5460; }
+        
+        /* 问题详情页 */
+        .problem-detail {
+            background: var(--white);
+            border-radius: 10px;
+            box-shadow: var(--card-shadow);
+            padding: 25px;
+            display: none;
+        }
+        
+        .detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .detail-title {
+            font-size: 22px;
+            color: var(--secondary);
+        }
+        
+        .problem-id {
+            font-size: 14px;
+            color: var(--gray);
+            font-weight: normal;
+        }
+        
+        .back-btn {
+            background: var(--gray-light);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--gray-dark);
+        }
+        
+        .back-btn:hover {
+            background: var(--border);
+        }
+        
+        .detail-content {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .problem-info {
+            flex: 7;
+        }
+        
+        .info-section {
+            margin-bottom: 25px;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            color: var(--secondary);
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: 120px 1fr;
+            row-gap: 15px;
+        }
+        
+        .info-label {
+            color: var(--gray-dark);
+            font-weight: 500;
+        }
+        
+        .info-value {
+            font-weight: 500;
+        }
+        
+        .attachments {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .attachment {
+            width: 120px;
+            height: 120px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            position: relative;
+        }
+        
+        .attachment img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .attachment .icon {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            color: var(--gray);
+            background: var(--gray-light);
+        }
+        
+        .attachment .name {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.6);
+            color: var(--white);
+            padding: 5px;
+            font-size: 11px;
+            text-align: center;
+        }
+        
+        /* 流程状态 */
+        .process-section {
+            margin-bottom: 25px;
+        }
+        
+        .process-steps {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            margin: 25px 0;
+            padding: 0 30px;
+        }
+        
+        .process-steps::before {
+            content: "";
+            position: absolute;
+            top: 18px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background-color: var(--border);
+            z-index: 1;
+        }
+        
+        .step {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 20%;
+        }
+        
+        .step-indicator {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--border);
+            color: var(--white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        
+        .step.active .step-indicator {
+            background: var(--primary);
+            box-shadow: 0 4px 10px rgba(26, 110, 158, 0.3);
+        }
+        
+        .step.completed .step-indicator {
+            background: var(--success);
+        }
+        
+        .step-label {
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .step.active .step-label {
+            color: var(--primary);
+            font-weight: 600;
+        }
+        
+        .step.completed .step-label {
+            color: var(--success);
+        }
+        
+        /* 操作区域 */
+        .operation-section {
+            background: var(--gray-light);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            border-left: 4px solid var(--primary);
+        }
+        
+        .operation-title {
+            font-size: 18px;
+            color: var(--secondary);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .role-tag {
+            background: var(--primary);
+            color: var(--white);
+            padding: 3px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: normal;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--secondary);
+        }
+        
+        textarea, input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        textarea {
+            height: 120px;
+            resize: vertical;
+        }
+        
+        textarea:focus, input:focus, select:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(26, 110, 158, 0.2);
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 15px;
+        }
+        
+        .btn-lg {
+            padding: 12px 20px;
+            font-size: 14px;
+        }
+        
+        /* 时间线 */
+        .timeline-section {
+            flex: 3;
+        }
+        
+        .timeline {
+            background: var(--white);
+            border-radius: 10px;
+            box-shadow: var(--card-shadow);
+            padding: 20px;
+            height: fit-content;
+        }
+        
+        .timeline-title {
+            font-size: 18px;
+            color: var(--secondary);
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .timeline-items {
+            max-height: 500px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+        
+        .timeline-item {
+            position: relative;
+            padding-left: 30px;
+            margin-bottom: 25px;
+            border-left: 2px solid var(--primary);
+            padding-bottom: 4px;
+        }
+        
+        .timeline-item:last-child {
+            border-left-color: transparent;
+        }
+        
+        .timeline-item .circle {
+            position: absolute;
+            left: -8px;
+            top: 0;
+            width: 14px;
+            height: 14px;
+            background: var(--primary);
+            border-radius: 50%;
+            border: 2px solid var(--white);
+        }
+        
+        .timeline-header {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .timeline-user {
+            font-size: 13px;
+            color: var(--gray);
+            margin-bottom: 5px;
+        }
+        
+        .timeline-date {
+            font-size: 12px;
+            color: var(--gray);
+            margin-bottom: 8px;
+        }
+        
+        .timeline-comment {
+            background: var(--gray-light);
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-top: 8px;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 992px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+            }
+            
+            .detail-content {
+                flex-direction: column;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .list-header, .list-row {
+                grid-template-columns: 1fr 100px 120px;
+            }
+            
+            .list-header .hide-mobile, .list-row .hide-mobile {
+                display: none;
+            }
+            
+            .search-box input {
+                width: 180px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航 -->
+    <div class="app-header">
+        <div class="logo">
+            <i class="fas fa-hard-hat fa-2x"></i>
+            <h1>智慧工地管理系统</h1>
+        </div>
+        <div class="user-info">
+            <div class="avatar">张</div>
+            <span>张监理</span>
+            <i class="fas fa-bell"></i>
+            <i class="fas fa-cog"></i>
+        </div>
+    </div>
+    
+    <!-- 主容器 -->
+    <div class="container">
+        <!-- 侧边栏 -->
+        <div class="sidebar">
+            <div class="sidebar-title">导航菜单</div>
+            <div class="nav-item active">
+                <i class="fas fa-tasks"></i>
+                <span>问题管理</span>
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-chart-line"></i>
+                <span>数据统计</span>
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-users"></i>
+                <span>人员管理</span>
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-map-marker-alt"></i>
+                <span>工地地图</span>
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-file-alt"></i>
+                <span>文档管理</span>
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-cog"></i>
+                <span>系统设置</span>
+            </div>
+        </div>
+        
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <!-- 问题列表页 -->
+            <div id="list-page">
+                <div class="toolbar">
+                    <div class="page-title">问题上报列表</div>
+                    <div class="actions">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" placeholder="搜索问题...">
+                        </div>
+                        <button class="btn btn-outline">
+                            <i class="fas fa-filter"></i> 筛选
+                        </button>
+                        <button class="btn btn-primary">
+                            <i class="fas fa-plus"></i> 新增问题
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="problems-list">
+                    <div class="list-header">
+                        <div>问题标题</div>
+                        <div>问题类型</div>
+                        <div>上报人</div>
+                        <div>上报时间</div>
+                        <div class="hide-mobile">负责人</div>
+                        <div>状态</div>
+                    </div>
+                    
+                    <div class="list-row" data-id="1">
+                        <div class="problem-title">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            3号楼基坑防护围栏缺失
+                        </div>
+                        <div class="problem-type type-safety">安全隐患</div>
+                        <div>张监理</div>
+                        <div>2023-07-30</div>
+                        <div class="hide-mobile">王强</div>
+                        <div class="problem-status status-processing">整改中</div>
+                    </div>
+                    
+                    <div class="list-row" data-id="2">
+                        <div class="problem-title">
+                            <i class="fas fa-tools"></i>
+                            5号楼钢筋绑扎不规范
+                        </div>
+                        <div class="problem-type type-quality">质量问题</div>
+                        <div>李监理</div>
+                        <div>2023-07-29</div>
+                        <div class="hide-mobile">赵工</div>
+                        <div class="problem-status status-approved">已审核</div>
+                    </div>
+                    
+                    <div class="list-row" data-id="3">
+                        <div class="problem-title">
+                            <i class="fas fa-calendar-times"></i>
+                            材料供应延迟影响进度
+                        </div>
+                        <div class="problem-type type-progress">进度问题</div>
+                        <div>王监理</div>
+                        <div>2023-07-28</div>
+                        <div class="hide-mobile">采购部</div>
+                        <div class="problem-status status-pending">待处理</div>
+                    </div>
+                    
+                    <div class="list-row" data-id="4">
+                        <div class="problem-title">
+                            <i class="fas fa-hard-hat"></i>
+                            工人未佩戴安全帽作业
+                        </div>
+                        <div class="problem-type type-compliance">违规操作</div>
+                        <div>张监理</div>
+                        <div>2023-07-27</div>
+                        <div class="hide-mobile">安全组</div>
+                        <div class="problem-status status-completed">已完成</div>
+                    </div>
+                    
+                    <div class="list-row" data-id="5">
+                        <div class="problem-title">
+                            <i class="fas fa-tint"></i>
+                            地下室积水严重
+                        </div>
+                        <div class="problem-type type-safety">安全隐患</div>
+                        <div>刘监理</div>
+                        <div>2023-07-26</div>
+                        <div class="hide-mobile">水电组</div>
+                        <div class="problem-status status-processing">整改中</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 问题详情页 -->
+            <div class="problem-detail" id="detail-page">
+                <div class="detail-header">
+                    <div>
+                        <h2 class="detail-title">3号楼基坑防护围栏缺失 <span class="problem-id">#P-20230730001</span></h2>
+                    </div>
+                    <button class="back-btn" id="back-to-list">
+                        <i class="fas fa-arrow-left"></i> 返回列表
+                    </button>
+                </div>
+                
+                <div class="detail-content">
+                    <div class="problem-info">
+                        <!-- 问题基本信息 -->
+                        <div class="info-section">
+                            <h3 class="section-title">问题基本信息</h3>
+                            <div class="info-grid">
+                                <div class="info-label">问题标题：</div>
+                                <div class="info-value">3号楼基坑防护围栏缺失</div>
+                                
+                                <div class="info-label">问题类型：</div>
+                                <div class="info-value">安全隐患</div>
+                                
+                                <div class="info-label">上报人：</div>
+                                <div class="info-value">张监理（监理部）</div>
+                                
+                                <div class="info-label">上报时间：</div>
+                                <div class="info-value">2023-07-30 09:15</div>
+                                
+                                <div class="info-label">问题位置：</div>
+                                <div class="info-value">3号楼西侧基坑区域</div>
+                                
+                                <div class="info-label">问题描述：</div>
+                                <div class="info-value">3号楼西侧基坑深度约5米，目前西侧有约15米长的区域防护围栏缺失，存在人员坠落风险。周边虽然有警示带，但效果不佳，急需修复。</div>
+                                
+                                <div class="info-label">关联附件：</div>
+                                <div class="info-value">
+                                    <div class="attachments">
+                                        <div class="attachment">
+                                            <div class="icon"><i class="fas fa-image"></i></div>
+                                            <div class="name">基坑照片1.jpg</div>
+                                        </div>
+                                        <div class="attachment">
+                                            <div class="icon"><i class="fas fa-video"></i></div>
+                                            <div class="name">现场视频.mp4</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 流程状态 -->
+                        <div class="process-section">
+                            <h3 class="section-title">问题处理流程</h3>
+                            <div class="process-steps">
+                                <div class="step completed">
+                                    <div class="step-indicator"><i class="fas fa-check"></i></div>
+                                    <div class="step-label">问题上报</div>
+                                </div>
+                                <div class="step completed">
+                                    <div class="step-indicator"><i class="fas fa-check"></i></div>
+                                    <div class="step-label">现场经理审核</div>
+                                </div>
+                                <div class="step completed">
+                                    <div class="step-indicator"><i class="fas fa-check"></i></div>
+                                    <div class="step-label">项目部处理</div>
+                                </div>
+                                <div class="step completed">
+                                    <div class="step-indicator"><i class="fas fa-check"></i></div>
+                                    <div class="step-label">指派整改</div>
+                                </div>
+                                <div class="step active">
+                                    <div class="step-indicator">5</div>
+                                    <div class="step-label">整改复核</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 当前操作区域 -->
+                        <div class="operation-section">
+                            <h3 class="operation-title">
+                                <i class="fas fa-hard-hat"></i> 当前操作 - 整改复核
+                                <span class="role-tag">监理</span>
+                            </h3>
+                            
+                            <div class="form-group">
+                                <label for="recheck-result">复核结果</label>
+                                <select id="recheck-result">
+                                    <option value="">请选择复核结果</option>
+                                    <option value="pass">通过</option>
+                                    <option value="reject">退回整改</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="recheck-comment">复核意见</label>
+                                <textarea id="recheck-comment" placeholder="请填写复核意见">现场检查发现：
+1. 防护围栏已按标准安装
+2. 围栏高度符合要求（1.2米）
+3. 底部挡脚板安装牢固
+4. 安全警示标识已增设</textarea>
+                            </div>
+                            
+                            <div class="btn-group">
+                                <button class="btn btn-outline btn-lg">
+                                    <i class="fas fa-times"></i> 取消
+                                </button>
+                                <button class="btn btn-primary btn-lg">
+                                    <i class="fas fa-check-double"></i> 提交复核
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 时间线 -->
+                    <div class="timeline-section">
+                        <div class="timeline">
+                            <h3 class="timeline-title">问题处理记录</h3>
+                            <div class="timeline-items">
+                                <div class="timeline-item">
+                                    <div class="circle"></div>
+                                    <div class="timeline-header">问题上报</div>
+                                    <div class="timeline-user">张监理（监理部）</div>
+                                    <div class="timeline-date">2023-07-30 09:15</div>
+                                    <div class="timeline-comment">发现3号楼基坑防护缺失安全隐患，已拍照上传现场证据。</div>
+                                </div>
+                                
+                                <div class="timeline-item">
+                                    <div class="circle"></div>
+                                    <div class="timeline-header">审核通过</div>
+                                    <div class="timeline-user">李经理（现场管理）</div>
+                                    <div class="timeline-date">2023-07-30 10:30</div>
+                                    <div class="timeline-comment">确认问题属实，请项目部相关人员及时处理。</div>
+                                </div>
+                                
+                                <div class="timeline-item">
+                                    <div class="circle"></div>
+                                    <div class="timeline-header">项目部处理</div>
+                                    <div class="timeline-user">项目部办公室</div>
+                                    <div class="timeline-date">2023-07-30 14:20</div>
+                                    <div class="timeline-comment">经现场勘查和讨论，问题属实，需立即整改。请现场工程师安排具体实施。</div>
+                                </div>
+                                
+                                <div class="timeline-item">
+                                    <div class="circle"></div>
+                                    <div class="timeline-header">指派整改</div>
+                                    <div class="timeline-user">王工程师（现场工程师）</div>
+                                    <div class="timeline-date">2023-07-30 15:45</div>
+                                    <div class="timeline-comment">已指派王强（土建班组）负责整改，要求7月31日前完成。</div>
+                                </div>
+                                
+                                <div class="timeline-item">
+                                    <div class="circle"></div>
+                                    <div class="timeline-header">整改完成</div>
+                                    <div class="timeline-user">王强（土建班组）</div>
+                                    <div class="timeline-date">2023-07-31 10:15</div>
+                                    <div class="timeline-comment">已重新安装标准化防护围栏，并增设安全警示标识，符合规范要求。</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 页面切换功能
+        const listPage = document.getElementById('list-page');
+        const detailPage = document.getElementById('detail-page');
+        const backBtn = document.getElementById('back-to-list');
+        const listRows = document.querySelectorAll('.list-row');
+        
+        // 点击列表行显示详情页
+        listRows.forEach(row => {
+            row.addEventListener('click', function() {
+                listPage.style.display = 'none';
+                detailPage.style.display = 'block';
+            });
+        });
+        
+        // 返回列表按钮
+        backBtn.addEventListener('click', function() {
+            detailPage.style.display = 'none';
+            listPage.style.display = 'block';
+        });
+        
+        // 设置默认时间为明天
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const formattedDate = tomorrow.toISOString().split('T')[0];
+        
+        // 流程步骤点击效果
+        const steps = document.querySelectorAll('.step');
+        steps.forEach(step => {
+            step.addEventListener('click', function() {
+                steps.forEach(s => s.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>

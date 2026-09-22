@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>成品料配送管理系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        }
+        
+        :root {
+            --primary: #2c6fd1;
+            --secondary: #41b0f0;
+            --warning: #fa8c16;
+            --success: #52c41a;
+            --danger: #f5222d;
+        }
+        
+        body {
+            background: #f5f9ff;
+            color: #333;
+            min-height: 100vh;
+            padding: 0;
+        }
+        
+        .app-container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        /* 顶部导航 */
+        .app-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 20px 15px;
+            position: relative;
+            z-index: 10;
+            box-shadow: 0 3px 10px rgba(44, 111, 209, 0.3);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .app-title {
+            font-size: 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .app-title i {
+            font-size: 24px;
+        }
+        
+        .control-buttons {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .btn-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-icon:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+        
+        /* 状态筛选 */
+        .status-filters {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 15px 15px 10px;
+            background: white;
+        }
+        
+        .status-filters::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .status-filter {
+            padding: 8px 16px;
+            background: #f0f7ff;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            white-space: nowrap;
+            border: 1px solid #d1e0ff;
+            transition: all 0.2s ease;
+        }
+        
+        .status-filter.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        /* 配送卡片 */
+        .distribution-cards {
+            padding: 15px;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            color: #1a2a3a;
+            margin: 15px 0;
+            padding-left: 10px;
+            border-left: 4px solid var(--primary);
+            font-weight: 600;
+        }
+        
+        .dist-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #e3edff;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .dist-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 7px 20px rgba(0,0,0,0.09);
+            border-color: #c2d8ff;
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #f0f5ff;
+            align-items: center;
+        }
+        
+        .order-id {
+            font-size: 17px;
+            font-weight: 600;
+            color: var(--primary);
+        }
+        
+        .order-status {
+            font-size: 14px;
+            font-weight: 500;
+            padding: 5px 12px;
+            border-radius: 20px;
+        }
+        
+        .status-pending {
+            background: #ffeed9;
+            color: #e6a23c;
+        }
+        
+        .status-in-progress {
+            background: #e0f0ff;
+            color: var(--primary);
+        }
+        
+        .status-completed {
+            background: #e8f7f0;
+            color: var(--success);
+        }
+        
+        .status-canceled {
+            background: #fef0ef;
+            color: var(--danger);
+        }
+        
+        .card-body {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .info-item {
+            margin-bottom: 10px;
+        }
+        
+        .info-label {
+            font-size: 13px;
+            color: #6a7985;
+            margin-bottom: 5px;
+        }
+        
+        .info-value {
+            font-size: 15px;
+            color: #1a2a3a;
+            font-weight: 500;
+        }
+        
+        .progress-section {
+            background: #f9fbfe;
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+        
+        .progress-container {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+        
+        .progress-bar {
+            flex: 1;
+            height: 10px;
+            background: #e1e9f7;
+            border-radius: 5px;
+            overflow: hidden;
+            margin: 0 10px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            border-radius: 5px;
+        }
+        
+        .progress-in-progress {
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            width: 60%;
+        }
+        
+        .progress-completed {
+            background: linear-gradient(90deg, var(--success), #73d13d);
+            width: 100%;
+        }
+        
+        .progress-text {
+            font-size: 14px;
+            color: #6a7985;
+            text-align: center;
+            margin-top: 10px;
+        }
+        
+        .batches {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+        }
+        
+        .batches::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .batch-tag {
+            padding: 6px 12px;
+            background: #e6f7ff;
+            border: 1px solid #91d5ff;
+            border-radius: 20px;
+            font-size: 13px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        
+        .batch-tag.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        .card-footer {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .card-btn {
+            flex: 1;
+            height: 45px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            gap: 8px;
+            border: none;
+            font-size: 15px;
+        }
+        
+        .btn-detail {
+            background: #f0f7ff;
+            color: var(--primary);
+            border: 1px solid #c9ddff;
+        }
+        
+        .btn-share {
+            background: #e6f7f1;
+            color: var(--success);
+            border: 1px solid #b7eb8f;
+        }
+        
+        .btn-complete {
+            background: linear-gradient(135deg, var(--success), #73d13d);
+            color: white;
+            box-shadow: 0 4px 10px rgba(82, 196, 26, 0.3);
+        }
+        
+        /* 配送详情模态框 */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+            display: none;
+        }
+        
+        .modal-content {
+            background: white;
+            width: 100%;
+            max-width: 450px;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            animation: modalAppear 0.4s ease;
+            max-height: 95vh;
+            overflow-y: auto;
+        }
+        
+        @keyframes modalAppear {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        
+        .modal-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 20px;
+            position: relative;
+        }
+        
+        .modal-header h2 {
+            font-size: 22px;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .close-modal {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .close-modal:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        .modal-body {
+            padding: 25px 20px;
+        }
+        
+        .modal-section {
+            margin-bottom: 25px;
+            padding: 15px;
+            border-radius: 15px;
+            background: #f9fbfe;
+            border: 1px solid #e6f7ff;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            color: var(--primary);
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e6f7ff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .batch-section {
+            margin-top: 20px;
+        }
+        
+        .batch-info {
+            padding: 15px;
+            background: white;
+            border-radius: 12px;
+            border: 1px solid #e6f7ff;
+            margin-bottom: 15px;
+        }
+        
+        .batch-header {
+            display: flex;
+            justify-content: space-between;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+            border-bottom: 1px dashed #f0f5ff;
+        }
+        
+        .batch-title {
+            font-weight: 600;
+            color: var(--primary);
+            font-size: 16px;
+        }
+        
+        .batch-status {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .batch-pending {
+            background: #ffeed9;
+            color: #e6a23c;
+        }
+        
+        .batch-completed {
+            background: #e8f7f0;
+            color: var(--success);
+        }
+        
+        .input-group {
+            margin-bottom: 15px;
+        }
+        
+        .input-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+            display: block;
+            font-weight: 500;
+        }
+        
+        .input-field {
+            width: 100%;
+            height: 50px;
+            border-radius: 12px;
+            border: 1px solid #e8e8e8;
+            padding: 0 15px;
+            font-size: 16px;
+            background: #f8f8f8;
+        }
+        
+        .select-field {
+            width: 100%;
+            height: 50px;
+            border-radius: 12px;
+            border: 1px solid #e8e8e8;
+            padding: 0 15px;
+            font-size: 16px;
+            background: #f8f8f8;
+            appearance: none;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .modal-btn {
+            flex: 1;
+            height: 55px;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            border: none;
+        }
+        
+        .btn-cancel {
+            background: #f5f7fa;
+            color: #666;
+            border: 1px solid #e8e8e8;
+        }
+        
+        .btn-confirm {
+            background: linear-gradient(135deg, var(--success), #73d13d);
+            color: white;
+            box-shadow: 0 4px 12px rgba(82, 196, 26, 0.3);
+        }
+        
+        .btn-print {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            box-shadow: 0 4px 12px rgba(44, 111, 209, 0.3);
+        }
+        
+        .modal-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        /* 底部导航 */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            display: flex;
+            border-top: 1px solid #e8f0fc;
+            padding: 10px 0;
+            z-index: 100;
+        }
+        
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #8590a5;
+            font-size: 12px;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+        
+        .nav-item.active {
+            color: var(--primary);
+        }
+        
+        .nav-icon {
+            font-size: 20px;
+            margin-bottom: 3px;
+        }
+        
+        .wechat-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1100;
+            display: none;
+        }
+        
+        .wechat-content {
+            background: white;
+            width: 85%;
+            max-width: 350px;
+            border-radius: 20px;
+            overflow: hidden;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .wechat-icon {
+            font-size: 70px;
+            color: #52c41a;
+            margin-bottom: 20px;
+        }
+        
+        .wechat-title {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .wechat-text {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+        
+        .qr-code {
+            width: 200px;
+            height: 200px;
+            background: #f9f9f9;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+            color: var(--primary);
+            border-radius: 12px;
+        }
+        
+        .btn-close-wechat {
+            padding: 12px 30px;
+            background: #f0f7ff;
+            color: var(--primary);
+            border-radius: 50px;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- 顶部区域 -->
+        <div class="app-header">
+            <div class="header-content">
+                <div class="app-title">
+                    <i class="fas fa-truck"></i>
+                    <div>成品料配送管理</div>
+                </div>
+                <div class="control-buttons">
+                    <div class="btn-icon">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <div class="btn-icon">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <div class="btn-icon">
+                        <i class="fas fa-cog"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 状态筛选 -->
+        <div class="status-filters">
+            <div class="status-filter active">全部</div>
+            <div class="status-filter">待配送</div>
+            <div class="status-filter">配送中</div>
+            <div class="status-filter">已完成</div>
+            <div class="status-filter">有预警</div>
+        </div>
+        
+        <!-- 配送卡片区域 -->
+        <div class="distribution-cards">
+            <div class="section-title">当前配送任务 (4)</div>
+            
+            <!-- 卡片1: 配送中 -->
+            <div class="dist-card">
+                <div class="card-header">
+                    <div class="order-id">申领单号: 000000001</div>
+                    <div class="order-status status-in-progress">配送中</div>
+                </div>
+                
+                <div class="card-body">
+                    <div class="info-item">
+                        <div class="info-label">物料编码</div>
+                        <div class="info-value">/ 7,000,000,000</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">物料名称</div>
+                        <div class="info-value">高强度混凝土 C40</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">申领数量</div>
+                        <div class="info-value">30m³</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">已配送量</div>
+                        <div class="info-value" style="color: var(--success);">15m³</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">使用部位</div>
+                        <div class="info-value">土场1</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">使用班组</div>
+                        <div class="info-value">李安-瓦工班经产经理</div>
+                    </div>
+                </div>
+                
+                <div class="progress-section">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">生产车间</div>
+                            <div class="info-value">750型生产车间</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">配送进度</div>
+                            <div class="info-value">15/30m³</div>
+                        </div>
+                    </div>
+                    
+                    <div class="progress-container">
+                        <div class="info-value">0%</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill progress-in-progress"></div>
+                        </div>
+                        <div class="info-value">50%</div>
+                    </div>
+                    <div class="progress-text">预计完成时间: 2023-08-25 14:30</div>
+                    
+                    <div class="batches">
+                        <div class="batch-tag active">第1车: 8m³</div>
+                        <div class="batch-tag active">第2车: 7m³</div>
+                        <div class="batch-tag">第3车: 7m³</div>
+                        <div class="batch-tag">第4车: 8m³</div>
+                    </div>
+                </div>
+                
+                <div class="card-footer">
+                    <div class="card-btn btn-detail" onclick="openDetailModal()">
+                        <i class="fas fa-file-alt"></i> 详情
+                    </div>
+                    <div class="card-btn btn-share" onclick="openWechatModal()">
+                        <i class="fab fa-weixin"></i> 分享
+                    </div>
+                    <div class="card-btn btn-complete" onclick="completeDelivery()">
+                        <i class="fas fa-check"></i> 完成
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 卡片2: 待配送 -->
+            <div class="dist-card">
+                <div class="card-header">
+                    <div class="order-id">申领单号: 000000002</div>
+                    <div class="order-status status-pending">待配送</div>
+                </div>
+                
+                <div class="card-body">
+                    <div class="info-item">
+                        <div class="info-label">物料编码</div>
+                        <div class="info-value">C30 P8</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">物料名称</div>
+                        <div class="info-value">通用混凝土 C30</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">申领数量</div>
+                        <div class="info-value">130m³</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">已配送量</div>
+                        <div class="info-value">0</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">使用部位</div>
+                        <div class="info-value">土场2</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">使用班组</div>
+                        <div class="info-value">张强-钢筋班主管</div>
+                    </div>
+                </div>
+                
+                <div class="progress-section">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">生产车间</div>
+                            <div class="info-value">60型生产车间</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">配送进度</div>
+                            <div class="info-value">0/130m³</div>
+                        </div>
+                    </div>
+                    
+                    <div class="progress-container">
+                        <div class="info-value">0%</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 0%"></div>
+                        </div>
+                        <div class="info-value">0%</div>
+                    </div>
+                    <div class="progress-text">计划发车时间: 2023-08-24 09:00</div>
+                    
+                    <div class="batches">
+                        <div class="batch-tag">第1车: 8m³</div>
+                        <div class="batch-tag">第2车: 8m³</div>
+                        <div class="batch-tag">第3车: 8m³</div>
+                    </div>
+                </div>
+                
+                <div class="card-footer">
+                    <div class="card-btn btn-detail" onclick="openDetailModal()">
+                        <i class="fas fa-file-alt"></i> 详情
+                    </div>
+                    <div class="card-btn btn-share" onclick="openWechatModal()">
+                        <i class="fab fa-weixin"></i> 分享
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 更多卡片... -->
+        </div>
+        
+        <!-- 底部导航 -->
+        <div class="bottom-nav">
+            <div class="nav-item active">
+                <div class="nav-icon"><i class="fas fa-home"></i></div>
+                <div>首页</div>
+            </div>
+            <div class="nav-item">
+                <div class="nav-icon"><i class="fas fa-clipboard-list"></i></div>
+                <div>订单</div>
+            </div>
+            <div class="nav-item">
+                <div class="nav-icon"><i class="fas fa-truck"></i></div>
+                <div>配送</div>
+            </div>
+            <div class="nav-item">
+                <div class="nav-icon"><i class="fas fa-user"></i></div>
+                <div>我的</div>
+            </div>
+        </div>
+        
+        <!-- 配送详情模态框 -->
+        <div class="modal" id="detailModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>配送任务详情</h2>
+                    <div class="close-modal" onclick="closeDetailModal()">
+                        <i class="fas fa-times"></i>
+                    </div>
+                </div>
+                <div class="modal-body">
+                    <div class="modal-section">
+                        <div class="section-title">
+                            <i class="fas fa-clipboard-list"></i>
+                            <div>成品料订单信息</div>
+                        </div>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <div class="info-label">申领单号</div>
+                                <div class="info-value">000000001</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">申请时间</div>
+                                <div class="info-value">2023-08-20 08:30</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">物料编码</div>
+                                <div class="info-value">M-8024-C40</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">物料名称</div>
+                                <div class="info-value">高强度混凝土 C40</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">使用部位</div>
+                                <div class="info-value">土场1</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">送达时间</div>
+                                <div class="info-value">2023-08-25 14:30</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">申请人</div>
+                                <div class="info-value">王磊</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">使用人</div>
+                                <div class="info-value">李安-瓦工班</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">申领数量</div>
+                                <div class="info-value">30m³</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">已配送量</div>
+                                <div class="info-value" style="color: var(--success);">15m³</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-section">
+                        <div class="section-title">
+                            <i class="fas fa-truck-loading"></i>
+                            <div>配送批次信息</div>
+                        </div>
+                        
+                        <div class="batch-section">
+                            <div class="batch-title">当前配送批次</div>
+                            <div class="batch-info">
+                                <div class="batch-header">
+                                    <div class="batch-title">第2车配送</div>
+                                    <div class="batch-status batch-in-progress">配送中</div>
+                                </div>
+                                
+                                <div class="info-grid">
+                                    <div class="info-item">
+                                        <div class="info-label">配送车间</div>
+                                        <div class="info-value">750型车间</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <div class="info-label">生产订单</div>
+                                        <div class="info-value">CJ1sc001</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <div class="info-label">配送物料</div>
+                                        <div class="info-value">C35 pile/p10/xx</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <div class="info-label">配送数量</div>
+                                        <div class="info-value">7m³</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <div class="info-label">发车时间</div>
+                                        <div class="info-value">2023-08-25 10:20</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <div class="info-label">预计抵达</div>
+                                        <div class="info-value">2023-08-25 10:50</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <div class="info-label">坍落度</div>
+                                        <div class="info-value">180mm</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <div class="info-label">浇注方式</div>
+                                        <div class="info-value">泵送</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="batch-title" style="margin-top: 15px;">车辆信息</div>
+                                <div class="info-grid">
+                                    <div class="info-item">
+                                        <div class="info-label">车牌号码</div>
+                                        <div class="info-value">沪A·K1234</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <div class="info-label">车型</div>
+                                        <div class="info-value">Kano V001</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <div class="info-label">司机姓名</div>
+                                        <div class="info-value">张师傅</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <div class="info-label">联系电话</div>
+                                        <div class="info-value">138*​**​*5678</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="input-group">
+                            <div class="input-label">修改发车时间</div>
+                            <input type="text" class="input-field" value="2023-08-25 10:20">
+                        </div>
+                        
+                        <div class="btn-group">
+                            <div class="modal-btn btn-cancel" onclick="closeDetailModal()">
+                                <i class="fas fa-times"></i> 取消
+                            </div>
+                            <div class="modal-btn btn-print">
+                                <i class="fas fa-print"></i> 打印配送单
+                            </div>
+                            <div class="modal-btn btn-confirm">
+                                <i class="fas fa-check-circle"></i> 标记完成
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 微信分享模态框 -->
+        <div class="wechat-modal" id="wechatModal">
+            <div class="wechat-content">
+                <div class="wechat-icon">
+                    <i class="fab fa-weixin"></i>
+                </div>
+                <div class="wechat-title">分享配送进度</div>
+                <div class="wechat-text">扫描二维码分享到微信，随时查看配送状态</div>
+                
+                <div class="qr-code">
+                    <i class="fas fa-qrcode"></i>
+                </div>
+                
+                <div class="btn-close-wechat" onclick="closeWechatModal()">
+                    关闭
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 打开详情模态框
+        function openDetailModal() {
+            document.getElementById('detailModal').style.display = 'flex';
+        }
+        
+        // 关闭详情模态框
+        function closeDetailModal() {
+            document.getElementById('detailModal').style.display = 'none';
+        }
+        
+        // 完成配送操作
+        function completeDelivery() {
+            if(confirm('确认将此配送任务标记为完成？')) {
+                alert('配送任务已标记为完成！');
+            }
+        }
+        
+        // 打开微信分享模态框
+        function openWechatModal() {
+            document.getElementById('wechatModal').style.display = 'flex';
+        }
+        
+        // 关闭微信分享模态框
+        function closeWechatModal() {
+            document.getElementById('wechatModal').style.display = 'none';
+        }
+        
+        // 状态筛选切换
+        document.querySelectorAll('.status-filter').forEach(filter => {
+            filter.addEventListener('click', function() {
+                document.querySelectorAll('.status-filter').forEach(f => {
+                    f.classList.remove('active');
+                });
+                this.classList.add('active');
+            });
+        });
+        
+        // 批次选择
+        document.querySelectorAll('.batch-tag').forEach(tag => {
+            tag.addEventListener('click', function() {
+                document.querySelectorAll('.batch-tag').forEach(t => {
+                    t.classList.remove('active');
+                });
+                this.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>

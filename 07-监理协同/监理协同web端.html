@@ -1,0 +1,1404 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工程报检管理系统</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        .phase-badge {
+            font-size: 0.8rem;
+            padding: 0.3rem 0.6rem;
+        }
+        .workflow-step {
+            position: relative;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .workflow-step:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .workflow-step.active {
+            background: #e3f2fd;
+            border: 2px solid #0d6efd;
+        }
+        .workflow-step.completed {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+        }
+        .workflow-step.pending {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+        }
+        .workflow-step-number {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        .form-section {
+            border-left: 4px solid #0d6efd;
+            padding-left: 1rem;
+            margin-bottom: 2rem;
+        }
+        .attachment-preview {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            margin: 5px;
+        }
+        .task-list-item {
+            padding: 10px;
+            border-bottom: 1px solid #dee2e6;
+            transition: background-color 0.2s;
+        }
+        .task-list-item:hover {
+            background-color: #f8f9fa;
+        }
+        .status-badge {
+            font-size: 0.75rem;
+        }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1050;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 8px;
+            max-width: 900px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .inspection-item-card {
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+        .inspection-item-card:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .inspection-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .inspection-item-status {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        .inspection-item-status.passed {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .inspection-item-status.failed {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .inspection-item-status.pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .photos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .photo-thumbnail {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+        }
+        .add-photo-btn {
+            width: 100%;
+            height: 120px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed #dee2e6;
+            border-radius: 4px;
+            background: #f8f9fa;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .add-photo-btn:hover {
+            background: #e9ecef;
+            border-color: #adb5bd;
+        }
+        .measurement-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+        .measurement-value {
+            font-weight: bold;
+            color: #0d6efd;
+        }
+        .alert-message {
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            display: none;
+        }
+        .alert-message.show {
+            display: block;
+        }
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- 消息提示 -->
+        <div id="alertMessage" class="alert-message"></div>
+
+        <!-- 顶部导航 -->
+        <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+            <div class="container">
+                <a class="navbar-brand" href="#" @click="setActiveTab('dashboard')">
+                    <i class="bi bi-clipboard-check"></i>
+                    工程报检管理系统
+                </a>
+                <div class="navbar-nav ms-auto">
+                    <div class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle"></i> {{ currentUser.name }} ({{ currentUser.role }})
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" @click="switchRole('施工员')"><i class="bi bi-person-workspace"></i> 施工员</a></li>
+                            <li><a class="dropdown-item" href="#" @click="switchRole('监理工程师')"><i class="bi bi-person-badge"></i> 监理工程师</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" @click="logout"><i class="bi bi-box-arrow-right"></i> 退出</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container-fluid">
+            <div class="row">
+                <!-- 侧边栏 -->
+                <div class="col-lg-2">
+                    <div class="list-group mb-4">
+                        <a href="#" class="list-group-item list-group-item-action" :class="{ active: activeTab === 'dashboard' }" @click="setActiveTab('dashboard')">
+                            <i class="bi bi-speedometer2"></i> 仪表盘
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action" :class="{ active: activeTab === 'create' }" @click="setActiveTab('create')">
+                            <i class="bi bi-plus-circle"></i> 新建报检
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action" :class="{ active: activeTab === 'my-inspections' }" @click="setActiveTab('my-inspections')">
+                            <i class="bi bi-list-check"></i> 我的报检单
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action" :class="{ active: activeTab === 'tasks' }" @click="setActiveTab('tasks')">
+                            <i class="bi bi-clock-history"></i> 待办任务
+                            <span v-if="pendingTasks.length > 0" class="badge bg-danger rounded-pill float-end">{{ pendingTasks.length }}</span>
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action" :class="{ active: activeTab === 'archive' }" @click="setActiveTab('archive')">
+                            <i class="bi bi-archive"></i> 归档记录
+                        </a>
+                    </div>
+
+                    <!-- 统计信息 -->
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">统计信息</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-2">
+                                <small class="text-muted">我的报检</small>
+                                <div class="d-flex justify-content-between">
+                                    <span>进行中: {{ stats.myInProgress }}</span>
+                                    <span class="text-success">已完成: {{ stats.myCompleted }}</span>
+                                </div>
+                            </div>
+                            <div class="mb-2">
+                                <small class="text-muted">待审批</small>
+                                <div class="d-flex justify-content-between">
+                                    <span>报检申请: {{ stats.pendingReview }}</span>
+                                    <span>检查申请: {{ stats.pendingInspection }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 主内容区 -->
+                <div class="col-lg-10">
+                    <!-- 仪表盘 -->
+                    <div v-if="activeTab === 'dashboard'" class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">报检流程概览</h5>
+                            <div class="row">
+                                <div class="col-md-3 mb-3" v-for="(step, index) in workflowSteps" :key="index">
+                                    <div class="workflow-step" :class="{
+                                        'active': step.id === currentStep,
+                                        'completed': step.status === 'completed',
+                                        'pending': step.status === 'pending'
+                                    }" @click="navigateToStep(step.id)">
+                                        <div class="d-flex align-items-center">
+                                            <div class="workflow-step-number" :class="{
+                                                'bg-primary text-white': step.status === 'active',
+                                                'bg-success text-white': step.status === 'completed',
+                                                'bg-warning text-white': step.status === 'pending'
+                                            }">
+                                                {{ index + 1 }}
+                                            </div>
+                                            <div>
+                                                <strong>{{ step.title }}</strong>
+                                                <div class="text-muted small">{{ step.description }}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 新建报检 -->
+                    <div v-if="activeTab === 'create'" class="card">
+                        <div class="card-header bg-light">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">
+                                    <i class="bi bi-file-earmark-text"></i>
+                                    新建报检申请单
+                                </h5>
+                                <span class="badge bg-info">报检编号: {{ generateInspectionNumber() }}</span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <form id="inspectionForm" @submit.prevent="submitInspection">
+                                <!-- 阶段选择 -->
+                                <div class="row mb-4">
+                                    <div class="col-md-6">
+                                        <label class="form-label">报检阶段</label>
+                                        <div>
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="radio" name="phase" id="preWork" 
+                                                       v-model="newInspection.phase" value="preWork" checked>
+                                                <label class="form-check-label" for="preWork">
+                                                    <span class="badge bg-warning phase-badge">准工检查</span>
+                                                </label>
+                                            </div>
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="radio" name="phase" id="completion" 
+                                                       v-model="newInspection.phase" value="completion" :disabled="!canStartCompletion">
+                                                <label class="form-check-label" for="completion">
+                                                    <span class="badge bg-success phase-badge">完工检查</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <small class="text-muted">准工检查通过后方可进行完工检查</small>
+                                    </div>
+                                </div>
+
+                                <!-- 基础信息 -->
+                                <div class="form-section">
+                                    <h6><i class="bi bi-info-circle"></i> 基础信息</h6>
+                                    <div class="row g-3">
+                                        <div class="col-md-4">
+                                            <label class="form-label">工程名称</label>
+                                            <input type="text" class="form-control" v-model="newInspection.projectName" required>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">位置/里程</label>
+                                            <input type="text" class="form-control" v-model="newInspection.location" required>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">部位</label>
+                                            <input type="text" class="form-control" v-model="newInspection.section" required>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">图号</label>
+                                            <input type="text" class="form-control" v-model="newInspection.drawingNumber">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">BoQ项</label>
+                                            <input type="text" class="form-control" v-model="newInspection.boqItem">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 待检项目描述 -->
+                                <div class="form-section">
+                                    <h6><i class="bi bi-card-checklist"></i> 待检项目描述</h6>
+                                    <textarea class="form-control" rows="4" v-model="newInspection.description" 
+                                              placeholder="请输入待检项目的详细描述..." required></textarea>
+                                </div>
+
+                                <!-- 附件上传 -->
+                                <div class="form-section">
+                                    <h6><i class="bi bi-paperclip"></i> 附件管理</h6>
+                                    <div class="mb-3">
+                                        <input type="file" class="form-control" multiple @change="handleFileUpload" 
+                                               accept=".pdf,.jpg,.jpeg,.png">
+                                        <small class="text-muted">支持PDF、JPG、PNG格式，单个文件不超过10MB</small>
+                                    </div>
+                                    <div class="d-flex flex-wrap">
+                                        <div v-for="(file, index) in newInspection.attachments" :key="index" class="position-relative">
+                                            <img :src="getFilePreview(file)" class="attachment-preview" 
+                                                 @click="viewAttachment(file)">
+                                            <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0" 
+                                                    @click="removeAttachment(index)">
+                                                <i class="bi bi-x"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 操作按钮 -->
+                                <div class="d-flex justify-content-between mt-4">
+                                    <div>
+                                        <button type="button" class="btn btn-outline-secondary" @click="saveDraft">
+                                            <i class="bi bi-file-earmark"></i> 保存草稿
+                                        </button>
+                                        <button type="button" class="btn btn-outline-primary ms-2" @click="previewInspection">
+                                            <i class="bi bi-eye"></i> 预览
+                                        </button>
+                                    </div>
+                                    <div>
+                                        <button type="submit" class="btn btn-success">
+                                            <i class="bi bi-send-check"></i> 提交报检
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- 我的报检单 -->
+                    <div v-if="activeTab === 'my-inspections'" class="card">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">
+                                <i class="bi bi-list-check"></i>
+                                我的报检单
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>报检编号</th>
+                                            <th>工程名称</th>
+                                            <th>阶段</th>
+                                            <th>状态</th>
+                                            <th>检查结果</th>
+                                            <th>创建时间</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="inspection in myInspections" :key="inspection.id">
+                                            <td>{{ inspection.number }}</td>
+                                            <td>{{ inspection.projectName }}</td>
+                                            <td>
+                                                <span :class="{
+                                                    'badge bg-warning': inspection.phase === 'preWork',
+                                                    'badge bg-success': inspection.phase === 'completion'
+                                                }">
+                                                    {{ inspection.phase === 'preWork' ? '准工检查' : '完工检查' }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span :class="{
+                                                    'badge bg-primary': inspection.status === 'submitted',
+                                                    'badge bg-info': inspection.status === 'reviewing',
+                                                    'badge bg-warning': inspection.status === 'underConstruction',
+                                                    'badge bg-success': inspection.status === 'completed',
+                                                    'badge bg-secondary': inspection.status === 'archived',
+                                                    'badge bg-dark': inspection.status === 'inspecting'
+                                                }">
+                                                    {{ getStatusText(inspection.status) }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span v-if="inspection.inspectionResult" :class="{
+                                                    'badge bg-success': inspection.inspectionResult === 'passed',
+                                                    'badge bg-danger': inspection.inspectionResult === 'failed',
+                                                    'badge bg-warning': inspection.inspectionResult === 'pending'
+                                                }">
+                                                    {{ getInspectionResultText(inspection.inspectionResult) }}
+                                                </span>
+                                                <span v-else class="text-muted">-</span>
+                                            </td>
+                                            <td>{{ formatDate(inspection.createdAt) }}</td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-primary" @click="viewInspection(inspection)">
+                                                    <i class="bi bi-eye"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 待办任务 -->
+                    <div v-if="activeTab === 'tasks'" class="card">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">
+                                <i class="bi bi-clock-history"></i>
+                                待办任务
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div v-if="pendingTasks.length === 0" class="text-center text-muted py-4">
+                                暂无待办任务
+                            </div>
+                            <div v-else>
+                                <div v-for="task in pendingTasks" :key="task.id" class="task-list-item">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="mb-1">{{ task.title }}</h6>
+                                            <small class="text-muted">{{ task.description }}</small>
+                                            <div class="mt-1">
+                                                <span class="badge bg-info status-badge">{{ task.inspectionNumber }}</span>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <button class="btn btn-sm btn-primary" @click="handleTask(task)">
+                                                {{ task.actionText }}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 归档记录 -->
+                    <div v-if="activeTab === 'archive'" class="card">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">
+                                <i class="bi bi-archive"></i>
+                                归档记录
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>报检编号</th>
+                                            <th>工程名称</th>
+                                            <th>阶段</th>
+                                            <th>检查结果</th>
+                                            <th>归档时间</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="inspection in archivedInspections" :key="inspection.id">
+                                            <td>{{ inspection.number }}</td>
+                                            <td>{{ inspection.projectName }}</td>
+                                            <td>
+                                                <span :class="{
+                                                    'badge bg-warning': inspection.phase === 'preWork',
+                                                    'badge bg-success': inspection.phase === 'completion'
+                                                }">
+                                                    {{ inspection.phase === 'preWork' ? '准工检查' : '完工检查' }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span :class="{
+                                                    'badge bg-success': inspection.inspectionResult === 'passed',
+                                                    'badge bg-danger': inspection.inspectionResult === 'failed'
+                                                }">
+                                                    {{ getInspectionResultText(inspection.inspectionResult) }}
+                                                </span>
+                                            </td>
+                                            <td>{{ formatDate(inspection.archivedAt) }}</td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-primary" @click="viewInspection(inspection)">
+                                                    <i class="bi bi-eye"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 报检单详情模态框 -->
+        <div v-if="showInspectionDetail" class="modal-overlay" @click.self="showInspectionDetail = false">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">报检单详情 - {{ selectedInspection.number }}</h5>
+                    <button type="button" class="btn-close" @click="showInspectionDetail = false"></button>
+                </div>
+                <div class="modal-body">
+                    <div v-if="selectedInspection">
+                        <!-- 报检单内容显示 -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <strong>工程名称:</strong> {{ selectedInspection.projectName }}
+                            </div>
+                            <div class="col-md-6">
+                                <strong>状态:</strong>
+                                <span :class="{
+                                    'badge bg-primary': selectedInspection.status === 'submitted',
+                                    'badge bg-info': selectedInspection.status === 'reviewing',
+                                    'badge bg-warning': selectedInspection.status === 'underConstruction',
+                                    'badge bg-success': selectedInspection.status === 'completed',
+                                    'badge bg-secondary': selectedInspection.status === 'archived',
+                                    'badge bg-dark': selectedInspection.status === 'inspecting'
+                                }">
+                                    {{ getStatusText(selectedInspection.status) }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <strong>位置/里程:</strong> {{ selectedInspection.location }}
+                            </div>
+                            <div class="col-md-6">
+                                <strong>部位:</strong> {{ selectedInspection.section }}
+                            </div>
+                        </div>
+
+                        <!-- 审批流程 -->
+                        <div v-if="selectedInspection.approvals && selectedInspection.approvals.length > 0" class="mb-4">
+                            <h6>审批流程</h6>
+                            <div class="timeline">
+                                <div v-for="(approval, index) in selectedInspection.approvals" :key="index" 
+                                     class="timeline-item mb-3">
+                                    <div class="d-flex">
+                                        <div class="timeline-marker me-3">
+                                            <i :class="{
+                                                'bi bi-check-circle-fill text-success': approval.status === 'approved',
+                                                'bi bi-x-circle-fill text-danger': approval.status === 'rejected',
+                                                'bi bi-clock text-warning': approval.status === 'pending'
+                                            }"></i>
+                                        </div>
+                                        <div>
+                                            <strong>{{ approval.role }}</strong>: {{ approval.name }}
+                                            <div class="text-muted small">{{ formatDate(approval.date) }}</div>
+                                            <div v-if="approval.comment">{{ approval.comment }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 施工完成后监理检查内容 -->
+                        <div v-if="selectedInspection.status === 'completed' || selectedInspection.status === 'inspecting'" class="mb-4">
+                            <h6>监理检查内容</h6>
+                            
+                            <div v-if="!selectedInspection.inspectionItems || selectedInspection.inspectionItems.length === 0" class="alert alert-warning">
+                                尚未进行监理检查。请点击下方"开始监理检查"按钮。
+                            </div>
+                            
+                            <div v-else>
+                                <!-- 检查项列表 -->
+                                <div v-for="(item, index) in selectedInspection.inspectionItems" :key="index" class="inspection-item-card">
+                                    <div class="inspection-item-header">
+                                        <h6 class="mb-0">{{ item.name }}</h6>
+                                        <span class="inspection-item-status" :class="item.result">
+                                            {{ getInspectionStatusText(item.result) }}
+                                        </span>
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted">{{ item.description }}</small>
+                                    </div>
+                                    
+                                    <!-- 检查标准 -->
+                                    <div class="mb-2">
+                                        <strong>检查标准:</strong> {{ item.standard }}
+                                    </div>
+                                    
+                                    <!-- 检查结果 -->
+                                    <div class="mb-2">
+                                        <strong>检查结果:</strong> 
+                                        <div class="mt-1">
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="radio" :name="'result-' + index" 
+                                                       :id="'passed-' + index" value="passed" v-model="item.result">
+                                                <label class="form-check-label" :for="'passed-' + index">通过</label>
+                                            </div>
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="radio" :name="'result-' + index" 
+                                                       :id="'failed-' + index" value="failed" v-model="item.result">
+                                                <label class="form-check-label" :for="'failed-' + index">不通过</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- 检查记录 -->
+                                    <div class="mb-2">
+                                        <label class="form-label">检查记录</label>
+                                        <textarea class="form-control" rows="2" v-model="item.notes" 
+                                                  placeholder="填写检查记录..."></textarea>
+                                    </div>
+                                    
+                                    <!-- 照片证据 -->
+                                    <div class="mb-2">
+                                        <label class="form-label">照片证据</label>
+                                        <div class="photos-grid">
+                                            <div v-for="(photo, photoIndex) in item.photos" :key="photoIndex" class="position-relative">
+                                                <img :src="photo.url" class="photo-thumbnail">
+                                                <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0"
+                                                        @click="removePhoto(item, photoIndex)">
+                                                    <i class="bi bi-x"></i>
+                                                </button>
+                                            </div>
+                                            <div class="add-photo-btn" @click="addPhoto(item)">
+                                                <i class="bi bi-camera fs-4"></i>
+                                                <small>添加照片</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 总体评价 -->
+                                <div class="mb-3">
+                                    <label class="form-label">总体评价</label>
+                                    <textarea class="form-control" rows="3" v-model="selectedInspection.overallEvaluation"
+                                              placeholder="填写总体评价..."></textarea>
+                                </div>
+                                
+                                <!-- 检查结论 -->
+                                <div class="mb-3">
+                                    <label class="form-label">检查结论</label>
+                                    <div class="d-flex gap-2">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="overallResult" 
+                                                   id="overallPassed" value="passed" v-model="selectedInspection.inspectionResult">
+                                            <label class="form-check-label" for="overallPassed">
+                                                <span class="badge bg-success">检查通过</span>
+                                            </label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="overallResult" 
+                                                   id="overallFailed" value="failed" v-model="selectedInspection.inspectionResult">
+                                            <label class="form-check-label" for="overallFailed">
+                                                <span class="badge bg-danger">检查不通过</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 操作按钮 -->
+                        <div v-if="currentUser.role === '监理工程师' && selectedInspection.status === 'submitted'" class="mt-3">
+                            <h6>监理批复</h6>
+                            <div class="mb-3">
+                                <label class="form-label">审批意见</label>
+                                <textarea class="form-control" v-model="reviewComment" rows="3"></textarea>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-success" @click="approveInspection">
+                                    <i class="bi bi-check-circle"></i> 批准
+                                </button>
+                                <button class="btn btn-danger" @click="rejectInspection">
+                                    <i class="bi bi-x-circle"></i> 拒绝
+                                </button>
+                            </div>
+                        </div>
+
+                        <div v-if="currentUser.role === '施工员' && selectedInspection.status === 'reviewing'" class="mt-3">
+                            <button class="btn btn-primary" @click="startConstruction">
+                                <i class="bi bi-play-circle"></i> 开始施工
+                            </button>
+                        </div>
+
+                        <div v-if="currentUser.role === '施工员' && selectedInspection.status === 'underConstruction'" class="mt-3">
+                            <button class="btn btn-success" @click="completeConstruction">
+                                <i class="bi bi-check-circle"></i> 施工完成
+                            </button>
+                        </div>
+
+                        <div v-if="currentUser.role === '监理工程师' && selectedInspection.status === 'completed'" class="mt-3">
+                            <div v-if="!selectedInspection.inspectionItems || selectedInspection.inspectionItems.length === 0">
+                                <button class="btn btn-primary" @click="startInspection">
+                                    <i class="bi bi-clipboard-check"></i> 开始监理检查
+                                </button>
+                            </div>
+                            <div v-else>
+                                <button class="btn btn-success" @click="submitInspectionResult">
+                                    <i class="bi bi-check-circle"></i> 提交检查结果
+                                </button>
+                                <button class="btn btn-outline-secondary ms-2" @click="continueInspection">
+                                    <i class="bi bi-pencil"></i> 继续检查
+                                </button>
+                            </div>
+                        </div>
+
+                        <div v-if="currentUser.role === '监理工程师' && selectedInspection.status === 'inspecting'" class="mt-3">
+                            <button class="btn btn-primary" @click="archiveInspection">
+                                <i class="bi bi-archive"></i> 归档
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const { createApp } = Vue;
+
+        const app = createApp({
+            data() {
+                return {
+                    activeTab: 'dashboard',
+                    currentStep: 'create',
+                    currentUser: {
+                        name: '王监理',
+                        role: '监理工程师'
+                    },
+                    newInspection: {
+                        phase: 'preWork',
+                        projectName: '',
+                        location: '',
+                        section: '',
+                        drawingNumber: '',
+                        boqItem: '',
+                        description: '',
+                        attachments: []
+                    },
+                    inspections: [
+                        {
+                            id: 1,
+                            number: 'CCECC-KKRP-IR-S001-20240131-001',
+                            projectName: 'KKRP项目主体结构',
+                            location: 'A区-1号楼',
+                            section: '地下室基础',
+                            phase: 'preWork',
+                            status: 'submitted',
+                            createdAt: new Date('2024-01-31'),
+                            approvals: []
+                        },
+                        {
+                            id: 2,
+                            number: 'CCECC-KKRP-IR-S001-20240130-002',
+                            projectName: 'KKRP项目电气工程',
+                            location: 'B区-配电室',
+                            section: '电缆敷设',
+                            phase: 'preWork',
+                            status: 'reviewing',
+                            createdAt: new Date('2024-01-30'),
+                            approvals: [
+                                {
+                                    role: '施工员',
+                                    name: '张工',
+                                    date: new Date('2024-01-30'),
+                                    status: 'approved'
+                                }
+                            ]
+                        },
+                        {
+                            id: 3,
+                            number: 'CCECC-KKRP-IR-S001-20240129-003',
+                            projectName: 'KKRP项目给排水',
+                            location: 'C区-卫生间',
+                            section: '管道安装',
+                            phase: 'preWork',
+                            status: 'underConstruction',
+                            createdAt: new Date('2024-01-29'),
+                            approvals: [
+                                {
+                                    role: '施工员',
+                                    name: '张工',
+                                    date: new Date('2024-01-29'),
+                                    status: 'approved'
+                                },
+                                {
+                                    role: '监理工程师',
+                                    name: '王监理',
+                                    date: new Date('2024-01-30'),
+                                    status: 'approved',
+                                    comment: '图纸符合要求，可以施工'
+                                }
+                            ]
+                        },
+                        {
+                            id: 4,
+                            number: 'CCECC-KKRP-IR-S001-20240128-004',
+                            projectName: 'KKRP项目钢结构',
+                            location: 'D区-厂房',
+                            section: '钢梁安装',
+                            phase: 'preWork',
+                            status: 'completed',
+                            createdAt: new Date('2024-01-28'),
+                            inspectionResult: 'pending',
+                            approvals: [
+                                {
+                                    role: '施工员',
+                                    name: '张工',
+                                    date: new Date('2024-01-28'),
+                                    status: 'approved'
+                                },
+                                {
+                                    role: '监理工程师',
+                                    name: '王监理',
+                                    date: new Date('2024-01-29'),
+                                    status: 'approved',
+                                    comment: '同意施工'
+                                }
+                            ]
+                        },
+                        {
+                            id: 5,
+                            number: 'CCECC-KKRP-IR-S001-20240127-005',
+                            projectName: 'KKRP项目外墙工程',
+                            location: 'A区-1号楼',
+                            section: '外墙保温',
+                            phase: 'completion',
+                            status: 'inspecting',
+                            createdAt: new Date('2024-01-27'),
+                            inspectionResult: 'pending',
+                            inspectionItems: [
+                                {
+                                    id: 1,
+                                    name: '保温板厚度检查',
+                                    description: '检查外墙保温板厚度是否符合设计要求',
+                                    standard: '设计厚度100mm，允许偏差±5mm',
+                                    result: 'passed',
+                                    notes: '现场测量厚度为102mm，符合要求',
+                                    photos: [
+                                        { url: 'https://via.placeholder.com/150x120/4CAF50/FFFFFF?text=厚度测量' }
+                                    ]
+                                },
+                                {
+                                    id: 2,
+                                    name: '粘结面积检查',
+                                    description: '检查保温板与基层墙体粘结面积',
+                                    standard: '粘结面积率≥40%',
+                                    result: 'passed',
+                                    notes: '现场抽查粘结面积率为45%，符合要求',
+                                    photos: [
+                                        { url: 'https://via.placeholder.com/150x120/2196F3/FFFFFF?text=粘结检查' }
+                                    ]
+                                },
+                                {
+                                    id: 3,
+                                    name: '平整度检查',
+                                    description: '检查保温层表面平整度',
+                                    standard: '平整度≤4mm/2m',
+                                    result: 'pending',
+                                    notes: '',
+                                    photos: []
+                                }
+                            ],
+                            overallEvaluation: '整体施工质量良好，大部分检查项符合要求',
+                            approvals: [
+                                {
+                                    role: '施工员',
+                                    name: '张工',
+                                    date: new Date('2024-01-27'),
+                                    status: 'approved'
+                                },
+                                {
+                                    role: '监理工程师',
+                                    name: '王监理',
+                                    date: new Date('2024-01-28'),
+                                    status: 'approved',
+                                    comment: '同意施工'
+                                }
+                            ]
+                        }
+                    ],
+                    selectedInspection: null,
+                    showInspectionDetail: false,
+                    reviewComment: '',
+                    stats: {
+                        myInProgress: 2,
+                        myCompleted: 5,
+                        pendingReview: 3,
+                        pendingInspection: 2
+                    },
+                    canStartCompletion: false
+                };
+            },
+            computed: {
+                workflowSteps() {
+                    return [
+                        {
+                            id: 'create',
+                            title: '发起报检',
+                            description: '填写报检信息',
+                            status: this.activeTab === 'create' ? 'active' : 'completed'
+                        },
+                        {
+                            id: 'review',
+                            title: '监理批复',
+                            description: '等待监理审批',
+                            status: 'pending'
+                        },
+                        {
+                            id: 'construction',
+                            title: '施工',
+                            description: '开始施工',
+                            status: 'pending'
+                        },
+                        {
+                            id: 'inspection',
+                            title: '监理检查',
+                            description: '施工完成检查',
+                            status: 'pending'
+                        },
+                        {
+                            id: 'archive',
+                            title: '留档',
+                            description: '资料归档保存',
+                            status: 'pending'
+                        }
+                    ];
+                },
+                myInspections() {
+                    return this.inspections.filter(insp => 
+                        insp.status !== 'archived' && insp.status !== 'draft'
+                    );
+                },
+                pendingTasks() {
+                    const tasks = [];
+                    
+                    // 施工员的任务
+                    if (this.currentUser.role === '施工员') {
+                        tasks.push(...this.inspections.filter(insp => 
+                            insp.status === 'submitted'
+                        ).map(insp => ({
+                            id: insp.id,
+                            title: '等待监理批复',
+                            description: `报检单: ${insp.number}`,
+                            inspectionNumber: insp.number,
+                            actionText: '查看详情'
+                        })));
+                        
+                        tasks.push(...this.inspections.filter(insp => 
+                            insp.status === 'reviewing'
+                        ).map(insp => ({
+                            id: insp.id,
+                            title: '可以开始施工',
+                            description: `报检单: ${insp.number}`,
+                            inspectionNumber: insp.number,
+                            actionText: '开始施工'
+                        })));
+                    }
+                    
+                    // 监理工程师的任务
+                    if (this.currentUser.role === '监理工程师') {
+                        tasks.push(...this.inspections.filter(insp => 
+                            insp.status === 'submitted'
+                        ).map(insp => ({
+                            id: insp.id,
+                            title: '需要审批',
+                            description: `报检单: ${insp.number}`,
+                            inspectionNumber: insp.number,
+                            actionText: '审批'
+                        })));
+                        
+                        tasks.push(...this.inspections.filter(insp => 
+                            insp.status === 'completed' && (!insp.inspectionItems || insp.inspectionItems.length === 0)
+                        ).map(insp => ({
+                            id: insp.id,
+                            title: '需要监理检查',
+                            description: `报检单: ${insp.number}`,
+                            inspectionNumber: insp.number,
+                            actionText: '检查'
+                        })));
+                        
+                        tasks.push(...this.inspections.filter(insp => 
+                            insp.status === 'inspecting'
+                        ).map(insp => ({
+                            id: insp.id,
+                            title: '检查待归档',
+                            description: `报检单: ${insp.number}`,
+                            inspectionNumber: insp.number,
+                            actionText: '归档'
+                        })));
+                    }
+                    
+                    return tasks;
+                },
+                archivedInspections() {
+                    return this.inspections.filter(insp => insp.status === 'archived');
+                }
+            },
+            methods: {
+                setActiveTab(tab) {
+                    this.activeTab = tab;
+                },
+                navigateToStep(stepId) {
+                    this.currentStep = stepId;
+                    if (stepId === 'create') {
+                        this.activeTab = 'create';
+                    }
+                },
+                switchRole(role) {
+                    this.currentUser.role = role;
+                    this.currentUser.name = role === '施工员' ? '张工' : '王监理';
+                    this.showMessage(`已切换到${role}角色`, 'success');
+                },
+                logout() {
+                    this.showMessage('已登出系统', 'success');
+                },
+                showMessage(message, type = 'success') {
+                    const alertEl = document.getElementById('alertMessage');
+                    alertEl.textContent = message;
+                    alertEl.className = `alert-message ${type === 'success' ? 'alert-success' : 'alert-error'} show`;
+                    
+                    setTimeout(() => {
+                        alertEl.className = 'alert-message';
+                    }, 3000);
+                },
+                generateInspectionNumber() {
+                    const now = new Date();
+                    const dateStr = now.toISOString().slice(0,10).replace(/-/g, '');
+                    const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+                    return `CCECC-KKRP-IR-S001-${dateStr}-${randomNum}`;
+                },
+                handleFileUpload(event) {
+                    const files = event.target.files;
+                    for (let i = 0; i < files.length; i++) {
+                        const file = files[i];
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            this.newInspection.attachments.push({
+                                name: file.name,
+                                type: file.type,
+                                data: e.target.result
+                            });
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                },
+                getFilePreview(file) {
+                    if (file.type && file.type.startsWith('image/')) {
+                        return file.data;
+                    } else if (file.type === 'application/pdf') {
+                        return 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24"%3E%3Cpath fill="%23dc3545" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/%3E%3Cpath fill="%23fff" d="M14 2v6h6m-4 5H8m8 4H8m2-8H8"/%3E%3C/svg%3E';
+                    }
+                    return '';
+                },
+                removeAttachment(index) {
+                    this.newInspection.attachments.splice(index, 1);
+                },
+                viewAttachment(file) {
+                    if (file.type === 'application/pdf') {
+                        window.open(file.data, '_blank');
+                    } else {
+                        const newWindow = window.open();
+                        newWindow.document.write(`<img src="${file.data}" style="max-width:100%;">`);
+                    }
+                },
+                saveDraft() {
+                    this.showMessage('已保存为草稿', 'success');
+                },
+                previewInspection() {
+                    this.showMessage('预览功能开发中...', 'success');
+                },
+                submitInspection() {
+                    if (!this.newInspection.projectName || !this.newInspection.location || !this.newInspection.section || !this.newInspection.description) {
+                        this.showMessage('请填写所有必填字段', 'error');
+                        return;
+                    }
+                    
+                    const newInspection = {
+                        id: this.inspections.length + 1,
+                        number: this.generateInspectionNumber(),
+                        ...JSON.parse(JSON.stringify(this.newInspection)),
+                        status: 'submitted',
+                        createdAt: new Date(),
+                        approvals: []
+                    };
+                    
+                    this.inspections.unshift(newInspection);
+                    
+                    // 重置表单
+                    this.newInspection = {
+                        phase: 'preWork',
+                        projectName: '',
+                        location: '',
+                        section: '',
+                        drawingNumber: '',
+                        boqItem: '',
+                        description: '',
+                        attachments: []
+                    };
+                    
+                    this.showMessage('报检单提交成功！', 'success');
+                    this.activeTab = 'my-inspections';
+                },
+                getStatusText(status) {
+                    const statusMap = {
+                        'draft': '草稿',
+                        'submitted': '已提交',
+                        'reviewing': '审批中',
+                        'underConstruction': '施工中',
+                        'completed': '施工完成',
+                        'inspecting': '检查中',
+                        'archived': '已归档'
+                    };
+                    return statusMap[status] || status;
+                },
+                getInspectionResultText(result) {
+                    const resultMap = {
+                        'passed': '通过',
+                        'failed': '不通过',
+                        'pending': '待检查'
+                    };
+                    return resultMap[result] || result;
+                },
+                getInspectionStatusText(status) {
+                    const statusMap = {
+                        'passed': '通过',
+                        'failed': '不通过',
+                        'pending': '待检查'
+                    };
+                    return statusMap[status] || status;
+                },
+                formatDate(date) {
+                    return new Date(date).toLocaleDateString('zh-CN');
+                },
+                viewInspection(inspection) {
+                    this.selectedInspection = JSON.parse(JSON.stringify(inspection));
+                    this.showInspectionDetail = true;
+                },
+                handleTask(task) {
+                    const inspection = this.inspections.find(insp => insp.id === task.id);
+                    if (inspection) {
+                        this.viewInspection(inspection);
+                    }
+                },
+                approveInspection() {
+                    if (!this.selectedInspection) return;
+                    
+                    this.selectedInspection.status = 'reviewing';
+                    this.selectedInspection.approvals.push({
+                        role: this.currentUser.role,
+                        name: this.currentUser.name,
+                        date: new Date(),
+                        status: 'approved',
+                        comment: this.reviewComment || '审批通过'
+                    });
+                    
+                    // 更新主列表
+                    const index = this.inspections.findIndex(insp => insp.id === this.selectedInspection.id);
+                    if (index !== -1) {
+                        this.inspections[index] = JSON.parse(JSON.stringify(this.selectedInspection));
+                    }
+                    
+                    this.reviewComment = '';
+                    this.showMessage('审批通过！', 'success');
+                    this.showInspectionDetail = false;
+                },
+                rejectInspection() {
+                    if (!this.selectedInspection) return;
+                    
+                    this.selectedInspection.status = 'draft';
+                    this.selectedInspection.approvals.push({
+                        role: this.currentUser.role,
+                        name: this.currentUser.name,
+                        date: new Date(),
+                        status: 'rejected',
+                        comment: this.reviewComment || '审批未通过'
+                    });
+                    
+                    // 更新主列表
+                    const index = this.inspections.findIndex(insp => insp.id === this.selectedInspection.id);
+                    if (index !== -1) {
+                        this.inspections[index] = JSON.parse(JSON.stringify(this.selectedInspection));
+                    }
+                    
+                    this.reviewComment = '';
+                    this.showMessage('审批未通过，已退回修改', 'success');
+                    this.showInspectionDetail = false;
+                },
+                startConstruction() {
+                    if (!this.selectedInspection) return;
+                    
+                    this.selectedInspection.status = 'underConstruction';
+                    
+                    // 更新主列表
+                    const index = this.inspections.findIndex(insp => insp.id === this.selectedInspection.id);
+                    if (index !== -1) {
+                        this.inspections[index] = JSON.parse(JSON.stringify(this.selectedInspection));
+                    }
+                    
+                    this.showMessage('开始施工！', 'success');
+                    this.showInspectionDetail = false;
+                },
+                completeConstruction() {
+                    if (!this.selectedInspection) return;
+                    
+                    this.selectedInspection.status = 'completed';
+                    this.selectedInspection.inspectionResult = 'pending';
+                    
+                    // 更新主列表
+                    const index = this.inspections.findIndex(insp => insp.id === this.selectedInspection.id);
+                    if (index !== -1) {
+                        this.inspections[index] = JSON.parse(JSON.stringify(this.selectedInspection));
+                    }
+                    
+                    this.showMessage('施工完成！', 'success');
+                    this.showInspectionDetail = false;
+                },
+                startInspection() {
+                    if (!this.selectedInspection) return;
+                    
+                    // 如果没有检查项，则创建默认检查项
+                    if (!this.selectedInspection.inspectionItems || this.selectedInspection.inspectionItems.length === 0) {
+                        this.selectedInspection.inspectionItems = [
+                            {
+                                id: 1,
+                                name: '质量检查',
+                                description: '检查施工质量是否符合要求',
+                                standard: '符合设计图纸和规范要求',
+                                result: 'pending',
+                                notes: '',
+                                photos: []
+                            },
+                            {
+                                id: 2,
+                                name: '安全检查',
+                                description: '检查施工安全措施',
+                                standard: '安全措施到位，无安全隐患',
+                                result: 'pending',
+                                notes: '',
+                                photos: []
+                            },
+                            {
+                                id: 3,
+                                name: '进度检查',
+                                description: '检查施工进度',
+                                standard: '按计划进度完成',
+                                result: 'pending',
+                                notes: '',
+                                photos: []
+                            }
+                        ];
+                    }
+                    
+                    // 更新主列表
+                    const index = this.inspections.findIndex(insp => insp.id === this.selectedInspection.id);
+                    if (index !== -1) {
+                        this.inspections[index] = JSON.parse(JSON.stringify(this.selectedInspection));
+                    }
+                    
+                    this.showMessage('已开始监理检查！请填写检查项。', 'success');
+                },
+                submitInspectionResult() {
+                    if (!this.selectedInspection) return;
+                    
+                    // 检查是否所有检查项都已完成
+                    const pendingItems = this.selectedInspection.inspectionItems.filter(item => item.result === 'pending');
+                    if (pendingItems.length > 0) {
+                        this.showMessage(`还有 ${pendingItems.length} 个检查项未完成，请先完成所有检查项。`, 'error');
+                        return;
+                    }
+                    
+                    if (!this.selectedInspection.inspectionResult) {
+                        this.showMessage('请选择总体检查结论！', 'error');
+                        return;
+                    }
+                    
+                    this.selectedInspection.status = 'inspecting';
+                    
+                    // 更新主列表
+                    const index = this.inspections.findIndex(insp => insp.id === this.selectedInspection.id);
+                    if (index !== -1) {
+                        this.inspections[index] = JSON.parse(JSON.stringify(this.selectedInspection));
+                    }
+                    
+                    this.showMessage(`检查结果已提交：${this.getInspectionResultText(this.selectedInspection.inspectionResult)}`, 'success');
+                    this.showInspectionDetail = false;
+                },
+                continueInspection() {
+                    this.showMessage('请继续填写检查项。', 'success');
+                },
+                addPhoto(item) {
+                    if (!item.photos) {
+                        item.photos = [];
+                    }
+                    // 模拟添加照片
+                    const colors = ['4CAF50', '2196F3', 'FF9800', '9C27B0', 'F44336'];
+                    const randomColor = colors[Math.floor(Math.random() * colors.length)];
+                    const photoUrl = `https://via.placeholder.com/150x120/${randomColor}/FFFFFF?text=检查照片`;
+                    item.photos.push({ url: photoUrl });
+                },
+                removePhoto(item, photoIndex) {
+                    if (item.photos && item.photos.length > photoIndex) {
+                        item.photos.splice(photoIndex, 1);
+                    }
+                },
+                archiveInspection() {
+                    if (!this.selectedInspection) return;
+                    
+                    if (this.selectedInspection.status !== 'inspecting') {
+                        this.showMessage('只有检查完成的报检单才能归档！', 'error');
+                        return;
+                    }
+                    
+                    this.selectedInspection.status = 'archived';
+                    this.selectedInspection.archivedAt = new Date();
+                    
+                    // 更新主列表
+                    const index = this.inspections.findIndex(insp => insp.id === this.selectedInspection.id);
+                    if (index !== -1) {
+                        this.inspections[index] = JSON.parse(JSON.stringify(this.selectedInspection));
+                    }
+                    
+                    this.showMessage('报检单已归档！', 'success');
+                    this.showInspectionDetail = false;
+                    this.activeTab = 'archive';
+                }
+            },
+            mounted() {
+                // 初始化消息提示框
+                const alertDiv = document.createElement('div');
+                alertDiv.id = 'alertMessage';
+                alertDiv.className = 'alert-message';
+                document.body.insertBefore(alertDiv, document.body.firstChild);
+            }
+        });
+
+        app.mount('#app');
+    </script>
+</body>
+</html>

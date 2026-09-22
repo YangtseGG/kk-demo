@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智慧工地 - 钢筋放样编制系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#165DFF',
+                        secondary: '#0FC6C2',
+                        accent: '#722ED1',
+                        warning: '#FF7D00',
+                        danger: '#F53F3F',
+                        success: '#00B42A',
+                        neutral: {
+                            100: '#F2F3F5',
+                            200: '#E5E6EB',
+                            300: '#C9CDD4',
+                            400: '#86909C',
+                            500: '#4E5969',
+                            600: '#272E3B',
+                            700: '#1D2129',
+                        }
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'card': '0 2px 8px rgba(0, 0, 0, 0.08)',
+                        'card-hover': '0 4px 16px rgba(0, 0, 0, 0.12)',
+                    }
+                },
+            }
+        }
+    </script>
+    
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .scrollbar-hide {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+            }
+            .scrollbar-hide::-webkit-scrollbar {
+                display: none;
+            }
+            .animate-fadeIn {
+                animation: fadeIn 0.3s ease-in-out;
+            }
+            .animate-slideIn {
+                animation: slideIn 0.3s ease-out;
+            }
+            .animate-pulse-soft {
+                animation: pulseSoft 2s infinite;
+            }
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            @keyframes slideIn {
+                from { transform: translateY(10px); opacity: 0; }
+                to { transform: translateY(0); opacity: 1; }
+            }
+            @keyframes pulseSoft {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.7; }
+            }
+            .form-input {
+                @apply w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors;
+            }
+            .form-input-error {
+                @apply border-danger focus:ring-danger/50 focus:border-danger;
+            }
+            .form-select {
+                @apply w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors;
+            }
+            .btn-primary {
+                @apply px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-md transition-colors;
+            }
+            .btn-secondary {
+                @apply px-4 py-2 border border-neutral-300 rounded-md text-neutral-700 hover:bg-neutral-50 transition-colors;
+            }
+            .btn-success {
+                @apply px-4 py-2 bg-success hover:bg-success/90 text-white rounded-md transition-colors;
+            }
+            .btn-danger {
+                @apply px-4 py-2 bg-danger hover:bg-danger/90 text-white rounded-md transition-colors;
+            }
+            .btn-loading {
+                @apply opacity-70 cursor-not-allowed;
+            }
+            .tooltip {
+                @apply invisible absolute bg-neutral-700 text-white text-xs rounded py-1 px-2 -mt-8 opacity-0 transition-opacity duration-300;
+            }
+            .has-tooltip:hover .tooltip {
+                @apply visible opacity-100;
+            }
+        }
+    </style>
+</head>
+<body class="font-inter bg-neutral-100 text-neutral-700 min-h-screen flex flex-col">
+    <!-- 顶部导航 -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+                <i class="fa fa-cubes text-primary text-2xl"></i>
+                <h1 class="text-xl font-semibold text-neutral-700">智慧工地管理系统</h1>
+            </div>
+            <div class="flex items-center space-x-6">
+                <nav class="hidden md:flex space-x-6">
+                    <a href="#" class="text-primary font-medium">钢筋放样</a>
+                    <a href="#" class="text-neutral-500 hover:text-primary transition-colors">工程进度</a>
+                    <a href="#" class="text-neutral-500 hover:text-primary transition-colors">质量安全</a>
+                    <a href="#" class="text-neutral-500 hover:text-primary transition-colors">物资管理</a>
+                    <a href="#" class="text-neutral-500 hover:text-primary transition-colors">人员管理</a>
+                </nav>
+                <div class="flex items-center space-x-3">
+                    <button class="text-neutral-500 hover:text-primary transition-colors relative has-tooltip">
+                        <i class="fa fa-bell-o"></i>
+                        <span class="absolute -top-1 -right-1 w-4 h-4 bg-danger rounded-full flex items-center justify-center text-white text-xs">3</span>
+                        <span class="tooltip">3条未读通知</span>
+                    </button>
+                    <div class="relative has-tooltip">
+                        <img src="https://picsum.photos/id/1005/200/200" alt="用户头像" class="w-8 h-8 rounded-full object-cover border-2 border-primary">
+                        <span class="tooltip">张三 (项目经理)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主内容区 -->
+    <main class="flex-grow container mx-auto px-4 py-6">
+        <div class="flex flex-col md:flex-row gap-6">
+            <!-- 左侧导航栏 -->
+            <aside class="w-full md:w-64 flex-shrink-0">
+                <div class="bg-white rounded-lg shadow-card p-4 h-fit">
+                    <h2 class="text-lg font-semibold mb-4 flex items-center">
+                        <i class="fa fa-list-ul text-primary mr-2"></i>
+                        功能导航
+                    </h2>
+                    <nav class="space-y-1">
+                        <a href="#" class="flex items-center px-3 py-2 text-sm font-medium rounded-md bg-primary/10 text-primary transition-all hover:bg-primary/20">
+                            <i class="fa fa-pencil-square-o mr-2"></i>
+                            钢筋放样编制
+                        </a>
+                        <a href="#" class="flex items-center px-3 py-2 text-sm font-medium rounded-md text-neutral-600 hover:bg-neutral-100 transition-colors">
+                            <i class="fa fa-file-text-o mr-2"></i>
+                            放样历史记录
+                        </a>
+                        <a href="#" class="flex items-center px-3 py-2 text-sm font-medium rounded-md text-neutral-600 hover:bg-neutral-100 transition-colors">
+                            <i class="fa fa-bar-chart mr-2"></i>
+                            统计分析
+                        </a>
+                        <a href="#" class="flex items-center px-3 py-2 text-sm font-medium rounded-md text-neutral-600 hover:bg-neutral-100 transition-colors">
+                            <i class="fa fa-cog mr-2"></i>
+                            参数设置
+                        </a>
+                    </nav>
+                </div>
+            </aside>
+
+            <!-- 右侧内容区 -->
+            <div class="flex-grow">
+                <!-- 页面标题 -->
+                <div class="mb-6">
+                    <h1 class="text-[clamp(1.5rem,3vw,2rem)] font-bold text-neutral-700">钢筋放样编制</h1>
+                    <p class="text-neutral-500 mt-1">为选定的分部分项工程进行钢筋放样计算</p>
+                </div>
+
+                <!-- 步骤指示器 -->
+                <div class="mb-8">
+                    <div class="flex items-center justify-between max-w-4xl mx-auto">
+                        <div class="flex flex-col items-center">
+                            <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center">
+                                <i class="fa fa-check"></i>
+                            </div>
+                            <span class="text-sm font-medium mt-2 text-primary">选择分部分项</span>
+                        </div>
+                        <div class="flex-1 h-1 bg-primary mx-2"></div>
+                        <div class="flex flex-col items-center">
+                            <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center">
+                                <i class="fa fa-check"></i>
+                            </div>
+                            <span class="text-sm font-medium mt-2 text-primary">查看预算</span>
+                        </div>
+                        <div class="flex-1 h-1 bg-primary mx-2"></div>
+                        <div class="flex flex-col items-center">
+                            <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center">
+                                <i class="fa fa-pencil"></i>
+                            </div>
+                            <span class="text-sm font-medium mt-2 text-primary">填写放样表</span>
+                        </div>
+                        <div class="flex-1 h-1 bg-neutral-300 mx-2"></div>
+                        <div class="flex flex-col items-center">
+                            <div class="w-10 h-10 rounded-full bg-neutral-300 text-white flex items-center justify-center">
+                                <i class="fa fa-list"></i>
+                            </div>
+                            <span class="text-sm font-medium mt-2 text-neutral-500">查看结果</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 内容卡片 -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- 左侧选择区域 -->
+                    <div class="lg:col-span-1 space-y-6">
+                        <!-- 分部分项选择 -->
+                        <div class="bg-white rounded-lg shadow-card p-5 animate-fadeIn">
+                            <h3 class="text-lg font-semibold mb-4 flex items-center">
+                                <i class="fa fa-folder-open-o text-primary mr-2"></i>
+                                分部分项选择
+                            </h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-neutral-700 mb-1">项目名称</label>
+                                    <select class="form-select">
+                                        <option>阳光花园小区二期</option>
+                                        <option>城市商业中心大厦</option>
+                                        <option>地铁3号线工程</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-neutral-700 mb-1">分部工程</label>
+                                    <select class="form-select">
+                                        <option>地基与基础工程</option>
+                                        <option>主体结构工程</option>
+                                        <option>建筑装饰装修工程</option>
+                                        <option>屋面工程</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-neutral-700 mb-1">分项工程</label>
+                                    <select class="form-select">
+                                        <option>钢筋工程</option>
+                                        <option>模板工程</option>
+                                        <option>混凝土工程</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-neutral-700 mb-1">施工段</label>
+                                    <select class="form-select">
+                                        <option>1号楼基础层</option>
+                                        <option>1号楼一层</option>
+                                        <option>1号楼二层</option>
+                                        <option>2号楼基础层</option>
+                                    </select>
+                                </div>
+                                <button id="searchBudgetBtn" class="w-full btn-primary flex items-center justify-center">
+                                    <i class="fa fa-search mr-2"></i>
+                                    查看预算
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 当前选中信息 -->
+                        <div class="bg-white rounded-lg shadow-card p-5 animate-fadeIn" style="animation-delay: 0.1s">
+                            <h3 class="text-lg font-semibold mb-4 flex items-center">
+                                <i class="fa fa-info-circle text-primary mr-2"></i>
+                                当前选中
+                            </h3>
+                            <div class="space-y-3 text-sm">
+                                <div class="flex justify-between">
+                                    <span class="text-neutral-500">项目名称:</span>
+                                    <span class="font-medium">阳光花园小区二期</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-neutral-500">分部工程:</span>
+                                    <span class="font-medium">主体结构工程</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-neutral-500">分项工程:</span>
+                                    <span class="font-medium">钢筋工程</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-neutral-500">施工段:</span>
+                                    <span class="font-medium">1号楼基础层</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-neutral-500">编制日期:</span>
+                                    <span class="font-medium">2025-07-08</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-neutral-500">编制人:</span>
+                                    <span class="font-medium">张三</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 右侧数据区域 -->
+                    <div class="lg:col-span-2 space-y-6">
+                        <!-- 预算展示 -->
+                        <div class="bg-white rounded-lg shadow-card p-5 animate-fadeIn" style="animation-delay: 0.2s">
+                            <h3 class="text-lg font-semibold mb-4 flex items-center">
+                                <i class="fa fa-line-chart text-primary mr-2"></i>
+                                钢筋预算 (吨)
+                            </h3>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div class="bg-neutral-50 rounded-lg p-3 border border-neutral-200 hover:shadow-card-hover transition-shadow cursor-pointer">
+                                    <div class="text-neutral-500 text-sm">Φ6</div>
+                                    <div class="text-2xl font-bold text-primary mt-1">12.5</div>
+                                    <div class="text-xs text-neutral-400 mt-1">已使用: 3.2</div>
+                                </div>
+                                <div class="bg-neutral-50 rounded-lg p-3 border border-neutral-200 hover:shadow-card-hover transition-shadow cursor-pointer">
+                                    <div class="text-neutral-500 text-sm">Φ8</div>
+                                    <div class="text-2xl font-bold text-primary mt-1">28.3</div>
+                                    <div class="text-xs text-neutral-400 mt-1">已使用: 15.7</div>
+                                </div>
+                                <div class="bg-neutral-50 rounded-lg p-3 border border-neutral-200 hover:shadow-card-hover transition-shadow cursor-pointer">
+                                    <div class="text-neutral-500 text-sm">Φ10</div>
+                                    <div class="text-2xl font-bold text-primary mt-1">42.7</div>
+                                    <div class="text-xs text-neutral-400 mt-1">已使用: 23.8</div>
+                                </div>
+                                <div class="bg-neutral-50 rounded-lg p-3 border border-neutral-200 hover:shadow-card-hover transition-shadow cursor-pointer">
+                                    <div class="text-neutral-500 text-sm">Φ12</div>
+                                    <div class="text-2xl font-bold text-primary mt-1">18.9</div>
+                                    <div class="text-xs text-neutral-400 mt-1">已使用: 5.6</div>
+                                </div>
+                                <div class="bg-neutral-50 rounded-lg p-3 border border-neutral-200 hover:shadow-card-hover transition-shadow cursor-pointer">
+                                    <div class="text-neutral-500 text-sm">Φ14</div>
+                                    <div class="text-2xl font-bold text-primary mt-1">35.2</div>
+                                    <div class="text-xs text-neutral-400 mt-1">已使用: 12.3</div>
+                                </div>
+                                <div class="bg-neutral-50 rounded-lg p-3 border border-neutral-200 hover:shadow-card-hover transition-shadow cursor-pointer">
+                                    <div class="text-neutral-500 text-sm">Φ16</div>
+                                    <div class="text-2xl font-bold text-primary mt-1">24.6</div>
+                                    <div class="text-xs text-neutral-400 mt-1">已使用: 8.9</div>
+                                </div>
+                                <div class="bg-neutral-50 rounded-lg p-3 border border-neutral-200 hover:shadow-card-hover transition-shadow cursor-pointer">
+                                    <div class="text-neutral-500 text-sm">Φ18</div>
+                                    <div class="text-2xl font-bold text-primary mt-1">16.4</div>
+                                    <div class="text-xs text-neutral-400 mt-1">已使用: 4.2</div>
+                                </div>
+                                <div class="bg-neutral-50 rounded-lg p-3 border border-neutral-200 hover:shadow-card-hover transition-shadow cursor-pointer">
+                                    <div class="text-neutral-500 text-sm">Φ20</div>
+                                    <div class="text-2xl font-bold text-primary mt-1">31.7</div>
+                                    <div class="text-xs text-neutral-400 mt-1">已使用: 17.5</div>
+                                </div>
+                            </div>
+                            
+                            <!-- 预算图表 -->
+                            <div class="mt-6 h-64">
+                                <canvas id="budgetChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- 放样表填写 -->
+                        <div class="bg-white rounded-lg shadow-card p-5 animate-fadeIn" style="animation-delay: 0.3s">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-lg font-semibold flex items-center">
+                                    <i class="fa fa-table text-primary mr-2"></i>
+                                    钢筋放样表填写
+                                </h3>
+                                <button id="addRowBtn" class="btn-primary flex items-center">
+                                    <i class="fa fa-plus mr-1"></i>
+                                    添加规格
+                                </button>
+                            </div>
+                            
+                            <!-- 放样表 -->
+                            <div class="overflow-x-auto">
+                                <div class="border border-neutral-200 rounded-lg overflow-hidden">
+                                    <table class="min-w-full divide-y divide-neutral-200">
+                                        <thead class="bg-neutral-50">
+                                            <tr>
+                                                <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">钢筋规格</th>
+                                                <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">米数 (m)</th>
+                                                <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">根数</th>
+                                                <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">理论重量 (kg/m)</th>
+                                                <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">放样重量 (吨)</th>
+                                                <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="rebarTableBody" class="bg-white divide-y divide-neutral-200">
+                                            <tr class="hover:bg-neutral-50 transition-colors animate-slideIn">
+                                                <td class="px-4 py-3 whitespace-nowrap">
+                                                    <select class="form-select text-sm rebar-diameter">
+                                                        <option>Φ6</option>
+                                                        <option selected>Φ8</option>
+                                                        <option>Φ10</option>
+                                                        <option>Φ12</option>
+                                                        <option>Φ14</option>
+                                                        <option>Φ16</option>
+                                                        <option>Φ18</option>
+                                                        <option>Φ20</option>
+                                                    </select>
+                                                </td>
+                                                <td class="px-4 py-3 whitespace-nowrap">
+                                                    <input type="number" value="12.5" class="form-input text-sm rebar-length">
+                                                </td>
+                                                <td class="px-4 py-3 whitespace-nowrap">
+                                                    <input type="number" value="85" class="form-input text-sm rebar-count">
+                                                </td>
+                                                <td class="px-4 py-3 whitespace-nowrap text-sm rebar-theoretical-weight">0.395</td>
+                                                <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-primary rebar-total-weight">0.419</td>
+                                                <td class="px-4 py-3 whitespace-nowrap text-sm">
+                                                    <button class="delete-row text-danger hover:text-danger/80 transition-colors">
+                                                        <i class="fa fa-trash-o"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            <tr class="hover:bg-neutral-50 transition-colors animate-slideIn" style="animation-delay: 0.1s">
+                                                <td class="px-4 py-3 whitespace-nowrap">
+                                                    <select class="form-select text-sm rebar-diameter">
+                                                        <option>Φ6</option>
+                                                        <option>Φ8</option>
+                                                        <option selected>Φ10</option>
+                                                        <option>Φ12</option>
+                                                        <option>Φ14</option>
+                                                        <option>Φ16</option>
+                                                        <option>Φ18</option>
+                                                        <option>Φ20</option>
+                                                    </select>
+                                                </td>
+                                                <td class="px-4 py-3 whitespace-nowrap">
+                                                    <input type="number" value="9.6" class="form-input text-sm rebar-length">
+                                                </td>
+                                                <td class="px-4 py-3 whitespace-nowrap">
+                                                    <input type="number" value="120" class="form-input text-sm rebar-count">
+                                                </td>
+                                                <td class="px-4 py-3 whitespace-nowrap text-sm rebar-theoretical-weight">0.617</td>
+                                                <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-primary rebar-total-weight">0.711</td>
+                                                <td class="px-4 py-3 whitespace-nowrap text-sm">
+                                                    <button class="delete-row text-danger hover:text-danger/80 transition-colors">
+                                                        <i class="fa fa-trash-o"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            <tr class="hover:bg-neutral-50 transition-colors animate-slideIn" style="animation-delay: 0.2s">
+                                                <td class="px-4 py-3 whitespace-nowrap">
+                                                    <select class="form-select text-sm rebar-diameter">
+                                                        <option>Φ6</option>
+                                                        <option>Φ8</option>
+                                                        <option>Φ10</option>
+                                                        <option selected>Φ12</option>
+                                                        <option>Φ14</option>
+                                                        <option>Φ16</option>
+                                                        <option>Φ18</option>
+                                                        <option>Φ20</option>
+                                                    </select>
+                                                </td>
+                                                <td class="px-4 py-3 whitespace-nowrap">
+                                                    <input type="number" value="15.8" class="form-input text-sm rebar-length">
+                                                </td>
+                                                <td class="px-4 py-3 whitespace-nowrap">
+                                                    <input type="number" value="65" class="form-input text-sm rebar-count">
+                                                </td>
+                                                <td class="px-4 py-3 whitespace-nowrap text-sm rebar-theoretical-weight">0.888</td>
+                                                <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-primary rebar-total-weight">0.907</td>
+                                                <td class="px-4 py-3 whitespace-nowrap text-sm">
+                                                    <button class="delete-row text-danger hover:text-danger/80 transition-colors">
+                                                        <i class="fa fa-trash-o"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                            <!-- 合计信息 -->
+                            <div class="mt-4 flex justify-end space-x-8 p-3 bg-neutral-50 rounded-lg border border-neutral-200">
+                                <div>
+                                    <div class="text-sm text-neutral-500">总放样重量</div>
+                                    <div class="text-xl font-bold text-primary" id="totalWeight">2.037 吨</div>
+                                </div>
+                                <div>
+                                    <div class="text-sm text-neutral-500">预算剩余</div>
+                                    <div class="text-xl font-bold text-success" id="budgetRemaining">97.963 吨</div>
+                                </div>
+                            </div>
+                            
+                            <!-- 操作按钮 -->
+                            <div class="mt-6 flex justify-end space-x-3">
+                                <button id="resetBtn" class="btn-secondary">
+                                    重置
+                                </button>
+                                <button id="calculateBtn" class="btn-primary">
+                                    <i class="fa fa-calculator mr-1"></i>
+                                    计算
+                                </button>
+                                <button id="saveBtn" class="btn-success">
+                                    <i class="fa fa-save mr-1"></i>
+                                    保存
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-white border-t border-neutral-200 py-4 mt-8">
+        <div class="container mx-auto px-4 text-center text-neutral-500 text-sm">
+            <p>© 2025 智慧工地管理系统 - 钢筋放样编制模块</p>
+        </div>
+    </footer>
+
+    <!-- 消息提示组件 -->
+    <div id="toast" class="fixed bottom-4 right-4 bg-neutral-800 text-white px-4 py-3 rounded-lg shadow-lg transform translate-y-16 opacity-0 transition-all duration-300 flex items-center z-50">
+        <i id="toastIcon" class="fa fa-check-circle mr-2"></i>
+        <span id="toastMessage">操作成功</span>
+    </div>
+
+    <!-- 加载中组件 -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg p-6 shadow-xl flex flex-col items-center">
+            <div class="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p id="loadingMessage" class="text-lg font-medium">处理中，请稍候...</p>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // 初始化预算图表
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctx = document.getElementById('budgetChart').getContext('2d');
+            
+            // 图表数据
+            const chartData = {
+                labels: ['Φ6', 'Φ8', 'Φ10', 'Φ12', 'Φ14', 'Φ16', 'Φ18', 'Φ20'],
+                datasets: [
+                    {
+                        label: '预算重量 (吨)',
+                        data: [12.5, 28.3, 42.7, 18.9, 35.2, 24.6, 16.4, 31.7],
+                        backgroundColor: 'rgba(22, 93, 255, 0.2)',
+                        borderColor: 'rgba(22, 93, 255, 1)',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        fill: true
+                    },
+                    {
+                        label: '已使用重量 (吨)',
+                        data: [3.2, 15.7, 23.8, 5.6, 12.3, 8.9, 4.2, 17.5],
+                        backgroundColor: 'rgba(15, 198, 194, 0.2)',
+                        borderColor: 'rgba(15, 198, 194, 1)',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        fill: true
+                    }
+                ]
+            };
+            
+            // 图表配置
+            const chartConfig = {
+                type: 'bar',
+                data: chartData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: '重量 (吨)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: '钢筋规格'
+                            }
+                        }
+                    }
+                }
+            };
+            
+            // 创建图表
+            new Chart(ctx, chartConfig);
+            
+            // 为表格行添加动画效果
+            animateTableRows();
+            
+            // 初始化表单验证
+            initFormValidation();
+            
+            // 初始化按钮事件
+            initButtonEvents();
+        });
+        
+        // 为表格行添加动画效果
+        function animateTableRows() {
+            const rows = document.querySelectorAll('#rebarTableBody tr');
+            rows.forEach((row, index) => {
+                row.style.animationDelay = `${index * 0.1}s`;
+                row.classList.add('animate-slideIn');
+            });
+        }
+        
+        // 初始化表单验证
+        function initFormValidation() {
+            const inputs = document.querySelectorAll('.rebar-length, .rebar-count');
+            inputs.forEach(input => {
+                input.addEventListener('blur', function() {
+                    validateInput(this);
+                });
+            });
+        }
+        
+        // 验证输入
+        function validateInput(input) {
+            if (input.value <= 0) {
+                input.classList.add('form-input-error');
+                showToast('请输入大于0的值', 'error');
+                return false;
+            } else {
+                input.classList.remove('form-input-error');
+                return true;
+            }
+        }
+        
+        // 初始化按钮事件
+        function initButtonEvents() {
+            // 计算按钮
+            document.getElementById('calculateBtn').addEventListener('click', function() {
+                // 显示加载状态
+                showLoading('正在计算...');
+                
+                // 模拟网络请求延迟
+                setTimeout(() => {
+                    calculateRebarWeight();
+                    hideLoading();
+                    showToast('计算成功', 'success');
+                }, 800);
+            });
+            
+            // 保存按钮
+            document.getElementById('saveBtn').addEventListener('click', function() {
+                // 先计算
+                calculateRebarWeight();
+                
+                // 验证表单
+                const inputs = document.querySelectorAll('.rebar-length, .rebar-count');
+                let isValid = true;
+                
+                inputs.forEach(input => {
+                    if (!validateInput(input)) {
+                        isValid = false;
+                    }
+                });
+                
+                if (!isValid) {
+                    return;
+                }
+                
+                // 显示确认对话框
+                if (confirm('确定要保存当前钢筋放样数据吗？')) {
+                    // 显示加载状态
+                    showLoading('正在保存...');
+                    
+                    // 模拟网络请求延迟
+                    setTimeout(() => {
+                        hideLoading();
+                        showToast('保存成功', 'success');
+                        
+                        // 模拟页面跳转
+                        setTimeout(() => {
+                            alert('即将跳转到结果查看页面');
+                        }, 1000);
+                    }, 1500);
+                }
+            });
+            
+            // 重置按钮
+            document.getElementById('resetBtn').addEventListener('click', function() {
+                if (confirm('确定要重置所有数据吗？')) {
+                    // 重置表格数据
+                    const inputs = document.querySelectorAll('.rebar-length, .rebar-count');
+                    inputs.forEach(input => {
+                        if (input.classList.contains('rebar-length')) {
+                            input.value = '12.5';
+                        } else {
+                            input.value = '85';
+                        }
+                    });
+                    
+                    // 重新计算
+                    calculateRebarWeight();
+                    
+                    showToast('数据已重置', 'info');
+                }
+            });
+            
+            // 添加行按钮
+            document.getElementById('addRowBtn').addEventListener('click', function() {
+                const tableBody = document.getElementById('rebarTableBody');
+                const newRow = document.createElement('tr');
+                newRow.className = 'hover:bg-neutral-50 transition-colors animate-slideIn';
+                
+                newRow.innerHTML = `
+                    <td class="px-4 py-3 whitespace-nowrap">
+                        <select class="form-select text-sm rebar-diameter">
+                            <option selected>Φ6</option>
+                            <option>Φ8</option>
+                            <option>Φ10</option>
+                            <option>Φ12</option>
+                            <option>Φ14</option>
+                            <option>Φ16</option>
+                            <option>Φ18</option>
+                            <option>Φ20</option>
+                        </select>
+                    </td>
+                    <td class="px-4 py-3 whitespace-nowrap">
+                        <input type="number" value="12.5" class="form-input text-sm rebar-length">
+                    </td>
+                    <td class="px-4 py-3 whitespace-nowrap">
+                        <input type="number" value="85" class="form-input text-sm rebar-count">
+                    </td>
+                    <td class="px-4 py-3 whitespace-nowrap text-sm rebar-theoretical-weight">0.222</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-primary rebar-total-weight">0.024</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-sm">
+                        <button class="delete-row text-danger hover:text-danger/80 transition-colors">
+                            <i class="fa fa-trash-o"></i>
+                        </button>
+                    </td>
+                `;
+                
+                // 添加到表格
+                tableBody.appendChild(newRow);
+                
+                // 为新行添加事件监听
+                const newSelect = newRow.querySelector('.rebar-diameter');
+                newSelect.addEventListener('change', updateTheoreticalWeightAndCalculate);
+                
+                const newInputs = newRow.querySelectorAll('.rebar-length, .rebar-count');
+                newInputs.forEach(input => {
+                    input.addEventListener('input', calculateRebarWeight);
+                    input.addEventListener('blur', function() {
+                        validateInput(this);
+                    });
+                });
+                
+                const deleteBtn = newRow.querySelector('.delete-row');
+                deleteBtn.addEventListener('click', function() {
+                    // 添加删除动画
+                    newRow.classList.add('opacity-0');
+                    newRow.style.height = newRow.offsetHeight + 'px';
+                    
+                    // 触发重排
+                    newRow.offsetHeight;
+                    
+                    // 执行动画
+                    newRow.style.height = '0';
+                    newRow.style.margin = '0';
+                    newRow.style.padding = '0';
+                    newRow.style.overflow = 'hidden';
+                    
+                    // 动画结束后移除元素
+                    setTimeout(() => {
+                        newRow.remove();
+                        calculateRebarWeight();
+                    }, 300);
+                });
+                
+                // 计算重量
+                calculateRebarWeight();
+                
+                // 显示提示
+                showToast('已添加新规格', 'success');
+            });
+            
+            // 为现有行的删除按钮添加事件
+            document.querySelectorAll('.delete-row').forEach(button => {
+                button.addEventListener('click', function() {
+                    const row = this.closest('tr');
+                    
+                    // 添加删除动画
+                    row.classList.add('opacity-0');
+                    row.style.height = row.offsetHeight + 'px';
+                    
+                    // 触发重排
+                    row.offsetHeight;
+                    
+                    // 执行动画
+                    row.style.height = '0';
+                    row.style.margin = '0';
+                    row.style.padding = '0';
+                    row.style.overflow = 'hidden';
+                    
+                    // 动画结束后移除元素
+                    setTimeout(() => {
+                        row.remove();
+                        calculateRebarWeight();
+                        showToast('已删除规格', 'info');
+                    }, 300);
+                });
+            });
+            
+            // 为现有行的选择框添加事件
+            document.querySelectorAll('.rebar-diameter').forEach(select => {
+                select.addEventListener('change', updateTheoreticalWeightAndCalculate);
+            });
+            
+            // 为现有行的输入框添加事件
+            document.querySelectorAll('.rebar-length, .rebar-count').forEach(input => {
+                input.addEventListener('input', calculateRebarWeight);
+            });
+            
+            // 查看预算按钮
+            document.getElementById('searchBudgetBtn').addEventListener('click', function() {
+                showLoading('正在加载预算数据...');
+                
+                // 模拟网络请求延迟
+                setTimeout(() => {
+                    hideLoading();
+                    showToast('预算数据已更新', 'success');
+                }, 1000);
+            });
+        }
+        
+        // 更新理论重量并计算
+        function updateTheoreticalWeightAndCalculate() {
+            const row = this.closest('tr');
+            const diameter = this.value;
+            let theoreticalWeight = 0;
+            
+            switch(diameter) {
+                case 'Φ6': theoreticalWeight = 0.222; break;
+                case 'Φ8': theoreticalWeight = 0.395; break;
+                case 'Φ10': theoreticalWeight = 0.617; break;
+                case 'Φ12': theoreticalWeight = 0.888; break;
+                case 'Φ14': theoreticalWeight = 1.21; break;
+                case 'Φ16': theoreticalWeight = 1.58; break;
+                case 'Φ18': theoreticalWeight = 2.00; break;
+                case 'Φ20': theoreticalWeight = 2.47; break;
+            }
+            
+            row.querySelector('.rebar-theoretical-weight').textContent = theoreticalWeight + ' kg/m';
+            
+            // 重新计算重量
+            calculateRebarWeight();
+        }
+        
+        // 计算放样重量的函数
+        function calculateRebarWeight() {
+            // 获取表格行
+            const rows = document.querySelectorAll('#rebarTableBody tr');
+            
+            // 遍历每行计算重量
+            rows.forEach(row => {
+                const diameterSelect = row.querySelector('.rebar-diameter');
+                const lengthInput = row.querySelector('.rebar-length');
+                const countInput = row.querySelector('.rebar-count');
+                const weightCell = row.querySelector('.rebar-total-weight');
+                
+                // 获取钢筋规格和输入值
+                const diameter = diameterSelect.value;
+                const length = parseFloat(lengthInput.value) || 0;
+                const count = parseInt(countInput.value) || 0;
+                
+                // 根据规格获取理论重量 (kg/m)
+                let theoreticalWeight = 0;
+                switch(diameter) {
+                    case 'Φ6': theoreticalWeight = 0.222; break;
+                    case 'Φ8': theoreticalWeight = 0.395; break;
+                    case 'Φ10': theoreticalWeight = 0.617; break;
+                    case 'Φ12': theoreticalWeight = 0.888; break;
+                    case 'Φ14': theoreticalWeight = 1.21; break;
+                    case 'Φ16': theoreticalWeight = 1.58; break;
+                    case 'Φ18': theoreticalWeight = 2.00; break;
+                    case 'Φ20': theoreticalWeight = 2.47; break;
+                }
+                
+                // 计算放样重量 (吨)
+                const totalWeight = (length * count * theoreticalWeight) / 1000;
+                
+                // 更新显示
+                weightCell.textContent = totalWeight.toFixed(3) + ' 吨';
+                
+                // 添加计算动画效果
+                weightCell.classList.add('animate-pulse-soft');
+                setTimeout(() => {
+                    weightCell.classList.remove('animate-pulse-soft');
+                }, 500);
+            });
+            
+            // 计算总重量
+            calculateTotalWeight();
+        }
+        
+        // 计算总重量
+        function calculateTotalWeight() {
+            const weightCells = document.querySelectorAll('.rebar-total-weight');
+            let totalWeight = 0;
+            
+            weightCells.forEach(cell => {
+                const weightText = cell.textContent;
+                const weight = parseFloat(weightText) || 0;
+                totalWeight += weight;
+            });
+            
+            // 更新总重量显示
+            const totalWeightElement = document.getElementById('totalWeight');
+            totalWeightElement.textContent = totalWeight.toFixed(3) + ' 吨';
+            
+            // 添加动画效果
+            totalWeightElement.classList.add('animate-pulse-soft');
+            setTimeout(() => {
+                totalWeightElement.classList.remove('animate-pulse-soft');
+            }, 500);
+            
+            // 计算预算剩余
+            const budgetRemaining = 100 - totalWeight; // 假设总预算为100吨
+            const budgetRemainingElement = document.getElementById('budgetRemaining');
+            budgetRemainingElement.textContent = budgetRemaining.toFixed(3) + ' 吨';
+            
+            // 添加动画效果
+            budgetRemainingElement.classList.add('animate-pulse-soft');
+            setTimeout(() => {
+                budgetRemainingElement.classList.remove('animate-pulse-soft');
+            }, 500);
+            
+            // 检查是否超过预算
+            if (totalWeight > 100) {
+                totalWeightElement.classList.add('text-danger');
+                budgetRemainingElement.classList.add('text-danger');
+            } else {
+                totalWeightElement.classList.remove('text-danger');
+                budgetRemainingElement.classList.remove('text-danger');
+            }
+        }
+        
+        // 显示提示消息
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            const toastIcon = document.getElementById('toastIcon');
+            
+            // 设置消息内容
+            toastMessage.textContent = message;
+            
+            // 设置图标和颜色
+            if (type === 'success') {
+                toast.className = 'fixed bottom-4 right-4 bg-success text-white px-4 py-3 rounded-lg shadow-lg transform translate-y-0 opacity-100 transition-all duration-300 flex items-center z-50';
+                toastIcon.className = 'fa fa-check-circle mr-2';
+            } else if (type === 'error') {
+                toast.className = 'fixed bottom-4 right-4 bg-danger text-white px-4 py-3 rounded-lg shadow-lg transform translate-y-0 opacity-100 transition-all duration-300 flex items-center z-50';
+                toastIcon.className = 'fa fa-exclamation-circle mr-2';
+            } else if (type === 'warning') {
+                toast.className = 'fixed bottom-4 right-4 bg-warning text-white px-4 py-3 rounded-lg shadow-lg transform translate-y-0 opacity-100 transition-all duration-300 flex items-center z-50';
+                toastIcon.className = 'fa fa-exclamation-triangle mr-2';
+            } else if (type === 'info') {
+                toast.className = 'fixed bottom-4 right-4 bg-primary text-white px-4 py-3 rounded-lg shadow-lg transform translate-y-0 opacity-100 transition-all duration-300 flex items-center z-50';
+                toastIcon.className = 'fa fa-info-circle mr-2';
+            }
+            
+            // 显示提示
+            toast.style.display = 'flex';
+            
+            // 3秒后隐藏
+            setTimeout(() => {
+                toast.style.transform = 'translateY(16px)';
+                toast.style.opacity = '0';
+                setTimeout(() => {
+                    toast.style.display = 'none';
+                }, 300);
+            }, 3000);
+        }
+        
+        // 显示加载状态
+        function showLoading(message = '处理中，请稍候...') {

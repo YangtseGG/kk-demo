@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>生产订单排产管理系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        }
+        
+        :root {
+            --primary: #2c6fd1;
+            --secondary: #41b0f0;
+            --warning: #ffa940;
+            --success: #52c41a;
+            --danger: #f5222d;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f0f7ff 0%, #e3eeff 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 0;
+            background-attachment: fixed;
+        }
+        
+        .app-container {
+            max-width: 500px;
+            margin: 0 auto;
+            min-height: 100vh;
+            background: white;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        
+        /* 顶部导航 */
+        .app-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 20px 15px 60px;
+            border-radius: 0 0 25px 25px;
+            box-shadow: 0 5px 15px rgba(44, 111, 209, 0.4);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .app-title {
+            font-size: 22px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .app-title i {
+            font-size: 24px;
+        }
+        
+        .control-buttons {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .btn-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-icon:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-3px);
+        }
+        
+        /* 统计卡片 */
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin: -30px 15px 20px;
+            padding: 0;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 15px 10px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.07);
+        }
+        
+        .stat-value {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 5px;
+            color: var(--primary);
+        }
+        
+        .stat-label {
+            font-size: 13px;
+            color: #6a7985;
+            white-space: nowrap;
+        }
+        
+        /* 筛选栏 */
+        .filters-container {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding: 0 15px 15px;
+            margin-bottom: 10px;
+            background: white;
+        }
+        
+        .filters-container::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .filter-chip {
+            padding: 10px 16px;
+            background: #f0f7ff;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            flex-shrink: 0;
+            border: 1px solid #d1e0ff;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+        
+        .filter-chip.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            box-shadow: 0 4px 8px rgba(44, 111, 209, 0.25);
+        }
+        
+        /* 订单卡片 */
+        .order-cards {
+            padding: 0 15px 80px;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            color: #1a2a3a;
+            margin: 0 0 15px;
+            padding: 10px 10px 10px 15px;
+            border-left: 4px solid var(--primary);
+            font-weight: 600;
+            background: rgba(240, 247, 255, 0.5);
+            border-radius: 0 10px 10px 0;
+        }
+        
+        .order-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #e8f0ff;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .order-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 25px rgba(44, 111, 209, 0.2);
+            border-color: #c2d8ff;
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #f0f5ff;
+            align-items: center;
+        }
+        
+        .order-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .order-icon {
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 22px;
+        }
+        
+        .order-info {
+            flex: 1;
+        }
+        
+        .order-id {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--primary);
+        }
+        
+        .order-desc {
+            font-size: 14px;
+            color: #8590a5;
+        }
+        
+        .order-status {
+            font-size: 14px;
+            font-weight: 500;
+            padding: 5px 15px;
+            border-radius: 20px;
+            min-width: 80px;
+            text-align: center;
+        }
+        
+        .status-pending {
+            background: #ffeed9;
+            color: #e6a23c;
+        }
+        
+        .status-in-progress {
+            background: #e0f0ff;
+            color: var(--primary);
+        }
+        
+        .status-completed {
+            background: #e8f7f0;
+            color: var(--success);
+        }
+        
+        .card-body {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .info-item {
+            margin-bottom: 10px;
+        }
+        
+        .info-label {
+            font-size: 13px;
+            color: #6a7985;
+            margin-bottom: 5px;
+        }
+        
+        .info-value {
+            font-size: 15px;
+            color: #1a2a3a;
+            font-weight: 500;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background: #e1e9f7;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+        }
+        
+        .progress-in-progress {
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            width: 60%;
+        }
+        
+        .card-footer {
+            display: flex;
+            gap: 12px;
+            margin-top: 15px;
+        }
+        
+        .card-btn {
+            flex: 1;
+            height: 42px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            gap: 8px;
+            border: 1px solid;
+        }
+        
+        .btn-detail {
+            background: rgba(240, 247, 255, 0.7);
+            color: var(--primary);
+            border-color: #c9ddff;
+        }
+        
+        .btn-transfer {
+            background: rgba(255, 248, 225, 0.7);
+            color: var(--warning);
+            border-color: #ffe7ba;
+        }
+        
+        /* 详情弹窗 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+            display: none;
+        }
+        
+        .detail-modal {
+            width: 100%;
+            max-width: 500px;
+            background: white;
+            border-radius: 25px;
+            overflow: hidden;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.25);
+            animation: modalAppear 0.4s ease;
+            max-height: 95vh;
+            overflow-y: auto;
+        }
+        
+        @keyframes modalAppear {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        
+        .modal-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 25px 20px;
+            position: relative;
+        }
+        
+        .modal-header h2 {
+            font-size: 24px;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+        
+        .modal-subtitle {
+            text-align: center;
+            opacity: 0.9;
+            font-size: 16px;
+        }
+        
+        .close-modal {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .close-modal:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        .close-modal i {
+            font-size: 22px;
+        }
+        
+        .modal-body {
+            padding: 25px 20px;
+        }
+        
+        .modal-section {
+            margin-bottom: 25px;
+            padding: 15px 20px;
+            background: #f9fbfe;
+            border-radius: 15px;
+            border: 1px solid #e6f7ff;
+        }
+        
+        .section-title {
+            font-size: 19px;
+            color: var(--primary);
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e6f7ff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section-title i {
+            color: var(--secondary);
+            font-size: 22px;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px 15px;
+            margin-bottom: 15px;
+        }
+        
+        .info-item {
+            min-height: 40px;
+        }
+        
+        .batch-section {
+            margin-top: 20px;
+        }
+        
+        .batch-header {
+            display: flex;
+            justify-content: space-between;
+            padding-bottom: 15px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #f0f5ff;
+        }
+        
+        .batch-title {
+            font-weight: 600;
+            color: var(--primary);
+            font-size: 18px;
+        }
+        
+        .batch-status {
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .batch-pending {
+            background: #ffeed9;
+            color: #e6a23c;
+        }
+        
+        .batch-completed {
+            background: #e8f7f0;
+            color: var(--success);
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        .input-label {
+            font-size: 15px;
+            color: #555;
+            margin-bottom: 12px;
+            display: block;
+            font-weight: 500;
+        }
+        
+        .input-field {
+            width: 100%;
+            height: 52px;
+            border-radius: 15px;
+            border: 1px solid #e8e8e8;
+            padding: 0 20px;
+            font-size: 16px;
+            background: #f8f8f8;
+            transition: all 0.3s;
+        }
+        
+        .input-field:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: #f5f9ff;
+            box-shadow: 0 5px 15px rgba(44, 111, 209, 0.15);
+        }
+        
+        .select-field {
+            width: 100%;
+            height: 52px;
+            border-radius: 15px;
+            border: 1px solid #e8e8e8;
+            padding: 0 20px;
+            font-size: 16px;
+            background: #f8f8f8;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23666'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 20px center;
+            background-size: 18px;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+        
+        .modal-btn {
+            flex: 1;
+            height: 55px;
+            border-radius: 18px;
+            font-size: 17px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            border: none;
+        }
+        
+        .btn-cancel {
+            background: #f5f7fa;
+            color: #666;
+            border: 1px solid #e8e8e8;
+        }
+        
+        .btn-confirm {
+            background: linear-gradient(135deg, var(--success), #73d13d);
+            color: white;
+            box-shadow: 0 8px 15px rgba(82, 196, 26, 0.3);
+        }
+        
+        .btn-print {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            box-shadow: 0 8px 15px rgba(44, 111, 209, 0.3);
+        }
+        
+        .modal-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 20px rgba(82, 196, 26, 0.4);
+        }
+        
+        .btn-print:hover {
+            box-shadow: 0 12px 20px rgba(44, 111, 209, 0.4);
+        }
+        
+        /* 底部导航 */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            display: flex;
+            padding: 12px 0;
+            border-top: 1px solid #e8f0fc;
+            z-index: 100;
+            box-shadow: 0 -5px 15px rgba(0,0,0,0.05);
+        }
+        
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #8590a5;
+            font-size: 12px;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+        
+        .nav-item.active {
+            color: var(--primary);
+        }
+        
+        .nav-icon {
+            font-size: 22px;
+            margin-bottom: 3px;
+        }
+        
+        /* 特殊状态标记 */
+        .highlight {
+            color: var(--primary);
+            font-weight: 600;
+        }
+        
+        .warning-text {
+            color: var(--warning);
+            font-weight: 500;
+            font-size: 15px;
+        }
+        
+        .success-text {
+            color: var(--success);
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- 顶部导航 -->
+        <div class="app-header">
+            <div class="header-content">
+                <div class="app-title">
+                    <i class="fas fa-clipboard-list"></i>
+                    <div>生产订单排产管理</div>
+                </div>
+                <div class="control-buttons">
+                    <div class="btn-icon">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <div class="btn-icon">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <div class="btn-icon">
+                        <i class="fas fa-cog"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 统计卡片 -->
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div class="stat-value">142</div>
+                    <div class="stat-label">总订单</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">38</div>
+                    <div class="stat-label">待生产</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">63</div>
+                    <div class="stat-label">生产中</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">16</div>
+                    <div class="stat-label">需转产</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 筛选栏 -->
+        <div class="filters-container">
+            <div class="filter-chip active">全部订单</div>
+            <div class="filter-chip">待生产</div>
+            <div class="filter-chip">生产中</div>
+            <div class="filter-chip">配送中</div>
+            <div class="filter-chip">已完成</div>
+            <div class="filter-chip">有转产</div>
+            <div class="filter-chip">逾期订单</div>
+        </div>
+        
+        <!-- 订单列表 -->
+        <div class="order-cards">
+            <div class="section-title">待生产订单 (3)</div>
+            
+            <!-- 订单卡片 1 -->
+            <div class="order-card" onclick="openDetailModal()">
+                <div class="card-header">
+                    <div class="order-title">
+                        <div class="order-icon">
+                            <i class="fas fa-industry"></i>
+                        </div>
+                        <div class="order-info">
+                            <div class="order-id">生产订单: CJ202308001</div>
+                            <div class="order-desc">60型生产车间</div>
+                        </div>
+                    </div>
+                    <div class="order-status status-pending">未配送</div>
+                </div>
+                
+                <div class="card-body">
+                    <div class="info-item">
+                        <div class="info-label">申领单号</div>
+                        <div class="info-value">000000001</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">物料编码</div>
+                        <div class="info-value">C30 P8</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">排产数量</div>
+                        <div class="info-value">130 m³</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">剩余生产</div>
+                        <div class="info-value">70 m³</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">使用部位</div>
+                        <div class="info-value">土场1</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">使用班组</div>
+                        <div class="info-value">李安-瓦工班</div>
+                    </div>
+                </div>
+                
+                <div class="info-item">
+                    <div class="info-label">生产进度</div>
+                    <div class="info-value">60/130 m³ (46%)</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill progress-in-progress"></div>
+                    </div>
+                </div>
+                
+                <div class="card-footer">
+                    <div class="card-btn btn-detail">
+                        <i class="fas fa-info-circle"></i> 详情
+                    </div>
+                    <div class="card-btn btn-transfer">
+                        <i class="fas fa-exchange-alt"></i> 转产
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 订单卡片 2 -->
+            <div class="order-card" onclick="openDetailModal()">
+                <div class="card-header">
+                    <div class="order-title">
+                        <div class="order-icon">
+                            <i class="fas fa-warehouse"></i>
+                        </div>
+                        <div class="order-info">
+                            <div class="order-id">生产订单: CJ202308002</div>
+                            <div class="order-desc">750型生产车间</div>
+                        </div>
+                    </div>
+                    <div class="order-status status-in-progress">配送中</div>
+                </div>
+                
+                <div class="card-body">
+                    <div class="info-item">
+                        <div class="info-label">申领单号</div>
+                        <div class="info-value">000000002</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">物料编码</div>
+                        <div class="info-value">/ 7,000,000,000</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">排产数量</div>
+                        <div class="info-value">30 m³</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">剩余生产</div>
+                        <div class="info-value">0 m³</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">使用部位</div>
+                        <div class="info-value">土场2</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">使用班组</div>
+                        <div class="info-value">张强-钢筋班</div>
+                    </div>
+                </div>
+                
+                <div class="info-item">
+                    <div class="info-label">配送进度</div>
+                    <div class="info-value">15/30 m³ (50%)</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill progress-in-progress" style="width: 50%"></div>
+                    </div>
+                </div>
+                
+                <div class="card-footer">
+                    <div class="card-btn btn-detail">
+                        <i class="fas fa-info-circle"></i> 详情
+                    </div>
+                    <div class="card-btn btn-transfer">
+                        <i class="fas fa-exchange-alt"></i> 转产
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 更多订单... -->
+        </div>
+        
+        <!-- 底部导航 -->
+        <div class="bottom-nav">
+            <div class="nav-item active">
+                <div class="nav-icon"><i class="fas fa-home"></i></div>
+                <div>首页</div>
+            </div>
+            <div class="nav-item">
+                <div class="nav-icon"><i class="fas fa-clipboard-list"></i></div>
+                <div>订单</div>
+            </div>
+            <div class="nav-item">
+                <div class="nav-icon"><i class="fas fa-truck"></i></div>
+                <div>配送</div>
+            </div>
+            <div class="nav-item">
+                <div class="nav-icon"><i class="fas fa-user"></i></div>
+                <div>我的</div>
+            </div>
+        </div>
+        
+        <!-- 详情弹窗 -->
+        <div class="modal-overlay" id="detailModal">
+            <div class="detail-modal">
+                <div class="modal-header">
+                    <h2>成品料配送详情</h2>
+                    <div class="modal-subtitle">申领单号: 000000001 | 当前状态: 配送中</div>
+                    <div class="close-modal" onclick="closeDetailModal()">
+                        <i class="fas fa-times"></i>
+                    </div>
+                </div>
+                
+                <div class="modal-body">
+                    <div class="modal-section">
+                        <div class="section-title">
+                            <i class="fas fa-clipboard-list"></i>
+                            <div>成品料订单信息</div>
+                        </div>
+                        
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <div class="info-label">申请时间</div>
+                                <div class="info-value">2023-08-20 08:30</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">物料编码</div>
+                                <div class="info-value">M-8024-C40</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">物料名称</div>
+                                <div class="info-value">高强度混凝土 C40</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">使用部位</div>
+                                <div class="info-value">土场1</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">送达时间</div>
+                                <div class="info-value">2023-08-25 14:30</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">申请人</div>
+                                <div class="info-value">王磊</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">使用人</div>
+                                <div class="info-value">李安-瓦工班</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">申领数量</div>
+                                <div class="info-value">30m³</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">已配送量</div>
+                                <div class="info-value highlight">15m³</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">剩余量</div>
+                                <div class="info-value warning-text">15m³</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-section">
+                        <div class="section-title">
+                            <i class="fas fa-truck-loading"></i>
+                            <div>原材料信息</div>
+                        </div>
+                        
+                        <div class="batch-section">
+                            <div class="batch-header">
+                                <div class="batch-title">当前配送车次</div>
+                                <div class="batch-status batch-completed">第2车配送</div>
+                            </div>
+                            
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <div class="info-label">配送车间</div>
+                                    <div class="info-value">60型车间</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">生产订单</div>
+                                    <div class="info-value">CJ1sc001</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">配送物料</div>
+                                    <div class="info-value">C35 pile/p10/xx</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">配送数量</div>
+                                    <div class="info-value">7m³</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">发车时间</div>
+                                    <div class="info-value highlight">2023-08-25 10:20</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">预计抵达</div>
+                                    <div class="info-value">2023-08-25 10:50</div>
+                                </div>
+                            </div>
+                            
+                            <div class="section-title" style="margin-top: 20px; border: none; font-size: 18px;">
+                                <i class="fas fa-truck"></i>
+                                <div>车辆信息</div>
+                            </div>
+                            
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <div class="info-label">车辆型号</div>
+                                    <div class="info-value">Kano V001</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">车牌号码</div>
+                                    <div class="info-value">沪A·K1234</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">司机姓名</div>
+                                    <div class="info-value">张师傅</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">联系电话</div>
+                                    <div class="info-value">138*​**​*5678</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="input-group">
+                            <div class="input-label">调整发车时间</div>
+                            <input type="text" class="input-field" value="2023-08-25 10:20">
+                        </div>
+                        
+                        <div class="input-group">
+                            <div class="input-label">浇注方式</div>
+                            <select class="select-field">
+                                <option value="pump">泵送</option>
+                                <option value="non-pump">非泵送</option>
+                            </select>
+                        </div>
+                        
+                        <div class="warning-text" style="text-align: center; margin: 20px 0;">
+                            <i class="fas fa-info-circle"></i> 申领的30方已配送完成(可修改配送状态)
+                        </div>
+                        
+                        <div class="btn-group">
+                            <div class="modal-btn btn-cancel" onclick="closeDetailModal()">
+                                <i class="fas fa-times"></i> 取消
+                            </div>
+                            <div class="modal-btn btn-print">
+                                <i class="fas fa-print"></i> 打印配送单
+                            </div>
+                            <div class="modal-btn btn-confirm">
+                                <i class="fas fa-check-circle"></i> 发车
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 打开详情弹窗
+        function openDetailModal() {
+            document.getElementById('detailModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+        
+        // 关闭详情弹窗
+        function closeDetailModal() {
+            document.getElementById('detailModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+        
+        // 筛选功能
+        document.querySelectorAll('.filter-chip').forEach(chip => {
+            chip.addEventListener('click', function() {
+                document.querySelectorAll('.filter-chip').forEach(c => {
+                    c.classList.remove('active');
+                });
+                this.classList.add('active');
+            });
+        });
+        
+        // 点击弹窗外区域关闭弹窗
+        document.getElementById('detailModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeDetailModal();
+            }
+        });
+    </script>
+</body>
+</html>

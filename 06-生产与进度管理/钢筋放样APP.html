@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>钢筋库存管理卡片</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #2c7ef5;
+            --warning-color: #ff6b6b;
+            --normal-color: #24a148;
+            --card-bg: #ffffff;
+            --border-color: #e0e0e0;
+            --text-primary: #333333;
+            --text-secondary: #666666;
+            --progress-bg: #e9ecef;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            padding: 20px;
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .tabs {
+            display: flex;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        .tab {
+            padding: 12px 24px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .tab.active {
+            background: var(--primary-color);
+            color: white;
+            border-radius: 8px;
+        }
+        
+        .cards-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 24px;
+            margin-top: 20px;
+        }
+        
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+        }
+        
+        .card-header {
+            padding: 16px 16px 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .card-id {
+            font-size: 14px;
+            color: var(--text-secondary);
+            font-weight: 500;
+            margin-bottom: 6px;
+        }
+        
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .steel-spec {
+            background: rgba(44, 126, 245, 0.1);
+            color: var(--primary-color);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .rebar-graphic {
+            padding: 20px;
+            min-height: 150px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .graphic-content {
+            width: 100%;
+            height: 100px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        
+        .graphic-line {
+            position: absolute;
+            height: 4px;
+            background: var(--primary-color);
+            transform-origin: left;
+        }
+        
+        .g-line-top { top: 30%; width: 70%; left: 10%; }
+        .g-line-middle { top: 50%; width: 80%; left: 5%; }
+        .g-line-bottom { top: 70%; width: 60%; left: 15%; }
+        .g-vertical { width: 4px; height: 70%; left: 60%; top: 15%; }
+        .g-circle { width: 24px; height: 24px; border: 3px solid var(--warning-color); border-radius: 50%; position: absolute; }
+        
+        .circle-1 { right: 20%; top: 30%; }
+        .circle-2 { right: 40%; bottom: 30%; }
+        
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .stats-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 30%;
+        }
+        
+        .stats-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+        
+        .stats-value {
+            font-size: 18px;
+            font-weight: 700;
+        }
+        
+        .budget-value { color: var(--primary-color); }
+        .used-value { color: var(--normal-color); }
+        .stock-value { color: var(--warning-color); }
+        
+        .progress-container {
+            padding: 16px;
+            padding-top: 8px;
+        }
+        
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background-color: var(--progress-bg);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.6s ease;
+        }
+        
+        .warning-tag {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background-color: var(--warning-color);
+            color: white;
+            font-size: 12px;
+            font-weight: 500;
+            padding: 4px 8px;
+            border-radius: 4px;
+            animation: pulse 1.5s infinite;
+        }
+        
+        .action-button {
+            display: flex;
+            justify-content: center;
+            padding: 14px 16px;
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        
+        .action-button:hover {
+            background-color: #1a68e0;
+        }
+        
+        .action-button i {
+            margin-right: 8px;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.8; }
+            50% { opacity: 1; }
+            100% { opacity: 0.8; }
+        }
+        
+        @media (max-width: 768px) {
+            .cards-container {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            }
+            
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .tabs {
+                margin-top: 15px;
+                width: 100%;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .cards-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-cubes"></i> 钢筋库存管理系统</h1>
+            <div class="tabs">
+                <div class="tab active">弯曲筋库存</div>
+                <div class="tab">直筋库存</div>
+                <div class="tab">库存总览</div>
+            </div>
+        </div>
+        
+        <div class="cards-container">
+            <!-- 卡片1：N1 -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-id">X1234</div>
+                    <div class="card-title">
+                        <span>N1 弯曲筋</span>
+                        <span class="steel-spec">Ø22 8.4m</span>
+                    </div>
+                </div>
+                
+                <div class="rebar-graphic">
+                    <div class="graphic-content">
+                        <div class="graphic-line g-line-top"></div>
+                        <div class="graphic-line g-line-middle"></div>
+                        <div class="graphic-line g-line-bottom"></div>
+                        <div class="graphic-line g-vertical"></div>
+                        <div class="g-circle circle-1"></div>
+                        <div class="g-circle circle-2"></div>
+                    </div>
+                </div>
+                
+                <div class="stats-row">
+                    <div class="stats-item">
+                        <div class="stats-label">预算量</div>
+                        <div class="stats-value budget-value">52 根</div>
+                    </div>
+                    <div class="stats-item">
+                        <div class="stats-label">已使用</div>
+                        <div class="stats-value used-value">26 根</div>
+                    </div>
+                    <div class="stats-item">
+                        <div class="stats-label">库存量</div>
+                        <div class="stats-value stock-value">26 根</div>
+                    </div>
+                </div>
+                
+                <div class="progress-container">
+                    <div class="progress-header">
+                        <span>使用进度</span>
+                        <span>50%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 50%; background-color: var(--primary-color);"></div>
+                    </div>
+                </div>
+                
+                <div class="action-button">
+                    <i class="fas fa-ruler"></i> 设置钢筋长度
+                </div>
+            </div>
+            
+            <!-- 卡片2：N2 -->
+            <div class="card">
+                <div class="warning-tag">库存红色预警</div>
+                <div class="card-header">
+                    <div class="card-id">X0</div>
+                    <div class="card-title">
+                        <span>N2 弯曲筋</span>
+                        <span class="steel-spec">Ø25 12.0m</span>
+                    </div>
+                </div>
+                
+                <div class="rebar-graphic">
+                    <div class="graphic-content">
+                        <div class="graphic-line g-line-top" style="width: 80%; left: 5%;"></div>
+                        <div class="graphic-line g-vertical" style="left: 35%;"></div>
+                        <div class="g-circle circle-1" style="top: 40%; right: 25%;"></div>
+                    </div>
+                </div>
+                
+                <div class="stats-row">
+                    <div class="stats-item">
+                        <div class="stats-label">预算量</div>
+                        <div class="stats-value budget-value">28 根</div>
+                    </div>
+                    <div class="stats-item">
+                        <div class="stats-label">已使用</div>
+                        <div class="stats-value used-value">47 根</div>
+                    </div>
+                    <div class="stats-item">
+                        <div class="stats-label">库存量</div>
+                        <div class="stats-value stock-value">-19 根</div>
+                    </div>
+                </div>
+                
+                <div class="progress-container">
+                    <div class="progress-header">
+                        <span>使用进度</span>
+                        <span>168%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 100%; background-color: var(--warning-color);"></div>
+                    </div>
+                </div>
+                
+                <div class="action-button">
+                    <i class="fas fa-ruler"></i> 设置钢筋长度
+                </div>
+            </div>
+            
+            <!-- 卡片3：N3 -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-id">X10</div>
+                    <div class="card-title">
+                        <span>N3 弯曲筋</span>
+                        <span class="steel-spec">Ø22 9.2m</span>
+                    </div>
+                </div>
+                
+                <div class="rebar-graphic">
+                    <div class="graphic-content">
+                        <div class="graphic-line g-line-top" style="height: 6px; top: 40%;"></div>
+                        <div class="graphic-line g-line-middle" style="height: 6px; top: 60%; width: 70%; left: 15%;"></div>
+                        <div class="graphic-line g-vertical" style="height: 90%; left: 30%; top: 5%;"></div>
+                        <div class="g-circle circle-1" style="bottom: 25%; right: 30%;"></div>
+                    </div>
+                </div>
+                
+                <div class="stats-row">
+                    <div class="stats-item">
+                        <div class="stats-label">预算量</div>
+                        <div class="stats-value budget-value">42 根</div>
+                    </div>
+                    <div class="stats-item">
+                        <div class="stats-label">已使用</div>
+                        <div class="stats-value used-value">29 根</div>
+                    </div>
+                    <div class="stats-item">
+                        <div class="stats-label">库存量</div>
+                        <div class="stats-value stock-value">13 根</div>
+                    </div>
+                </div>
+                
+                <div class="progress-container">
+                    <div class="progress-header">
+                        <span>使用进度</span>
+                        <span>69%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 69%; background-color: var(--primary-color);"></div>
+                    </div>
+                </div>
+                
+                <div class="action-button">
+                    <i class="fas fa-ruler"></i> 设置钢筋长度
+                </div>
+            </div>
+            
+            <!-- 卡片4：N4 -->
+            <div class="card">
+                <div class="warning-tag">库存黄色预警</div>
+                <div class="card-header">
+                    <div class="card-id">X10</div>
+                    <div class="card-title">
+                        <span>N4 弯曲筋</span>
+                        <span class="steel-spec">Ø16 6.7m</span>
+                    </div>
+                </div>
+                
+                <div class="rebar-graphic">
+                    <div class="graphic-content">
+                        <div class="graphic-line g-line-top" style="width: 60%; top: 25%; left: 10%;"></div>
+                        <div class="graphic-line g-line-middle" style="width: 50%; top: 50%; left: 20%;"></div>
+                        <div class="graphic-line g-line-bottom" style="width: 70%; top: 75%; left: 15%;"></div>
+                        <div class="graphic-line g-vertical" style="height: 60%; left: 70%; top: 20%;"></div>
+                    </div>
+                </div>
+                
+                <div class="stats-row">
+                    <div class="stats-item">
+                        <div class="stats-label">预算量</div>
+                        <div class="stats-value budget-value">120 根</div>
+                    </div>
+                    <div class="stats-item">
+                        <div class="stats-label">已使用</div>
+                        <div class="stats-value used-value">111 根</div>
+                    </div>
+                    <div class="stats-item">
+                        <div class="stats-label">库存量</div>
+                        <div class="stats-value stock-value">9 根</div>
+                    </div>
+                </div>
+                
+                <div class="progress-container">
+                    <div class="progress-header">
+                        <span>使用进度</span>
+                        <span>93%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 93%; background-color: #ffa600;"></div>
+                    </div>
+                </div>
+                
+                <div class="action-button">
+                    <i class="fas fa-ruler"></i> 设置钢筋长度
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 模拟交互功能
+        const actionButtons = document.querySelectorAll('.action-button');
+        actionButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const cardTitle = this.closest('.card').querySelector('.card-title span').textContent;
+                alert(`正在设置 ${cardTitle} 的钢筋长度`);
+            });
+        });
+        
+        // 标签切换功能
+        const tabs = document.querySelectorAll('.tab');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                tabs.forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>

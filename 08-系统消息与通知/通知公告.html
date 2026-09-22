@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智慧工地公告大屏系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', 'Segoe UI', sans-serif;
+        }
+        
+        body {
+            background-color: #0c1e2e;
+            color: #e0f0ff;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .announcement-board {
+            width: 100%;
+            max-width: 1800px;
+            height: 95vh;
+            background: linear-gradient(145deg, #0d2435 0%, #081928 100%);
+            border-radius: 15px;
+            box-shadow: 0 20px 50px rgba(0, 40, 100, 0.6);
+            overflow: hidden;
+            border: 2px solid #1c4d6f;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* 顶部信息栏 */
+        .header {
+            background: linear-gradient(90deg, #1a5c8c 0%, #0d3557 100%);
+            padding: 20px 35px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #2d8bc8;
+        }
+        
+        .title-section h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, #66c2ff, #4da6ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 20px rgba(64, 164, 255, 0.4);
+            letter-spacing: 1px;
+        }
+        
+        .location-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 1.2rem;
+            color: #7fc8f8;
+            font-weight: 500;
+            margin-top: 8px;
+        }
+        
+        .datetime {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            text-align: right;
+        }
+        
+        .date {
+            font-size: 1.4rem;
+            color: #66c2ff;
+            font-weight: 500;
+        }
+        
+        .time {
+            font-size: 3.5rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            background: linear-gradient(90deg, #66c2ff, #4da6ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 5px 0;
+        }
+        
+        .weather {
+            font-size: 1.1rem;
+            color: #8ed1ff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        /* 主内容区 */
+        .content-container {
+            display: flex;
+            flex: 1;
+            padding: 25px;
+            gap: 25px;
+            height: 70%;
+        }
+        
+        /* 紧急通知轮播区 */
+        .emergency-carousel {
+            flex: 1;
+            min-width: 0;
+            background: rgba(255, 90, 90, 0.1);
+            border-radius: 12px;
+            border: 2px solid rgba(255, 107, 107, 0.5);
+            box-shadow: 0 0 20px rgba(255, 107, 107, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .carousel-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 20px 30px;
+            background: rgba(255, 110, 110, 0.15);
+            border-bottom: 2px solid rgba(255, 107, 107, 0.5);
+        }
+        
+        .emergency-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #ff5e62, #ff9966);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 20px rgba(255, 107, 107, 0.5);
+        }
+        
+        .emergency-icon i {
+            font-size: 1.8rem;
+            color: white;
+        }
+        
+        .carousel-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #ff6b6b;
+            text-transform: uppercase;
+        }
+        
+        .carousel-items {
+            height: calc(100% - 80px);
+            display: flex;
+            animation: carouselAnimation 30s infinite linear;
+        }
+        
+        .emergency-item {
+            min-width: 100%;
+            height: 100%;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .emergency-badge {
+            display: inline-block;
+            padding: 10px 25px;
+            border-radius: 30px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 25px;
+            background: linear-gradient(135deg, #ff5e62, #ff9966);
+            align-self: flex-start;
+        }
+        
+        .emergency-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .emergency-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #ffb2b2;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .emergency-title i {
+            font-size: 2.2rem;
+        }
+        
+        .emergency-details {
+            font-size: 1.6rem;
+            line-height: 1.6;
+            color: #e8f4ff;
+            margin-bottom: 40px;
+            max-width: 95%;
+        }
+        
+        .emergency-info {
+            display: flex;
+            gap: 30px;
+            font-size: 1.2rem;
+            color: #ffb2b2;
+            flex-wrap: wrap;
+        }
+        
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .carousel-indicators {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255, 107, 107, 0.4);
+            cursor: default;
+            transition: all 0.3s;
+        }
+        
+        .indicator.active {
+            background: #ff5e62;
+            box-shadow: 0 0 10px rgba(255, 94, 98, 0.8);
+            transform: scale(1.3);
+        }
+        
+        @keyframes carouselAnimation {
+            0%, 20% {
+                transform: translateX(0%);
+            }
+            25%, 45% {
+                transform: translateX(-100%);
+            }
+            50%, 70% {
+                transform: translateX(-200%);
+            }
+            75%, 95% {
+                transform: translateX(-300%);
+            }
+            100% {
+                transform: translateX(-400%);
+            }
+        }
+        
+        /* 常驻通知区 */
+        .permanent-section {
+            width: 35%;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            background: rgba(64, 144, 229, 0.08);
+            border-radius: 12px;
+            border: 2px solid rgba(77, 166, 255, 0.3);
+            box-shadow: 0 0 20px rgba(77, 166, 255, 0.1);
+        }
+        
+        .permanent-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 20px 30px;
+            background: rgba(64, 144, 229, 0.12);
+            border-bottom: 2px solid rgba(77, 166, 255, 0.3);
+        }
+        
+        .permanent-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #4da6ff, #66c2ff);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 20px rgba(77, 166, 255, 0.5);
+        }
+        
+        .permanent-icon i {
+            font-size: 1.8rem;
+            color: white;
+        }
+        
+        .permanent-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #4da6ff;
+            text-transform: uppercase;
+        }
+        
+        .permanent-container {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-auto-rows: minmax(200px, auto);
+            gap: 20px;
+            padding: 25px;
+            overflow-y: auto;
+        }
+        
+        .permanent-card {
+            border-radius: 10px;
+            padding: 20px;
+            background: rgba(64, 144, 229, 0.1);
+            border: 1px solid rgba(77, 166, 255, 0.25);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .permanent-card-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #a3d3ff;
+        }
+        
+        .permanent-card-content {
+            font-size: 1.2rem;
+            line-height: 1.5;
+            color: #c7e1ff;
+            margin-bottom: 15px;
+            flex: 1;
+        }
+        
+        .permanent-card-footer {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            color: #8aa3c0;
+            border-top: 1px dashed rgba(138, 163, 192, 0.3);
+            padding-top: 12px;
+        }
+        
+        /* 底部信息栏 */
+        .footer {
+            background: rgba(0, 26, 51, 0.8);
+            padding: 15px 35px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 2px solid #1c4d6f;
+        }
+        
+        .project-info {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+            font-size: 1.1rem;
+        }
+        
+        .counters {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .counter {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px 15px;
+            background: rgba(64, 144, 229, 0.15);
+            border-radius: 8px;
+            min-width: 120px;
+        }
+        
+        .counter-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #4da6ff;
+        }
+        
+        .counter-label {
+            font-size: 0.9rem;
+            color: #8aa3c0;
+        }
+        
+        /* 公告面板底部滚动条 */
+        .marquee-container {
+            height: 50px;
+            background: linear-gradient(90deg, rgba(0, 80, 160, 0.5), transparent);
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+            border-top: 1px solid rgba(77, 166, 255, 0.2);
+        }
+        
+        .marquee {
+            white-space: nowrap;
+            animation: marqueeScroll 30s linear infinite;
+            font-size: 1.3rem;
+            padding: 0 10px;
+            color: #66c2ff;
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+        
+        @keyframes marqueeScroll {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-200%); }
+        }
+        
+        /* 安全状态指示灯 */
+        .safety-status {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.1rem;
+            color: #66c2ff;
+        }
+        
+        .status-indicator {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: #4CAF50;
+            box-shadow: 0 0 10px rgba(76, 175, 80, 0.7);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(76, 175, 80, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="announcement-board">
+        <div class="safety-status">
+            <div class="status-indicator"></div>
+            <span>安全运行中</span>
+        </div>
+        
+        <div class="header">
+            <div class="title-section">
+                <h1>智慧工地公告系统</h1>
+                <div class="location-info">
+                    <span><i class="fas fa-map-marker-alt"></i> 闸机入口处</span>
+                    <span><i class="fas fa-map-marker-alt"></i> 办公区入口处</span>
+                </div>
+            </div>
+            <div class="datetime">
+                <div class="date">2025年8月5日 星期二</div>
+                <div class="time">11:47:32</div>
+                <div class="weather">
+                    <i class="fas fa-sun"></i>
+                    <span>晴 32°C | 湿度 45%</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="content-container">
+            <!-- 紧急通知轮播区 -->
+            <div class="emergency-carousel">
+                <div class="carousel-header">
+                    <div class="emergency-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="carousel-title">紧急通知轮播</div>
+                </div>
+                
+                <div class="carousel-items">
+                    <!-- 紧急通知1 -->
+                    <div class="emergency-item">
+                        <div class="emergency-badge">高温预警</div>
+                        <div class="emergency-content">
+                            <div class="emergency-title">
+                                <i class="fas fa-temperature-high"></i>
+                                <span>高温作业风险红色预警</span>
+                            </div>
+                            <div class="emergency-details">
+                                气象局发布高温红色预警：今日气温将达38℃以上，地表温度超50℃。11:00-15:00暂停所有户外作业，所有人员进入室内避暑。休息区备有防暑降温物资（冰水、藿香正气水、清凉油），请及时补充水分。各班组负责人需每30分钟检查一次组员身体状况，发现中暑症状立即报告医疗站。
+                            </div>
+                            <div class="emergency-info">
+                                <div class="info-item">
+                                    <i class="fas fa-user-shield"></i>
+                                    <span>责任人：李安全（安全总监）</span>
+                                </div>
+                                <div class="info-item">
+                                    <i class="fas fa-phone"></i>
+                                    <span>紧急电话：137XXXX8888</span>
+                                </div>
+                                <div class="info-item">
+                                    <i class="fas fa-clock"></i>
+                                    <span>生效时间：立即生效至今日18:00</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 紧急通知2 -->
+                    <div class="emergency-item">
+                        <div class="emergency-badge">天气预警</div>
+                        <div class="emergency-content">
+                            <div class="emergency-title">
+                                <i class="fas fa-cloud-bolt"></i>
+                                <span>强对流天气应急响应</span>
+                            </div>
+                            <div class="emergency-details">
+                                气象台发布雷电黄色预警：预计13:00左右有强雷暴天气（风力8级，短时强降水）。立即启动Ⅲ级应急响应：所有高空作业立即停止，人员撤离至安全区域；塔吊吊钩升至最高位，臂架顺风向停放；切断非必要电源，重要设备做好防水；深基坑排水系统全面检查；临时设施加固处理。
+                            </div>
+                            <div class="emergency-info">
+                                <div class="info-item">
+                                    <i class="fas fa-user-headset"></i>
+                                    <span>应急指挥：王总指挥（138XXXX9999）</span>
+                                </div>
+                                <div class="info-item">
+                                    <i class="fas fa-walkie-talkie"></i>
+                                    <span>应急频道：对讲机频道8</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 紧急通知3 -->
+                    <div class="emergency-item">
+                        <div class="emergency-badge">安全新规</div>
+                        <div class="emergency-content">
+                            <div class="emergency-title">
+                                <i class="fas fa-hard-hat"></i>
+                                <span>安全装备佩戴强制规定</span>
+                            </div>
+                            <div class="emergency-details">
+                                即日起，以下区域必须佩戴全套安全装备：A区钢结构（高空作业）、B区深基坑（深度＞5m）、C区设备吊装区（起重作业）。装备包括：安全帽（带下颏带）、反光背心（Ⅲ级）、防穿刺安全鞋、双钩安全带（高空）。装备检查点设在各区域入口，未达标者禁止进入。违规者首次警告，二次罚款500元，三次清退出场。
+                            </div>
+                            <div class="emergency-info">
+                                <div class="info-item">
+                                    <i class="fas fa-exclamation-circle"></i>
+                                    <span>适用范围：所有施工人员及访客</span>
+                                </div>
+                                <div class="info-item">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <span>检查点位置：A区东门、B区北门、C区西门</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 紧急通知4 -->
+                    <div class="emergency-item">
+                        <div class="emergency-badge">设备维护</div>
+                        <div class="emergency-content">
+                            <div class="emergency-title">
+                                <i class="fas fa-crane"></i>
+                                <span>A区塔吊维护通知</span>
+                            </div>
+                            <div class="emergency-details">
+                                A区3号塔吊将于明日（8月6日）8:00-12:00进行季度维护保养，期间暂停使用。请相关班组调整工作计划，避开此时段进行吊装作业。维护期间塔吊半径20米内设为警戒区，非工作人员禁止入内。
+                            </div>
+                            <div class="emergency-info">
+                                <div class="info-item">
+                                    <i class="fas fa-calendar"></i>
+                                    <span>维护时间：8月6日 8:00-12:00</span>
+                                </div>
+                                <div class="info-item">
+                                    <i class="fas fa-user-hard-hat"></i>
+                                    <span>负责人：张工（设备管理部）</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="carousel-indicators">
+                    <div class="indicator active"></div>
+                    <div class="indicator"></div>
+                    <div class="indicator"></div>
+                    <div class="indicator"></div>
+                </div>
+            </div>
+            
+            <!-- 常驻通知区 -->
+            <div class="permanent-section">
+                <div class="permanent-header">
+                    <div class="permanent-icon">
+                        <i class="fas fa-clipboard-list"></i>
+                    </div>
+                    <div class="permanent-title">常驻通知</div>
+                </div>
+                <div class="permanent-container">
+                    <div class="permanent-card">
+                        <div class="permanent-card-title">
+                            <i class="fas fa-hard-hat"></i>
+                            <span>安全装备佩戴规定</span>
+                        </div>
+                        <div class="permanent-card-content">
+                            进入工地必须佩戴安全帽、反光背心及安全鞋。高空作业区域必须系安全带。装备检查点位于各区域入口处。
+                        </div>
+                        <div class="permanent-card-footer">
+                            <div><i class="fas fa-clock"></i> 长期有效</div>
+                            <div><i class="fas fa-user"></i> 安全监督组</div>
+                        </div>
+                    </div>
+                    
+                    <div class="permanent-card">
+                        <div class="permanent-card-title">
+                            <i class="fas fa-car"></i>
+                            <span>车辆进出管理规定</span>
+                        </div>
+                        <div class="permanent-card-content">
+                            施工车辆进出时段：上午6:00-9:00，下午4:00-7:00。所有车辆限速20km/h，按指定路线行驶。
+                        </div>
+                        <div class="permanent-card-footer">
+                            <div><i class="fas fa-clock"></i> 长期有效</div>
+                            <div><i class="fas fa-user"></i> 车辆管理部</div>
+                        </div>
+                    </div>
+                    
+                    <div class="permanent-card">
+                        <div class="permanent-card-title">
+                            <i class="fas fa-users"></i>
+                            <span>访客管理规定</span>
+                        </div>
+                        <div class="permanent-card-content">
+                            所有访客需在闸机处登记，佩戴访客证后方可进入。未预约访客请联系接待处：分机号802。
+                        </div>
+                        <div class="permanent-card-footer">
+                            <div><i class="fas fa-clock"></i> 长期有效</div>
+                            <div><i class="fas fa-user"></i> 行政办公室</div>
+                        </div>
+                    </div>
+                    
+                    <div class="permanent-card">
+                        <div class="permanent-card-title">
+                            <i class="fas fa-fire-extinguisher"></i>
+                            <span>消防通道管理规定</span>
+                        </div>
+                        <div class="permanent-card-content">
+                            消防通道禁止堆放任何物品，确保24小时畅通。违者将按安全条例严肃处理。
+                        </div>
+                        <div class="permanent-card-footer">
+                            <div><i class="fas fa-clock"></i> 长期有效</div>
+                            <div><i class="fas fa-user"></i> 消防管理部</div>
+                        </div>
+                    </div>
+                    
+                    <div class="permanent-card">
+                        <div class="permanent-card-title">
+                            <i class="fas fa-utensils"></i>
+                            <span>食堂管理规定</span>
+                        </div>
+                        <div class="permanent-card-content">
+                            午餐供应时间：11:30-13:00，晚餐：17:30-19:00。请自觉排队，保持餐厅整洁。
+                        </div>
+                        <div class="permanent-card-footer">
+                            <div><i class="fas fa-clock"></i> 长期有效</div>
+                            <div><i class="fas fa-user"></i> 后勤部</div>
+                        </div>
+                    </div>
+                    
+                    <div class="permanent-card">
+                        <div class="permanent-card-title">
+                            <i class="fas fa-wifi"></i>
+                            <span>办公区网络使用规定</span>
+                        </div>
+                        <div class="permanent-card-content">
+                            办公区WiFi密码：Office@2025。禁止使用网络进行非法活动，禁止下载大文件影响网速。
+                        </div>
+                        <div class="permanent-card-footer">
+                            <div><i class="fas fa-clock"></i> 长期有效</div>
+                            <div><i class="fas fa-user"></i> IT部门</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="marquee-container">
+            <div class="marquee">
+                <i class="fas fa-info-circle"></i>
+                重要提示：请所有人员遵守安全规定，进入工地必须正确佩戴安全帽！近期高温天气，注意防暑降温，及时补充水分。
+                <i class="fas fa-exclamation-triangle"></i>
+                安全第一，预防为主！本月安全目标：零事故、零伤亡、零违章！
+                <i class="fas fa-utensils"></i>
+                今日午餐供应：红烧排骨、清蒸鲈鱼、鱼香肉丝、清炒时蔬、冬瓜排骨汤。
+            </div>
+        </div>
+        
+        <div class="footer">
+            <div class="project-info">
+                <div><i class="fas fa-hard-hat"></i> 国建五局 · 智慧工地示范项目</div>
+                <div><i class="fas fa-phone"></i> 安全热线：400-800-9000 | 行政热线：400-800-8000</div>
+            </div>
+            <div class="counters">
+                <div class="counter">
+                    <div class="counter-value">147</div>
+                    <div class="counter-label">安全运行(天)</div>
+                </div>
+                <div class="counter">
+                    <div class="counter-value">326</div>
+                    <div class="counter-label">今日入场(人)</div>
+                </div>
+                <div class="counter">
+                    <div class="counter-value">85</div>
+                    <div class="counter-label">办公区人员</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 实时更新时间
+        function updateTime() {
+            const now = new Date();
+            const options = { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric', 
+                weekday: 'long' 
+            };
+            const dateStr = now.toLocaleDateString('zh-CN', options);
+            const timeStr = now.toLocaleTimeString('zh-CN', { hour12: false });
+            
+            document.querySelector('.date').textContent = dateStr;
+            document.querySelector('.time').textContent = timeStr;
+        }
+        
+        // 初始化并设置定时器
+        updateTime();
+        setInterval(updateTime, 1000);
+        
+        // 更新轮播指示器
+        function updateCarouselIndicators() {
+            const indicators = document.querySelectorAll('.indicator');
+            const items = document.querySelectorAll('.emergency-item');
+            const scrollPosition = document.querySelector('.carousel-items').scrollLeft;
+            const itemWidth = document.querySelector('.emergency-item').offsetWidth;
+            const currentIndex = Math.round(scrollPosition / itemWidth);
+            
+            indicators.forEach((indicator, index) => {
+                indicator.classList.toggle('active', index === currentIndex);
+            });
+        }
+        
+        // 初始化轮播指示器
+        updateCarouselIndicators();
+        
+        // 设置轮播指示器更新
+        setInterval(updateCarouselIndicators, 1000);
+    </script>
+</body>
+</html>
