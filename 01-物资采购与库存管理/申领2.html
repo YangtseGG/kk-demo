@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的申领 - 卡片布局</title>
+    <style>
+        /* 容器样式 */
+        .card-container {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            padding: 16px;
+            background: #f5f5f5;
+        }
+
+        /* 卡片基础样式 */
+        .card {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            padding: 16px;
+            transition: box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        /* 卡片头部（时间+状态） */
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .apply-time {
+            font-size: 14px;
+            color: #666;
+        }
+
+        /* 状态标签样式（不同状态区分） */
+        .status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .status.rejected { background: #ffdadc; color: #b00020; }
+        .status.out-stock { background: #c6f6d5; color: #2e7d32; }
+        .status.approved { background: #bbdefb; color: #1976d2; }
+        .status.in-stock { background: #d4edda; color: #155724; }
+        .status.purchasing { background: #fff3cd; color: #856404; }
+        .status.closed { background: #e2e3e5; color: #444; }
+        .status.pending { background: #ffe8cc; color: #d9534f; }
+
+        /* 物料信息区域 */
+        .material-name {
+            font-size: 16px;
+            font-weight: bold;
+            margin: 8px 0;
+        }
+
+        .material-info {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 12px;
+        }
+
+        /* 数量信息 */
+        .quantity {
+            margin-bottom: 12px;
+        }
+        .quantity span {
+            margin-right: 16px;
+            font-size: 14px;
+            color: #555;
+        }
+
+        /* 底部信息（送达时间+类型） */
+        .card-footer {
+            font-size: 14px;
+            color: #999;
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+    <div class="card-container">
+        <!-- 卡片1：木工锤 - 拒绝 -->
+        <div class="card">
+            <div class="card-header">
+                <span class="apply-time">2024-03-01</span>
+                <span class="status rejected">拒绝</span>
+            </div>
+            <div class="material-name">carpenter hammer 木工锤</div>
+            <div class="material-info">编码：XXXXX | 分类：xx/xx/xx | 单位：pcs</div>
+            <div class="quantity">
+                <span>申领：10</span>
+                <span>采购：-</span>
+                <span>审批：-</span>
+            </div>
+            <div class="card-footer">
+                <span>希望送达：2024-03-08 15:00</span>
+                <span>类型：领用</span>
+            </div>
+        </div>
+
+        <!-- 卡片2：木工扳手 - 已出库 -->
+        <div class="card">
+            <div class="card-header">
+                <span class="apply-time">2024-03-01</span>
+                <span class="status out-stock">已出库</span>
+            </div>
+            <div class="material-name">spanner 木工扳手</div>
+            <div class="material-info">编码：XXXXX | 分类：xx/xx/xx | 单位：pcs</div>
+            <div class="quantity">
+                <span>申领：10</span>
+                <span>采购：4</span>
+                <span>审批：4</span>
+            </div>
+            <div class="card-footer">
+                <span>希望送达：2024-03-08 15:00</span>
+                <span>类型：采购</span>
+            </div>
+        </div>
+
+        <!-- 卡片3：木工扳手 - 通过 -->
+        <div class="card">
+            <div class="card-header">
+                <span class="apply-time">2024-03-01</span>
+                <span class="status approved">通过</span>
+            </div>
+            <div class="material-name">spanner 木工扳手</div>
+            <div class="material-info">编码：XXXXX | 分类：xx/xx/xx | 单位：pcs</div>
+            <div class="quantity">
+                <span>申领：10</span>
+                <span>采购：8</span>
+                <span>审批：8</span>
+            </div>
+            <div class="card-footer">
+                <span>希望送达：2024-03-08 15:00</span>
+                <span>类型：领用</span>
+            </div>
+        </div>
+
+        <!-- 卡片4：铁丝 - 已入库 -->
+        <div class="card">
+            <div class="card-header">
+                <span class="apply-time">2024-03-01</span>
+                <span class="status in-stock">已入库</span>
+            </div>
+            <div class="material-name">Iron wire 铁丝</div>
+            <div class="material-info">编码：XXXXX | 分类：xx/xx/xx | 单位：roll</div>
+            <div class="quantity">
+                <span>申领：3</span>
+                <span>采购：3</span>
+                <span>审批：3</span>
+            </div>
+            <div class="card-footer">
+                <span>希望送达：2024-03-08 15:00</span>
+                <span>类型：采购</span>
+            </div>
+        </div>
+
+        <!-- 卡片5：施工线 - 采购中 -->
+        <div class="card">
+            <div class="card-header">
+                <span class="apply-time">2024-03-01</span>
+                <span class="status purchasing">采购中</span>
+            </div>
+            <div class="material-name">Construction line 施工线</div>
+            <div class="material-info">编码：XXXXX | 分类：xx/xx/xx | 单位：pcs</div>
+            <div class="quantity">
+                <span>申领：50</span>
+                <span>采购：50</span>
+                <span>审批：50</span>
+            </div>
+            <div class="card-footer">
+                <span>希望送达：2024-03-08 15:00</span>
+                <span>类型：领用</span>
+            </div>
+        </div>
+
+        <!-- 卡片6：水泥钉 - 超时关闭 -->
+        <div class="card">
+            <div class="card-header">
+                <span class="apply-time">2024-03-01</span>
+                <span class="status closed">超时关闭</span>
+            </div>
+            <div class="material-name">concrete nail 水泥钉</div>
+            <div class="material-info">编码：XXXXX | 分类：xx/xx/xx | 单位：箱</div>
+            <div class="quantity">
+                <span>申领：1</span>
+                <span>采购：1</span>
+                <span>审批：1</span>
+            </div>
+            <div class="card-footer">
+                <span>希望送达：2024-03-08 15:00</span>
+                <span>类型：采购</span>
+            </div>
+        </div>
+
+        <!-- 卡片7：合金打磨片 - 审核中 -->
+        <div class="card">
+            <div class="card-header">
+                <span class="apply-time">2024-03-01</span>
+                <span class="status pending">审核中</span>
+            </div>
+            <div class="material-name">Alloy Filing Disc 合金打磨片</div>
+            <div class="material-info">编码：XXXXX | 分类：xx/xx/xx | 单位：pcs</div>
+            <div class="quantity">
+                <span>申领：50</span>
+                <span>采购：50</span>
+                <span>审批：50</span>
+            </div>
+            <div class="card-footer">
+                <span>希望送达：2024-03-08 15:00</span>
+                <span>类型：领用</span>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

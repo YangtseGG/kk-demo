@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>仓储系统 - 入库验收</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #1890ff;
+            --success: #52c41a;
+            --warning: #faad14;
+            --danger: #ff4d4f;
+            --gray: #f0f2f5;
+            --dark-gray: #8c8c8c;
+            --border: #d9d9d9;
+            --text: rgba(0, 0, 0, 0.85);
+            --table-header: #f5f7fa;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f8f9fa;
+            color: var(--text);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background-color: #fff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.09);
+            padding: 16px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--primary);
+        }
+        
+        .logo i {
+            margin-right: 8px;
+            font-size: 24px;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .current-time {
+            background: var(--gray);
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .page-title {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin: 20px 0;
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--text);
+        }
+        
+        .stats-container {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            flex: 1;
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            margin: 15px 0 8px;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: var(--dark-gray);
+        }
+        
+        .stat-card.pending .stat-value {
+            color: var(--primary);
+        }
+        
+        .stat-card.partial .stat-value {
+            color: var(--warning);
+        }
+        
+        .stat-card.completed .stat-value {
+            color: var(--success);
+        }
+        
+        .section {
+            background: white;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+        }
+        
+        .section-title {
+            font-size: 19px;
+            font-weight: 600;
+            margin-bottom: 22px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        /* 平铺列表样式 */
+        .flat-list {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        .flat-list th {
+            background-color: var(--table-header);
+            text-align: left;
+            padding: 16px;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .flat-list td {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+        }
+        
+        .flat-list tr:hover {
+            background-color: rgba(24, 144, 255, 0.03);
+        }
+        
+        .flat-list tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .status-badge {
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        
+        .status-pending {
+            background-color: rgba(24, 144, 255, 0.1);
+            color: var(--primary);
+        }
+        
+        .status-partial {
+            background-color: rgba(250, 173, 20, 0.1);
+            color: var(--warning);
+        }
+        
+        .status-success {
+            background-color: rgba(82, 196, 26, 0.1);
+            color: var(--success);
+        }
+        
+        .quantity-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .quantity-box {
+            min-width: 40px;
+            padding: 6px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            text-align: center;
+            background: white;
+            font-weight: 500;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 8px 15px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid transparent;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        .btn-primary:hover {
+            background-color: #40a9ff;
+            border-color: #40a9ff;
+            box-shadow: 0 2px 8px rgba(24, 144, 255, 0.2);
+        }
+        
+        .btn-outline {
+            background-color: transparent;
+            border-color: var(--border);
+            color: var(--text);
+        }
+        
+        .btn-outline:hover {
+            background-color: var(--gray);
+        }
+        
+        .btn-success {
+            background-color: var(--success);
+            color: white;
+            border-color: var(--success);
+        }
+        
+        .btn-success:hover {
+            background-color: #73d13d;
+            border-color: #73d13d;
+        }
+        
+        .btn-warning {
+            background-color: var(--warning);
+            color: white;
+            border-color: var(--warning);
+        }
+        
+        .btn-warning:hover {
+            background-color: #ffc53d;
+            border-color: #ffc53d;
+        }
+        
+        /* 顶部搜索栏 */
+        .search-section {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+            align-items: center;
+        }
+        
+        .search-box {
+            flex: 1;
+            position: relative;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 12px 16px 12px 45px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        
+        .search-box input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+        }
+        
+        .search-box i {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--dark-gray);
+            font-size: 18px;
+        }
+        
+        /* 导航按钮 */
+        .nav-buttons {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+        
+        .nav-button {
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid var(--border);
+            background: white;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .nav-button.active {
+            background-color: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+        
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            .stats-container {
+                flex-direction: column;
+            }
+            
+            .actions {
+                flex-wrap: wrap;
+            }
+            
+            .quantity-row {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="logo">
+                <i class="fas fa-warehouse"></i>
+                <span>仓储管理系统</span>
+            </div>
+            <div class="user-info">
+                <div class="current-time">
+                    <i class="far fa-clock"></i>
+                    <span id="current-time">2023-11-15 09:41</span>
+                </div>
+                <span>操作员: 张经理</span>
+            </div>
+        </div>
+    </header>
+    
+    <div class="container">
+        <h1 class="page-title">待验收入库物资</h1>
+        
+        <!-- 搜索区域 -->
+        <div class="search-section">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="搜索采购批次...">
+            </div>
+        </div>
+        
+        <!-- 统计区域 -->
+        <div class="stats-container">
+            <div class="stat-card pending">
+                <div class="stat-label">待验收</div>
+                <div class="stat-value">5</div>
+            </div>
+            <div class="stat-card partial">
+                <div class="stat-label">部分验收</div>
+                <div class="stat-value">6</div>
+            </div>
+            <div class="stat-card completed">
+                <div class="stat-label">全部验收</div>
+                <div class="stat-value">3</div>
+            </div>
+        </div>
+        
+        <!-- 采购批次列表 -->
+        <div class="section">
+            <div class="section-title">非系统采购验收</div>
+            
+            <table class="flat-list">
+                <thead>
+                    <tr>
+                        <th style="width: 18%;">采购批次</th>
+                        <th style="width: 10%;">状态</th>
+                        <th style="width: 12%;">物料种类</th>
+                        <th style="width: 12%;">采购总量</th>
+                        <th style="width: 20%;">入库进度</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- 批次202403-01 -->
+                    <tr>
+                        <td><strong>202403-01</strong></td>
+                        <td><span class="status-badge status-pending">待验收</span></td>
+                        <td>7种</td>
+                        <td>138件</td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div style="flex: 1; background: #e8f4ff; height: 8px; border-radius: 4px;">
+                                    <div style="background: var(--primary); height: 100%; width: 70%; border-radius: 4px;"></div>
+                                </div>
+                                <span style="font-size: 13px; color: var(--dark-gray);">16/18</span>
+                            </div>
+                        </td>
+                        <td class="actions">
+                            <button class="btn btn-outline">
+                                <i class="fas fa-list"></i> 采购清单
+                            </button>
+                            <button class="btn btn-primary">
+                                <i class="fas fa-check-circle"></i> 继续验收
+                            </button>
+                        </td>
+                    </tr>
+                    
+                    <!-- 批次202403-02 -->
+                    <tr>
+                        <td><strong>202403-02</strong></td>
+                        <td><span class="status-badge status-partial">部分验收</span></td>
+                        <td>10种</td>
+                        <td>215件</td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div style="flex: 1; background: #fff7e6; height: 8px; border-radius: 4px;">
+                                    <div style="background: var(--warning); height: 100%; width: 50%; border-radius: 4px;"></div>
+                                </div>
+                                <span style="font-size: 13px; color: var(--dark-gray);">10/18</span>
+                            </div>
+                        </td>
+                        <td class="actions">
+                            <button class="btn btn-outline">
+                                <i class="fas fa-list"></i> 采购清单
+                            </button>
+                            <button class="btn btn-primary">
+                                <i class="fas fa-check-circle"></i> 继续验收
+                            </button>
+                        </td>
+                    </tr>
+                    
+                    <!-- 批次202403-03 -->
+                    <tr>
+                        <td><strong>202403-03</strong></td>
+                        <td><span class="status-badge status-success">全部验收</span></td>
+                        <td>5种</td>
+                        <td>98件</td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div style="flex: 1; background: #f6ffed; height: 8px; border-radius: 4px;">
+                                    <div style="background: var(--success); height: 100%; width: 100%; border-radius: 4px;"></div>
+                                </div>
+                                <span style="font-size: 13px; color: var(--dark-gray);">5/5</span>
+                            </div>
+                        </td>
+                        <td class="actions">
+                            <button class="btn btn-outline">
+                                <i class="fas fa-list"></i> 采购清单
+                            </button>
+                            <button class="btn btn-outline">
+                                <i class="fas fa-eye"></i> 查看详情
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- 物料清单 -->
+        <div class="section">
+            <div class="section-title">物料验收清单 - 202403-01</div>
+            
+            <!-- 物料状态导航 -->
+            <div class="nav-buttons">
+                <div class="nav-button active">
+                    <i class="fas fa-tasks"></i> 所有物料
+                </div>
+                <div class="nav-button">
+                    <i class="fas fa-hourglass-half"></i> 待验收 <span style="background: var(--primary); color: white; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; margin-left: 6px;">6</span>
+                </div>
+                <div class="nav-button">
+                    <i class="fas fa-check-circle"></i> 已清点 <span style="background: var(--success); color: white; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; margin-left: 6px;">3</span>
+                </div>
+            </div>
+            
+            <table class="flat-list">
+                <thead>
+                    <tr>
+                        <th style="width: 20%;">物料名称</th>
+                        <th style="width: 15%;">物料编码</th>
+                        <th style="width: 20%;">物料分类</th>
+                        <th>数量情况</th>
+                        <th style="width: 12%;">状态</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- 物料1 -->
+                    <tr>
+                        <td><strong>木工锤</strong></td>
+                        <td>WH-75862</td>
+                        <td>工具 / 手动工具 / 锤类</td>
+                        <td>
+                            <div class="quantity-row">
+                                <div>
+                                    <div style="font-size: 12px; color: var(--dark-gray);">采购</div>
+                                    <div class="quantity-box">20</div>
+                                </div>
+                                <i class="fas fa-arrow-right" style="color: var(--dark-gray); margin: 0 5px;"></i>
+                                <div>
+                                    <div style="font-size: 12px; color: var(--dark-gray);">配送</div>
+                                    <div class="quantity-box">10</div>
+                                </div>
+                                <i class="fas fa-arrow-right" style="color: var(--dark-gray); margin: 0 5px;"></i>
+                                <div>
+                                    <div style="font-size: 12px; color: var(--dark-gray);">合格</div>
+                                    <div class="quantity-box" style="border-color: var(--warning);">8</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="status-badge status-partial">部分合格</span></td>
+                        <td class="actions">
+                            <button class="btn btn-warning" style="font-size: 12px;">
+                                <i class="fas fa-truck-loading"></i> 补货
+                            </button>
+                            <button class="btn btn-primary" style="font-size: 12px;">
+                                <i class="fas fa-clipboard-check"></i> 二次验收
+                            </button>
+                            <button class="btn btn-outline" style="font-size: 12px;">
+                                <i class="fas fa-archive"></i> 入库
+                            </button>
+                        </td>
+                    </tr>
+                    
+                    <!-- 物料2 -->
+                    <tr>
+                        <td><strong>木工锤</strong></td>
+                        <td>WH-75863</td>
+                        <td>工具 / 手动工具 / 锤类</td>
+                        <td>
+                            <div class="quantity-row">
+                                <div>
+                                    <div style="font-size: 12px; color: var(--dark-gray);">采购</div>
+                                    <div class="quantity-box">20</div>
+                                </div>
+                                <i class="fas fa-arrow-right" style="color: var(--dark-gray); margin: 0 5px;"></i>
+                                <div>
+                                    <div style="font-size: 12px; color: var(--dark-gray);">配送</div>
+                                    <div class="quantity-box">0</div>
+                                </div>
+                                <i class="fas fa-arrow-right" style="color: var(--dark-gray); margin: 0 5px;"></i>
+                                <div>
+                                    <div style="font-size: 12px; color: var(--dark-gray);">合格</div>
+                                    <div class="quantity-box">0</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="status-badge status-pending">待验收</span></td>
+                        <td class="actions">
+                            <button class="btn btn-outline" style="font-size: 12px;">
+                                <i class="fas fa-undo-alt"></i> 退货
+                            </button>
+                            <button class="btn btn-warning" style="font-size: 12px;">
+                                <i class="fas fa-truck-loading"></i> 补货
+                            </button>
+                            <button class="btn btn-primary" style="font-size: 12px;">
+                                <i class="fas fa-clipboard-check"></i> 验收
+                            </button>
+                        </td>
+                    </tr>
+                    
+                    <!-- 物料3 -->
+                    <tr>
+                        <td><strong>不锈钢扳手</strong></td>
+                        <td>WH-88521</td>
+                        <td>工具 / 手动工具 / 扳手</td>
+                        <td>
+                            <div class="quantity-row">
+                                <div>
+                                    <div style="font-size: 12px; color: var(--dark-gray);">采购</div>
+                                    <div class="quantity-box">15</div>
+                                </div>
+                                <i class="fas fa-arrow-right" style="color: var(--dark-gray); margin: 0 5px;"></i>
+                                <div>
+                                    <div style="font-size: 12px; color: var(--dark-gray);">配送</div>
+                                    <div class="quantity-box">12</div>
+                                </div>
+                                <i class="fas fa-arrow-right" style="color: var(--dark-gray); margin: 0 5px;"></i>
+                                <div>
+                                    <div style="font-size: 12px; color: var(--dark-gray);">合格</div>
+                                    <div class="quantity-box" style="border-color: var(--success);">12</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="status-badge status-success">全部合格</span></td>
+                        <td class="actions">
+                            <button class="btn btn-primary" style="font-size: 12px;">
+                                <i class="fas fa-clipboard-list"></i> 详情
+                            </button>
+                            <button class="btn btn-outline" style="font-size: 12px;">
+                                <i class="fas fa-archive"></i> 入库
+                            </button>
+                            <button class="btn btn-success" style="font-size: 12px;">
+                                <i class="fas fa-check-circle"></i> 完成
+                            </button>
+                        </td>
+                    </tr>
+                    
+                    <!-- 物料4 -->
+                    <tr>
+                        <td><strong>电动螺丝刀</strong></td>
+                        <td>WH-99234</td>
+                        <td>工具 / 电动工具 / 螺丝刀</td>
+                        <td>
+                            <div class="quantity-row">
+                                <div>
+                                    <div style="font-size: 12px; color: var(--dark-gray);">采购</div>
+                                    <div class="quantity-box">10</div>
+                                </div>
+                                <i class="fas fa-arrow-right" style="color: var(--dark-gray); margin: 0 5px;"></i>
+                                <div>
+                                    <div style="font-size: 12px; color: var(--dark-gray);">配送</div>
+                                    <div class="quantity-box">8</div>
+                                </div>
+                                <i class="fas fa-arrow-right" style="color: var(--dark-gray); margin: 0 5px;"></i>
+                                <div>
+                                    <div style="font-size: 12px; color: var(--dark-gray);">合格</div>
+                                    <div class="quantity-box" style="border-color: var(--warning);">5</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="status-badge status-partial">部分合格</span></td>
+                        <td class="actions">
+                            <button class="btn btn-outline" style="font-size: 12px;">
+                                <i class="fas fa-undo-alt"></i> 退货
+                            </button>
+                            <button class="btn btn-warning" style="font-size: 12px;">
+                                <i class="fas fa-truck-loading"></i> 补货
+                            </button>
+                            <button class="btn btn-primary" style="font-size: 12px;">
+                                <i class="fas fa-clipboard-check"></i> 二次验收
+                            </button>
+                            <button class="btn btn-outline" style="font-size: 12px;">
+                                <i class="fas fa-archive"></i> 入库
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- 验收表单 -->
+        <div class="section">
+            <div class="section-title">入库验收表单</div>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
+                <div>
+                    <div style="font-weight: 500; margin-bottom: 8px;">货物来源</div>
+                    <select style="width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 6px;">
+                        <option>供应商A</option>
+                        <option selected>供应商B</option>
+                        <option>供应商C</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <div style="font-weight: 500; margin-bottom: 8px;">采购批次</div>
+                    <input type="text" value="202403-01" style="width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 6px;">
+                </div>
+                
+                <div>
+                    <div style="font-weight: 500; margin-bottom: 8px;">物料编码</div>
+                    <input type="text" value="WH-75862" style="width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 6px;">
+                </div>
+                
+                <div>
+                    <div style="font-weight: 500; margin-bottom: 8px;">物料名称</div>
+                    <input type="text" value="木工锤" style="width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 6px; background: #f8f9fa;" readonly>
+                </div>
+                
+                <div>
+                    <div style="font-weight: 500; margin-bottom: 8px;">物料分类</div>
+                    <input type="text" value="工具 / 手动工具 / 锤类" style="width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 6px; background: #f8f9fa;" readonly>
+                </div>
+                
+                <div>
+                    <div style="font-weight: 500; margin-bottom: 8px;">供应商</div>
+                    <input type="text" value="五金供应有限公司" style="width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 6px;">
+                </div>
+                
+                <div>
+                    <div style="font-weight: 500; margin-bottom: 8px;">车牌号</div>
+                    <input type="text" value="浙A12345" style="width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 6px;">
+                </div>
+                
+                <div>
+                    <div style="font-weight: 500; margin-bottom: 8px;">路单号</div>
+                    <input type="text" value="LD20240301" style="width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 6px;">
+                </div>
+                
+                <div>
+                    <div style="font-weight: 500; margin-bottom: 8px;">采购编码号</div>
+                    <input type="text" value="CG-202403-001" style="width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 6px;">
+                </div>
+            </div>
+            
+            <div style="margin-top: 30px;">
+                <div style="font-size: 18px; font-weight: 600; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border);">
+                    数量验收
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 20px;">
+                    <div>
+                        <div style="font-weight: 500; margin-bottom: 8px;">采购数量</div>
+                        <div style="padding: 15px; border: 1px solid var(--border); border-radius: 6px; text-align: center; font-weight: 600; font-size: 18px; background: #f8f9fa;">20</div>
+                    </div>
+                    
+                    <div>
+                        <div style="font-weight: 500; margin-bottom: 8px;">配送数量</div>
+                        <input type="text" value="10" style="width: 100%; padding: 15px; border: 1px solid var(--border); border-radius: 6px; text-align: center; font-weight: 600; font-size: 18px;">
+                    </div>
+                    
+                    <div>
+                        <div style="font-weight: 500; margin-bottom: 8px;">合格数量</div>
+                        <input type="text" value="8" style="width: 100%; padding: 15px; border: 1px solid var(--border); border-radius: 6px; text-align: center; font-weight: 600; font-size: 18px;">
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 30px; margin-top: 20px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div style="font-weight: 500;">是否补货</div>
+                        <label style="position: relative; display: inline-block; width: 50px; height: 26px;">
+                            <input type="checkbox" style="opacity: 0;">
+                            <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #ddd; border-radius: 13px;"></span>
+                            <span style="position: absolute; height: 22px; width: 22px; left: 2px; bottom: 2px; background: white; border-radius: 50%; transition: .4s;"></span>
+                        </label>
+                    </div>
+                    
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div style="font-weight: 500;">是否退货</div>
+                        <label style="position: relative; display: inline-block; width: 50px; height: 26px;">
+                            <input type="checkbox" style="opacity: 0;">
+                            <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #ddd; border-radius: 13px;"></span>
+                            <span style="position: absolute; height: 22px; width: 22px; left: 2px; bottom: 2px; background: white; border-radius: 50%; transition: .4s;"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 40px;">
+                <div style="font-size: 18px; font-weight: 600; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border);">
+                    外观规格
+                </div>
+                
+                <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+                    <div style="padding: 10px 20px; border: 1px solid var(--success); border-radius: 6px; background: rgba(82, 196, 26, 0.1); display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-check-circle" style="color: var(--success);"></i>
+                        <span>规格匹配</span>
+                    </div>
+                    
+                    <div style="padding: 10px 20px; border: 1px solid var(--border); border-radius: 6px; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-times-circle" style="color: var(--dark-gray);"></i>
+                        <span>规格不符</span>
+                    </div>
+                    
+                    <div style="padding: 10px 20px; border: 1px solid var(--success); border-radius: 6px; background: rgba(82, 196, 26, 0.1); display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-check-circle" style="color: var(--success);"></i>
+                        <span>外观完好</span>
+                    </div>
+                    
+                    <div style="padding: 10px 20px; border: 1px solid var(--border); border-radius: 6px; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-times-circle" style="color: var(--dark-gray);"></i>
+                        <span>外观损坏</span>
+                    </div>
+                </div>
+                
+                <div>
+                    <div style="font-weight: 500; margin-bottom: 8px;">外观规格描述</div>
+                    <textarea style="width: 100%; padding: 15px; border: 1px solid var(--border); border-radius: 6px; height: 100px;" placeholder="请描述外观规格情况..."></textarea>
+                </div>
+            </div>
+            
+            <div style="margin-top: 40px; margin-bottom: 40px;">
+                <div style="font-size: 18px; font-weight: 600; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border);">
+                    验收附件
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 20px;">
+                    <div>
+                        <div style="height: 150px; border: 2px dashed var(--border); border-radius: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; transition: all 0.3s;">
+                            <i class="fas fa-camera" style="font-size: 32px; color: var(--dark-gray); margin-bottom: 15px;"></i>
+                            <div style="font-size: 14px; color: var(--dark-gray);">点击拍摄物料照片</div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div style="height: 150px; border: 2px dashed var(--border); border-radius: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; transition: all 0.3s;">
+                            <i class="fas fa-file-invoice" style="font-size: 32px; color: var(--dark-gray); margin-bottom: 15px;"></i>
+                            <div style="font-size: 14px; color: var(--dark-gray);">点击拍摄路单照片</div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div style="height: 150px; border: 2px dashed var(--border); border-radius: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; transition: all 0.3s;">
+                            <i class="fas fa-file-alt" style="font-size: 32px; color: var(--dark-gray); margin-bottom: 15px;"></i>
+                            <div style="font-size: 14px; color: var(--dark-gray);">点击拍摄验收凭证</div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div style="height: 150px; border: 2px dashed var(--border); border-radius: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; transition: all 0.3s;">
+                            <i class="fas fa-paperclip" style="font-size: 32px; color: var(--dark-gray); margin-bottom: 15px;"></i>
+                            <div style="font-size: 14px; color: var(--dark-gray);">点击添加其它附件</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="display: flex; justify-content: flex-end; gap: 15px; padding-top: 20px; border-top: 1px solid var(--border);">
+                <button class="btn btn-outline" style="min-width: 100px; padding: 12px 20px;">
+                    <i class="fas fa-times"></i> 取消
+                </button>
+                <button class="btn btn-primary" style="min-width: 150px; padding: 12px 20px;">
+                    <i class="fas fa-check-circle"></i> 完成验收
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 更新当前时间
+        function updateDateTime() {
+            const now = new Date();
+            const date = now.toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' });
+            const time = now.toLocaleTimeString('zh-CN', { hour12: false, hour: '2-digit', minute: '2-digit' });
+            document.getElementById('current-time').textContent = `${date} ${time}`;
+        }
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            updateDateTime();
+            setInterval(updateDateTime, 60000);
+            
+            // 导航按钮交互
+            const navButtons = document.querySelectorAll('.nav-button');
+            navButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    navButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+            
+            // 验收选项按钮交互
+            const specOptions = document.querySelectorAll('.spec-btn');
+            specOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    this.classList.toggle('active');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>物料申请系统 - 优化版</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+        }
+        
+        body {
+            background: #f5f7fa;
+            color: #333;
+            font-size: 14px;
+            line-height: 1.6;
+            min-height: 100vh;
+            padding-bottom: 90px;
+        }
+        
+        .status-bar {
+            background: #fff;
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 15px;
+            font-size: 14px;
+            color: #666;
+            border-bottom: 1px solid #eee;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .page-header {
+            padding: 15px;
+            background: #fff;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .page-title {
+            font-size: 20px;
+            font-weight: 700;
+            text-align: center;
+            color: #1a1a1a;
+            margin-bottom: 5px;
+        }
+        
+        .breadcrumb {
+            display: flex;
+            justify-content: center;
+            margin-top: 8px;
+            color: #666;
+            font-size: 13px;
+            font-weight: 500;
+            flex-wrap: wrap;
+        }
+        
+        .breadcrumb-item {
+            position: relative;
+            padding: 0 10px;
+        }
+        
+        .breadcrumb-item:after {
+            content: '>';
+            position: absolute;
+            right: -5px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+        }
+        
+        .breadcrumb-item:last-child:after {
+            display: none;
+        }
+        
+        .breadcrumb-item:last-child {
+            color: #1677ff;
+        }
+        
+        .controls-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background: #fff;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+            color: #666;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+            position: sticky;
+            top: 60px;
+            z-index: 90;
+        }
+        
+        .material-count {
+            font-weight: 600;
+            color: #1677ff;
+            font-size: 15px;
+        }
+        
+        .material-list {
+            padding: 0 15px 15px;
+            background: #fff;
+        }
+        
+        .material-item {
+            padding: 15px 0;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            position: relative;
+        }
+        
+        .material-info {
+            flex: 1;
+            padding-right: 10px;
+        }
+        
+        .material-name {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #1a1a1a;
+        }
+        
+        .tags {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .tag {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: #f0f7ff;
+            color: #1677ff;
+            font-weight: 500;
+        }
+        
+        .tag.lb {
+            background: #f0f7ff;
+            color: #1677ff;
+        }
+        
+        .tag.jc {
+            background: #f6ffed;
+            color: #52c41a;
+        }
+        
+        .tag.stock-warning {
+            background: #fff1f0;
+            color: #f5222d;
+        }
+        
+        .stats-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 5px;
+        }
+        
+        .stat {
+            text-align: center;
+            flex: 1;
+            padding: 3px;
+        }
+        
+        .stat-value {
+            font-weight: 600;
+            font-size: 14px;
+            margin-top: 2px;
+            color: #333;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #8c8c8c;
+        }
+        
+        .stock-value {
+            color: #52c41a;
+            font-weight: 600;
+        }
+        
+        .stock-value.warning {
+            color: #fa8c16;
+        }
+        
+        .stock-value.danger {
+            color: #f5222d;
+        }
+        
+        .material-status {
+            position: absolute;
+            top: 15px;
+            right: 0;
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+        
+        .status-normal {
+            background: #f6ffed;
+            color: #52c41a;
+        }
+        
+        .status-warning {
+            background: #fffbe6;
+            color: #fa8c16;
+        }
+        
+        .status-danger {
+            background: #fff1f0;
+            color: #f5222d;
+        }
+        
+        .material-actions {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding-left: 10px;
+            gap: 8px;
+        }
+        
+        .action-btn {
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 4px;
+            text-align: center;
+            cursor: pointer;
+            min-width: 70px;
+            font-weight: 500;
+            border: 1px solid #d9d9d9;
+            transition: all 0.2s ease;
+        }
+        
+        .view-btn {
+            background: #f5f5f5;
+            color: #595959;
+        }
+        
+        .view-btn:hover {
+            background: #e6e6e6;
+        }
+        
+        /* 底部状态栏 */
+        .footer-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            background: #fff;
+            border-top: 1px solid #e6e6e6;
+            padding: 10px 15px;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.06);
+            z-index: 100;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .add-material-btn {
+            background: transparent;
+            border: none;
+            color: #1677ff;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            padding: 8px 12px;
+        }
+        
+        .add-material-btn i {
+            font-size: 16px;
+        }
+        
+        .apply-btn {
+            background: #1677ff;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(22, 119, 255, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .apply-btn:hover {
+            background: #0958d9;
+        }
+        
+        /* 悬浮按钮 */
+        .floating-btn {
+            position: fixed;
+            bottom: 75px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #722ed1;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(114, 46, 209, 0.3);
+            z-index: 99;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .floating-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(114, 46, 209, 0.4);
+        }
+        
+        /* 申领明细面板 */
+        .detail-panel {
+            position: fixed;
+            bottom: 135px;
+            right: 20px;
+            width: 320px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+            z-index: 98;
+            padding: 20px;
+            display: none;
+            border: 1px solid #f0f0f0;
+        }
+        
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .panel-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+        
+        .close-btn {
+            background: #f5f5f5;
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px dashed #f0f0f0;
+            font-size: 13px;
+        }
+        
+        .detail-item:last-child {
+            border-bottom: none;
+        }
+        
+        .detail-name {
+            color: #595959;
+        }
+        
+        .detail-value {
+            font-weight: 500;
+            color: #1a1a1a;
+        }
+        
+        .detail-footer {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #f0f0f0;
+            text-align: right;
+        }
+        
+        .hint-text {
+            background: #fffbe6;
+            padding: 8px 12px;
+            border-radius: 4px;
+            color: #d48806;
+            font-size: 12px;
+            margin: 15px 0;
+        }
+        
+        @media (max-width: 480px) {
+            .breadcrumb {
+                font-size: 12px;
+            }
+            .material-name {
+                font-size: 15px;
+            }
+            .stat-value {
+                font-size: 13px;
+            }
+            .footer-bar {
+                padding: 8px 12px;
+            }
+            .detail-panel {
+                width: calc(100% - 40px);
+                max-width: 320px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 状态栏 -->
+    <div class="status-bar">
+        <div>9:41</div>
+        <div>📶 📡 🔋</div>
+    </div>
+    
+    <!-- 页面标题 -->
+    <div class="page-header">
+        <div class="page-title">物料申请</div>
+        <div class="breadcrumb">
+            <div class="breadcrumb-item">地基与基础</div>
+            <div class="breadcrumb-item">地基</div>
+            <div class="breadcrumb-item">土工合成材料地基</div>
+        </div>
+    </div>
+    
+    <!-- 控制栏 -->
+    <div class="controls-bar">
+        <div>土工合成材料地基</div>
+        <div class="material-count">共12种物料</div>
+    </div>
+    
+    <!-- 物料列表 -->
+    <div class="material-list">
+        <!-- 物料项 1 -->
+        <div class="material-item">
+            <div class="material-status status-warning">库存黄色</div>
+            <div class="material-info">
+                <div class="material-name">XXXX-钢筋</div>
+                <div class="tags">
+                    <div class="tag jc">建筑材料</div>
+                </div>
+                <div class="stats-container">
+                    <div class="stat">
+                        <div class="stat-label">预算量</div>
+                        <div class="stat-value">100 pcs</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">已使用</div>
+                        <div class="stat-value">80 pcs</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">库存量</div>
+                        <div class="stat-value"><span class="stock-value warning">X1234</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="material-actions">
+                <div class="action-btn view-btn">浏览</div>
+            </div>
+        </div>
+        
+        <!-- 物料项 2 -->
+        <div class="material-item">
+            <div class="material-status status-danger">库存红色</div>
+            <div class="material-info">
+                <div class="material-name">XXXX安全帽</div>
+                <div class="tags">
+                    <div class="tag lb">劳保用品</div>
+                    <div class="tag">以旧换新</div>
+                </div>
+                <div class="stats-container">
+                    <div class="stat">
+                        <div class="stat-label">预算量</div>
+                        <div class="stat-value">100顶</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">已使用</div>
+                        <div class="stat-value">90顶</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">库存量</div>
+                        <div class="stat-value"><span class="stock-value danger">X0</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="material-actions">
+                <div class="action-btn view-btn">浏览</div>
+            </div>
+        </div>
+        
+        <!-- 物料项 3 -->
+        <div class="material-item">
+            <div class="material-status status-normal">库存充足</div>
+            <div class="material-info">
+                <div class="material-name">XXXX-XXXXX</div>
+                <div class="tags">
+                    <div class="tag lb">劳保用品</div>
+                    <div class="tag">以旧换新</div>
+                </div>
+                <div class="stats-container">
+                    <div class="stat">
+                        <div class="stat-label">预算量</div>
+                        <div class="stat-value">100 pcs</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">已使用</div>
+                        <div class="stat-value">10 pcs</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">库存量</div>
+                        <div class="stat-value"><span class="stock-value">60 pcs</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="material-actions">
+                <div class="action-btn view-btn">浏览</div>
+            </div>
+        </div>
+        
+        <!-- 物料项 4 -->
+        <div class="material-item">
+            <div class="material-status status-danger">库存红色</div>
+            <div class="material-info">
+                <div class="material-name">XXXX-钢筋</div>
+                <div class="tags">
+                    <div class="tag jc">建筑材料</div>
+                    <div class="tag">以旧换新</div>
+                </div>
+                <div class="stats-container">
+                    <div class="stat">
+                        <div class="stat-label">预算量</div>
+                        <div class="stat-value">100 pcs</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">已使用</div>
+                        <div class="stat-value">90 pcs</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">库存量</div>
+                        <div class="stat-value"><span class="stock-value danger">X10</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="material-actions">
+                <div class="action-btn view-btn">浏览</div>
+            </div>
+        </div>
+        
+        <!-- 物料项 5 -->
+        <div class="material-item">
+            <div class="material-status status-warning">库存黄色</div>
+            <div class="material-info">
+                <div class="material-name">XXXX劳保手套</div>
+                <div class="tags">
+                    <div class="tag lb">劳保用品</div>
+                    <div class="tag">以旧换新</div>
+                </div>
+                <div class="stats-container">
+                    <div class="stat">
+                        <div class="stat-label">预算量</div>
+                        <div class="stat-value">300双</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">已使用</div>
+                        <div class="stat-value">240双</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">库存量</div>
+                        <div class="stat-value"><span class="stock-value warning">35双</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="material-actions">
+                <div class="action-btn view-btn">浏览</div>
+            </div>
+        </div>
+        
+        <!-- 物料项 6 -->
+        <div class="material-item">
+            <div class="material-status status-normal">库存充足</div>
+            <div class="material-info">
+                <div class="material-name">XXXX防护口罩</div>
+                <div class="tags">
+                    <div class="tag lb">劳保用品</div>
+                </div>
+                <div class="stats-container">
+                    <div class="stat">
+                        <div class="stat-label">预算量</div>
+                        <div class="stat-value">500个</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">已使用</div>
+                        <div class="stat-value">260个</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">库存量</div>
+                        <div class="stat-value"><span class="stock-value">180个</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="material-actions">
+                <div class="action-btn view-btn">浏览</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="hint-text">
+        <i class="fas fa-info-circle"></i> 请注意：申请物料前请确认库存状态，库存黄色代表库存紧张，红色代表库存告急。
+    </div>
+    
+    <!-- 悬浮按钮（申领明细） -->
+    <div class="floating-btn" id="detailBtn">
+        <i class="fas fa-list"></i>
+    </div>
+    
+    <!-- 申领明细面板 -->
+    <div class="detail-panel" id="detailPanel">
+        <div class="panel-header">
+            <div class="panel-title">申领明细 (6项)</div>
+            <button class="close-btn" id="closeDetailBtn">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="detail-item">
+            <div class="detail-name">XXXX-钢筋</div>
+            <div class="detail-value">10 pcs</div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-name">XXXX安全帽</div>
+            <div class="detail-value">5顶</div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-name">XXXX劳保手套</div>
+            <div class="detail-value">15双</div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-name">XXXX防护口罩</div>
+            <div class="detail-value">20个</div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-name">XXXX防水卷材</div>
+            <div class="detail-value">50㎡</div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-name">螺纹钢管</div>
+            <div class="detail-value">8根</div>
+        </div>
+        
+        <div class="detail-footer">
+            <button class="view-btn" id="editDetailBtn">
+                <i class="fas fa-edit"></i> 编辑明细
+            </button>
+        </div>
+    </div>
+    
+    <!-- 底部状态栏 -->
+    <div class="footer-bar">
+        <button class="add-material-btn" id="addMaterialBtn">
+            <i class="fas fa-plus-circle"></i> 添加其他物料
+        </button>
+        <button class="apply-btn" id="applyBtn">
+            <i class="fas fa-paper-plane"></i> 申领(6)
+        </button>
+    </div>
+    
+    <script>
+        // 申领明细控制
+        const detailBtn = document.getElementById('detailBtn');
+        const detailPanel = document.getElementById('detailPanel');
+        const closeDetailBtn = document.getElementById('closeDetailBtn');
+        
+        detailBtn.addEventListener('click', function() {
+            detailPanel.style.display = 'block';
+        });
+        
+        closeDetailBtn.addEventListener('click', function() {
+            detailPanel.style.display = 'none';
+        });
+        
+        // 点击申领按钮
+        document.getElementById('applyBtn').addEventListener('click', function() {
+            alert('申领请求已提交(6项物料)');
+        });
+        
+        // 添加其他物料
+        document.getElementById('addMaterialBtn').addEventListener('click', function() {
+            alert('打开其他物料添加页面');
+        });
+        
+        // 编辑申领明细
+        document.getElementById('editDetailBtn').addEventListener('click', function() {
+            alert('打开申领明细编辑页面');
+            detailPanel.style.display = 'none';
+        });
+        
+        // 点击浏览按钮
+        document.querySelectorAll('.view-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                const item = this.closest('.material-item');
+                const name = item.querySelector('.material-name').textContent;
+                alert(`浏览物料详情: ${name}`);
+                e.stopPropagation();
+            });
+        });
+        
+        // 点击物料项
+        document.querySelectorAll('.material-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const name = this.querySelector('.material-name').textContent;
+                alert(`选中物料: ${name}`);
+            });
+        });
+    </script>
+</body>
+</html>

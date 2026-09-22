@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>仓库出库管理系统</title>
+    <style>
+        :root {
+            --primary-color: #007bff;
+            --bg-color: #f5f7fa;
+            --card-bg: #ffffff;
+            --text-main: #333333;
+            --text-sub: #888888;
+            --border-color: #e1e1e1;
+            --danger-color: #ff4d4f;
+            --mask-bg: rgba(0, 0, 0, 0.5);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding-bottom: 70px; /* 底部导航留白 */
+        }
+
+        /* 顶部导航栏 */
+        .header {
+            background: var(--primary-color);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* 页面容器 */
+        .container {
+            padding: 10px;
+            display: none;
+        }
+        
+        .container.active {
+            display: block;
+        }
+
+        /* 筛选区域样式 (更新) */
+        .filter-section {
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .filter-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .filter-grid {
+            display: grid;
+            gap: 12px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            color: var(--text-sub);
+            margin-bottom: 6px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 14px;
+            background: #fafafa;
+        }
+
+        .btn-search {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            width: 100%;
+            margin-top: 10px;
+            font-weight: 500;
+            font-size: 15px;
+        }
+
+        /* 列表卡片样式 */
+        .card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .card-header {
+            border-bottom: 1px dashed var(--border-color);
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+
+        .material-name {
+            font-size: 16px;
+            font-weight: bold;
+            color: #222;
+            margin-bottom: 5px;
+        }
+
+        .material-code {
+            font-size: 12px;
+            color: var(--text-sub);
+            background: #f0f2f5;
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .card-body {
+            font-size: 13px;
+            color: #555;
+            line-height: 1.8;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .highlight {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .qty-badge {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .card-footer {
+            margin-top: 12px;
+            text-align: right;
+            padding-top: 8px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .btn-return {
+            background: white;
+            color: var(--danger-color);
+            border: 1px solid var(--danger-color);
+            padding: 6px 18px;
+            border-radius: 20px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        /* 搜索栏 (汇总页) */
+        .search-bar-wrapper {
+            position: sticky;
+            top: 50px;
+            background: var(--bg-color);
+            padding: 10px 0;
+            z-index: 90;
+        }
+        
+        .search-input-group {
+            display: flex;
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 8px 15px;
+            border: 1px solid var(--border-color);
+            align-items: center;
+        }
+        .search-input-group input {
+            border: none;
+            background: transparent;
+            padding: 0 10px;
+            outline: none;
+        }
+
+        /* 底部导航 */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            background: white;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 900;
+        }
+
+        .nav-item {
+            text-align: center;
+            font-size: 11px;
+            color: var(--text-sub);
+            flex: 1;
+            padding: 5px 0;
+        }
+        .nav-item.active { color: var(--primary-color); }
+        .nav-icon { font-size: 22px; display: block; margin-bottom: 2px; }
+
+        /* ==================== */
+        /* 弹窗样式 (Modal)    */
+        /* ==================== */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--mask-bg);
+            display: none;
+            align-items: center; /* 垂直居中 */
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-card {
+            background: white;
+            width: 85%;
+            max-width: 400px;
+            border-radius: 12px;
+            overflow: hidden;
+            animation: slideUp 0.3s ease-out;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-header {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            font-size: 16px;
+            font-weight: bold;
+            text-align: center;
+            background: #f9f9f9;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .modal-info {
+            background: #f0f7ff;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 13px;
+            color: #555;
+        }
+        
+        .modal-info p { margin-bottom: 4px; }
+        .modal-info strong { color: #333; }
+
+        .modal-footer {
+            display: flex;
+            border-top: 1px solid #eee;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 15px;
+            background: white;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .btn-cancel { color: #888; border-right: 1px solid #eee; }
+        .btn-confirm { color: var(--primary-color); font-weight: bold; }
+        .btn-confirm:active { background: #f5f5f5; }
+
+    </style>
+</head>
+<body>
+
+    <div class="header" id="page-title">出库流水</div>
+
+    <div id="view-log" class="container active">
+        <div class="filter-section">
+            <div class="filter-grid">
+                <div class="form-group">
+                    <label>综合搜索</label>
+                    <input type="text" placeholder="输入物料编码 / 名称 / 领用人">
+                </div>
+                <div class="form-group">
+                    <label>出库时间</label>
+                    <input type="date">
+                </div>
+            </div>
+            <button class="btn-search">查询</button>
+        </div>
+
+        <div class="list-container">
+            <div class="card">
+                <div class="card-header">
+                    <div class="material-name">M6不锈钢螺母</div>
+                    <div class="material-code">编码: WJ-2023-001</div>
+                </div>
+                <div class="card-body">
+                    <div class="info-row">
+                        <span>领用人：</span>
+                        <span class="highlight">张三</span>
+                    </div>
+                    <div class="info-row">
+                        <span>领用班组：</span>
+                        <span>机修一班</span>
+                    </div>
+                    <div class="info-row">
+                        <span>出库数量：</span>
+                        <span class="qty-badge">50 <small style="font-weight:normal; font-size:12px">个</small></span>
+                    </div>
+                    <div class="info-row">
+                        <span>出库时间：</span>
+                        <span>2023-10-27 09:30</span>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button class="btn-return" onclick="openReturnModal('M6不锈钢螺母', 50)">退库</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="material-name">15寸显示屏</div>
+                    <div class="material-code">编码: DZ-2023-889</div>
+                </div>
+                <div class="card-body">
+                    <div class="info-row">
+                        <span>领用人：</span>
+                        <span class="highlight">李四</span>
+                    </div>
+                    <div class="info-row">
+                        <span>领用班组：</span>
+                        <span>行政后勤组</span>
+                    </div>
+                    <div class="info-row">
+                        <span>出库数量：</span>
+                        <span class="qty-badge">2 <small style="font-weight:normal; font-size:12px">台</small></span>
+                    </div>
+                    <div class="info-row">
+                        <span>出库时间：</span>
+                        <span>2023-10-26 14:15</span>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button class="btn-return" onclick="openReturnModal('15寸显示屏', 2)">退库</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-summary" class="container">
+        <div class="search-bar-wrapper">
+            <div class="search-input-group">
+                <span>🔍</span>
+                <input type="text" placeholder="搜索领用人或班组...">
+            </div>
+        </div>
+
+        <div style="padding: 10px 5px; color: var(--text-sub); font-size: 13px;">
+            当前展示：<span style="color: var(--text-main); font-weight: bold;">张三</span> 的领用记录
+        </div>
+
+        <div class="list-container">
+            <div class="card">
+                <div class="card-header">
+                    <div class="material-name">M6不锈钢螺母</div>
+                    <div class="material-code">分类: 五金耗材</div>
+                </div>
+                <div class="card-body">
+                    <div class="info-row">
+                        <span>领用人：</span>
+                        <span>张三</span>
+                    </div>
+                    <div class="info-row">
+                        <span>领用班组：</span>
+                        <span>机修一班</span>
+                    </div>
+                    <div class="info-row" style="margin-top:5px;">
+                        <span>累计领用：</span>
+                        <span class="qty-badge" style="color:var(--primary-color)">150 <small>个</small></span>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button class="btn-return" onclick="openReturnModal('M6不锈钢螺母', 150)">退库</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bottom-nav">
+        <div class="nav-item active" onclick="switchTab('log', this)">
+            <span class="nav-icon">📋</span>
+            <span>出库流水</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('summary', this)">
+            <span class="nav-icon">👤</span>
+            <span>领用汇总</span>
+        </div>
+    </div>
+
+    <div id="modal-return" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">退库操作</div>
+            <div class="modal-body">
+                <div class="modal-info">
+                    <p>物料：<strong id="m-name">--</strong></p>
+                    <p>可退数量上限：<span id="m-max">0</span></p>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label>退回库位 <span style="color:red">*</span></label>
+                    <select id="return-location">
+                        <option value="" disabled selected>请选择库位</option>
+                        <option value="A-01-01">A-01-01 (主库区)</option>
+                        <option value="B-02-15">B-02-15 (五金区)</option>
+                        <option value="C-05-08">C-05-08 (次品区)</option>
+                        <option value="TEMP">暂存区</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>退回数量 <span style="color:red">*</span></label>
+                    <input type="number" id="return-qty" placeholder="输入数量">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn btn-cancel" onclick="closeModal()">取消</button>
+                <button class="modal-btn btn-confirm" onclick="submitReturn()">确认退库</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 页面切换逻辑
+        function switchTab(tabName, element) {
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+
+            document.querySelectorAll('.container').forEach(el => el.classList.remove('active'));
+            const titleEl = document.getElementById('page-title');
+
+            if(tabName === 'log') {
+                document.getElementById('view-log').classList.add('active');
+                titleEl.textContent = '出库流水';
+            } else {
+                document.getElementById('view-summary').classList.add('active');
+                titleEl.textContent = '按人领用汇总';
+            }
+            window.scrollTo(0, 0);
+        }
+
+        // ========================
+        // 弹窗逻辑处理
+        // ========================
+        const modal = document.getElementById('modal-return');
+        const nameDisplay = document.getElementById('m-name');
+        const maxDisplay = document.getElementById('m-max');
+        const qtyInput = document.getElementById('return-qty');
+        const locInput = document.getElementById('return-location');
+
+        // 打开弹窗
+        function openReturnModal(materialName, maxQty) {
+            nameDisplay.textContent = materialName;
+            maxDisplay.textContent = maxQty;
+            qtyInput.value = ''; // 清空输入
+            qtyInput.max = maxQty; // 设置最大值属性
+            locInput.selectedIndex = 0; // 重置库位
+            
+            modal.classList.add('show');
+        }
+
+        // 关闭弹窗
+        function closeModal() {
+            modal.classList.remove('show');
+        }
+
+        // 提交退库
+        function submitReturn() {
+            const qty = qtyInput.value;
+            const loc = locInput.value;
+
+            if(!loc) {
+                alert("请选择退回库位");
+                return;
+            }
+            if(!qty || qty <= 0) {
+                alert("请输入有效的退回数量");
+                return;
+            }
+            if(parseInt(qty) > parseInt(maxDisplay.textContent)) {
+                alert("退回数量不能超过领用总数");
+                return;
+            }
+
+            // 模拟提交成功
+            alert(`成功！\n已将 [${qty}] 个 [${nameDisplay.textContent}] \n退回至库位 [${loc}]`);
+            closeModal();
+        }
+
+        // 点击遮罩层关闭
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>

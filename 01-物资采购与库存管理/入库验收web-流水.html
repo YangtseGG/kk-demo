@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>仓储系统 - 验收流水</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #1890ff;
+            --success: #52c41a;
+            --warning: #faad14;
+            --danger: #ff4d4f;
+            --gray: #f0f2f5;
+            --dark-gray: #8c8c8c;
+            --border: #d9d9d9;
+            --text: rgba(0, 0, 0, 0.85);
+            --table-header: #f5f7fa;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f8f9fa;
+            color: var(--text);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background-color: #fff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.09);
+            padding: 16px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--primary);
+        }
+        
+        .logo i {
+            margin-right: 8px;
+            font-size: 24px;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .current-time {
+            background: var(--gray);
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .page-title {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin: 20px 0;
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--text);
+        }
+        
+        .search-section {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+            align-items: center;
+        }
+        
+        .search-box {
+            flex: 1;
+            position: relative;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 12px 16px 12px 45px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        
+        .search-box input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+        }
+        
+        .search-box i {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--dark-gray);
+            font-size: 18px;
+        }
+        
+        .filter-section {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            min-width: 200px;
+        }
+        
+        .filter-label {
+            font-size: 14px;
+            margin-bottom: 8px;
+            color: var(--dark-gray);
+        }
+        
+        .filter-select {
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background-color: white;
+            font-size: 14px;
+        }
+        
+        .date-filter {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .date-input {
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .stats-container {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            flex: 1;
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+        }
+        
+        .stat-card.pending::before {
+            background-color: var(--primary);
+        }
+        
+        .stat-card.partial::before {
+            background-color: var(--warning);
+        }
+        
+        .stat-card.completed::before {
+            background-color: var(--success);
+        }
+        
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            margin: 15px 0 8px;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: var(--dark-gray);
+        }
+        
+        .stat-card.pending .stat-value {
+            color: var(--primary);
+        }
+        
+        .stat-card.partial .stat-value {
+            color: var(--warning);
+        }
+        
+        .stat-card.completed .stat-value {
+            color: var(--success);
+        }
+        
+        .section {
+            background: white;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+        }
+        
+        .section-title {
+            font-size: 19px;
+            font-weight: 600;
+            margin-bottom: 22px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .inspection-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        .inspection-table th {
+            background-color: var(--table-header);
+            text-align: left;
+            padding: 16px;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .inspection-table td {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: top;
+        }
+        
+        .inspection-table tr:hover {
+            background-color: rgba(24, 144, 255, 0.03);
+        }
+        
+        .inspection-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .status-badge {
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            display: inline-block;
+        }
+        
+        .status-pending {
+            background-color: rgba(24, 144, 255, 0.1);
+            color: var(--primary);
+        }
+        
+        .status-partial {
+            background-color: rgba(250, 173, 20, 0.1);
+            color: var(--warning);
+        }
+        
+        .status-success {
+            background-color: rgba(82, 196, 26, 0.1);
+            color: var(--success);
+        }
+        
+        .quantity-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .quantity-box {
+            min-width: 40px;
+            padding: 6px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            text-align: center;
+            background: white;
+            font-weight: 500;
+        }
+        
+        .spec-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        
+        .spec-item {
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            background: var(--gray);
+        }
+        
+        .spec-item.success {
+            background: rgba(82, 196, 26, 0.1);
+            color: var(--success);
+        }
+        
+        .spec-item.warning {
+            background: rgba(250, 173, 20, 0.1);
+            color: var(--warning);
+        }
+        
+        .attachment-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .attachment-item {
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            background: rgba(24, 144, 255, 0.1);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: var(--primary);
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+        
+        .switch-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .switch-label {
+            font-size: 14px;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 30px;
+        }
+        
+        .page-btn {
+            padding: 8px 16px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: white;
+            cursor: pointer;
+        }
+        
+        .page-btn.active {
+            background-color: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        .actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .action-btn {
+            padding: 6px 12px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: white;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .action-btn:hover {
+            background-color: var(--gray);
+        }
+        
+        .action-btn.view {
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+        
+        .action-btn.edit {
+            color: var(--warning);
+            border-color: var(--warning);
+        }
+        
+        .action-btn.delete {
+            color: var(--danger);
+            border-color: var(--danger);
+        }
+        
+        @media (max-width: 1200px) {
+            .inspection-table {
+                display: block;
+                overflow-x: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="logo">
+                <i class="fas fa-warehouse"></i>
+                <span>仓储管理系统</span>
+            </div>
+            <div class="user-info">
+                <div class="current-time">
+                    <i class="far fa-clock"></i>
+                    <span id="current-time">2023-11-15 09:41</span>
+                </div>
+                <span>操作员: 张经理</span>
+            </div>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="page-title">
+            <span>验收流水记录</span>
+        </div>
+        
+        <!-- 搜索区域 -->
+        <div class="search-section">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="搜索物料名称、批次号、供应商...">
+            </div>
+            <button class="action-btn">
+                <i class="fas fa-filter"></i> 高级筛选
+            </button>
+        </div>
+        
+        <!-- 筛选区域 -->
+        <div class="filter-section">
+            <div class="filter-group">
+                <div class="filter-label">货物来源</div>
+                <select class="filter-select">
+                    <option>全部来源</option>
+                    <option>供应商A</option>
+                    <option>供应商B</option>
+                    <option>供应商C</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <div class="filter-label">验收状态</div>
+                <select class="filter-select">
+                    <option>全部状态</option>
+                    <option>待验收</option>
+                    <option>部分验收</option>
+                    <option>全部验收</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <div class="filter-label">物料分类</div>
+                <select class="filter-select">
+                    <option>全部分类</option>
+                    <option>工具</option>
+                    <option>手动工具</option>
+                    <option>电动工具</option>
+                    <option>安全装备</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <div class="filter-label">日期范围</div>
+                <div class="date-filter">
+                    <input type="date" class="date-input">
+                    <span>至</span>
+                    <input type="date" class="date-input">
+                </div>
+            </div>
+        </div>
+        
+        <!-- 统计区域 -->
+        <div class="stats-container">
+            <div class="stat-card pending">
+                <div class="stat-label">待验收</div>
+                <div class="stat-value">16</div>
+            </div>
+            <div class="stat-card partial">
+                <div class="stat-label">部分验收</div>
+                <div class="stat-value">8</div>
+            </div>
+            <div class="stat-card completed">
+                <div class="stat-label">全部验收</div>
+                <div class="stat-value">24</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">总验收记录</div>
+                <div class="stat-value">48</div>
+            </div>
+        </div>
+        
+        <!-- 验收流水表格 -->
+        <div class="section">
+            <div class="section-title">
+                <span>验收流水记录</span>
+                <span>共48条记录</span>
+            </div>
+            
+            <table class="inspection-table">
+                <thead>
+                    <tr>
+                        <th style="width: 150px;">采购批次</th>
+                        <th style="width: 120px;">物料编码</th>
+                        <th>物料名称</th>
+                        <th style="width: 180px;">供应商</th>
+                        <th style="width: 200px;">数量验收</th>
+                        <th style="width: 120px;">状态</th>
+                        <th style="width: 160px;">外观规格</th>
+                        <th style="width: 120px;">操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- 记录1 -->
+                    <tr>
+                        <td>
+                            <div>202403-01</div>
+                            <div style="font-size: 12px; color: var(--dark-gray);">2023-11-15 09:30</div>
+                        </td>
+                        <td>WH-75862</td>
+                        <td>
+                            <div>木工锤</div>
+                            <div style="font-size: 12px; color: var(--dark-gray);">工具 / 手动工具 / 锤类</div>
+                        </td>
+                        <td>
+                            <div>五金供应有限公司</div>
+                            <div style="font-size: 12px; color: var(--dark-gray);">货物来源: 供应商A</div>
+                        </td>
+                        <td>
+                            <div class="quantity-row">
+                                <div>
+                                    <div style="font-size: 12px; color: var(--dark-gray);">采购</div>
+                                    <div class="quantity-box">20</div>
+                                </div>
+                                <i class="fas fa-arrow-right" style="color: var(--dark-gray); margin: 0 5px;"></i>
+                                <div>
+                                    <div style="font-size: 12px; color: var(--dark-gray);">配送</div>
+                                    <div class="quantity-box">10</div>
+                                </div>
+                                <i class="fas fa-arrow-right" style="color: var(--dark-gray); margin: 0 5px;"></i>
+                                <div>
+                                    <div style="font-size: 12px; color: var(--dark-gray);">合格</div>
+                                    <div class="quantity-box">8</div>
+                                </div>
+                            </div>
+                            <div class="switch-group" style="margin-top: 8px;">
+                                <div class="switch-label">补货:</div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="slider"></span>
+                                </label>
+                                <div class="switch-label" style="margin-left: 10px;">退货:</div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="status-badge status-partial">部分验收</span>
+                        </td>
+                        <td>
+                            <div class="spec-row">
+                                <div class="spec-item success">规格匹配</div>
+                                <div class="spec-item warning">外观损坏</div>
+                            </div>
+                            <div class="attachment-row">
+                                <div class="attachment-item">
+                                    <i class="fas fa-camera"></i> 物料照片
+                                </div>
+                                <div class="attachment-item">
+                                    <i class="fas fa-file-invoice"></i> 路单照片
+                                </div>
+                            </div>
+                        </td>
+                        <td class="actions">
+                            <button class="action-btn view">
+                                <i class="fas fa-eye"></i> 查看
+                            </button>
+                        </td>
+                    </tr>
+                    
+                    <!-- 记录2 -->
+                    <tr>
+                        <td>
+                            <div>202403-02</div>
+                            <div style="font-size: 12px; color: var(--dark-gray);">2023-11-15 09:15</div>
+                        </td>
+                        <td>WH-88521</td>
+                        <td>
+                            <div>不锈钢扳手</div>
+                            <div style="font-size: 12px; color: var(--dark-gray);">工具 / 手动工具 / 扳手</div>
+                        </td>
+                        <td>
+                            <div>机械配件厂</div>
+                            <div style="font-size: 12px; color: var(--dark-gray);">货物来源: 供应商B</div>
+                        </td>
+                        <td>
+                            <div class="quantity-row">
+                                <div>
+                                    <div style="font-size: 12px; color: var(--dark-gray);">采购</div>
+                                    <div class="quantity-box">15</div>
+                                </div>
+                                <i class="fas fa-arrow-right" style="color: var(--dark-gray); margin: 0 5px;"></i>
+                                <div>
+                                    <div style="font-size: 12px; color: var(--dark-gray);">配送</div>
+                                    <div class="quantity-box">12</div>
+                                </div>
+                                <i class="fas fa-arrow-right" style="color: var(--dark-gray); margin: 0 5px;"></i>
+                                <div>
+                                    <div style="font-size: 12px; color: var(--dark-gray);">合格</div>
+                                    <div class="quantity-box">12</div>
+                                </div>
+                            </div>
+                            <div class="switch-group" style="margin-top: 8px;">
+                                <div class="switch-label">补货:</div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox">
+                                    <span class="slider"></span>
+                                </label>
+                                <div class="switch-label" style="margin-left: 10px;">退货:</div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="status-badge status-success">全部验收</span>
+                        </td>
+                        <td>
+                            <div class="spec-row">
+                                <div class="spec-item success">规格匹配</div>
+                                <div class="spec-item success">外观完好</div>
+                            </div>
+                            <div class="attachment-row">
+                                <div class="attachment-item">
+                                    <i class="fas fa-camera"></i> 物料照片
+                                </div>
+                                <div class="attachment-item">
+                                    <i class="fas fa-file-invoice"></i> 路单照片
+                                </div>
+                                <div class="attachment-item">
+                                    <i class="fas fa-file-alt"></i> 验收凭证
+                                </div>
+                            </div>
+                        </td>
+                        <td class="actions">
+                            <button class="action-btn view">
+                                <i class="fas fa-eye"></i> 查看
+                            </button>
+                        </td>
+                    </tr>
+                    
+                    <!-- 记录3 -->
+                    <tr>
+                        <td>
+                            <div>202403-03</div>
+                            <div style="font-size: 12px; color: var(--dark-gray);">2023-11-15 08:45</div>
+                        </td>
+                        <td>WH-99234</td>
+                        <td>
+                            <div>电动螺丝刀</div>
+                            <div style="font-size: 12px; color: var(--dark-gray);">工具 / 电动工具 / 螺丝刀</div>
+                        </td>
+                        <td>
+                            <div>电动工具制造公司</div>
+                            <div style="font-size: 12px; color: var(--dark-gray);">货物来源: 供应商C</div>
+                        </td>
+                        <td>
+                            <div class="quantity-row">
+                                <div>
+                                    <div style="font-size: 12px; color: var(--dark-gray);">采购</div>
+                                    <div class="quantity-box">10</div>
+                                </div>
+                                <i class="fas fa-arrow-right" style="color: var(--dark-gray); margin: 0 5px;"></i>
+                                <div>
+                                    <div style="font-size: 12px; color: var(--dark-gray);">配送</div>
+                                    <div class="quantity-box">8</div>
+                                </div>
+                                <i class="fas fa-arrow-right" style="color: var(--dark-gray); margin: 0 5px;"></i>
+                                <div>
+                                    <div style="font-size: 12px; color: var(--dark-gray);">合格</div>
+                                    <div class="quantity-box">5</div>
+                                </div>
+                            </div>
+                            <div class="switch-group" style="margin-top: 8px;">
+                                <div class="switch-label">补货:</div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="slider"></span>
+                                </label>
+                                <div class="switch-label" style="margin-left: 10px;">退货:</div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="status-badge status-partial">部分验收</span>
+                        </td>
+                        <td>
+                            <div class="spec-row">
+                                <div class="spec-item warning">规格不符</div>
+                                <div class="spec-item warning">外观损坏</div>
+                            </div>
+                            <div class="attachment-row">
+                                <div class="attachment-item">
+                                    <i class="fas fa-camera"></i> 物料照片
+                                </div>
+                            </div>
+                        </td>
+                        <td class="actions">
+                            <button class="action-btn view">
+                                <i class="fas fa-eye"></i> 查看
+                            </button>
+                        </td>
+                    </tr>
+                    
+                    <!-- 记录4 -->
+                    <tr>
+                        <td>
+                            <div>202403-04</div>
+                            <div style="font-size: 12px; color: var(--dark-gray);">2023-11-14 16:20</div>
+                        </td>
+                        <td>SA-77056</td>
+                        <td>
+                            <div>防护手套</div>
+                            <div style="font-size: 12px; color: var(--dark-gray);">安全装备 / 手部防护</div>
+                        </td>
+                        <td>
+                            <div>安全设备公司</div>
+                            <div style="font-size: 12px; color: var(--dark-gray);">货物来源: 供应商D</div>
+                        </td>
+                        <td>
+                            <div class="quantity-row">
+                                <div>
+                                    <div style="font-size: 12px; color: var(--dark-gray);">采购</div>
+                                    <div class="quantity-box">50</div>
+                                </div>
+                                <i class="fas fa-arrow-right" style="color: var(--dark-gray); margin: 0 5px;"></i>
+                                <div>
+                                    <div style="font-size: 12px; color: var(--dark-gray);">配送</div>
+                                    <div class="quantity-box">50</div>
+                                </div>
+                                <i class="fas fa-arrow-right" style="color: var(--dark-gray); margin: 0 5px;"></i>
+                                <div>
+                                    <div style="font-size: 12px; color: var(--dark-gray);">合格</div>
+                                    <div class="quantity-box">50</div>
+                                </div>
+                            </div>
+                            <div class="switch-group" style="margin-top: 8px;">
+                                <div class="switch-label">补货:</div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox">
+                                    <span class="slider"></span>
+                                </label>
+                                <div class="switch-label" style="margin-left: 10px;">退货:</div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="status-badge status-success">全部验收</span>
+                        </td>
+                        <td>
+                            <div class="spec-row">
+                                <div class="spec-item success">规格匹配</div>
+                                <div class="spec-item success">外观完好</div>
+                            </div>
+                            <div class="attachment-row">
+                                <div class="attachment-item">
+                                    <i class="fas fa-camera"></i> 物料照片
+                                </div>
+                                <div class="attachment-item">
+                                    <i class="fas fa-file-invoice"></i> 路单照片
+                                </div>
+                                <div class="attachment-item">
+                                    <i class="fas fa-file-alt"></i> 验收凭证
+                                </div>
+                                <div class="attachment-item">
+                                    <i class="fas fa-paperclip"></i> 其它附件
+                                </div>
+                            </div>
+                        </td>
+                        <td class="actions">
+                            <button class="action-btn view">
+                                <i class="fas fa-eye"></i> 查看
+                            </button>
+                        </td>
+                    </tr>
+                    
+                    <!-- 记录5 -->
+                    <tr>
+                        <td>
+                            <div>202403-05</div>
+                            <div style="font-size: 12px; color: var(--dark-gray);">2023-11-14 14:10</div>
+                        </td>
+                        <td>WH-75863</td>
+                        <td>
+                            <div>木工锤</div>
+                            <div style="font-size: 12px; color: var(--dark-gray);">工具 / 手动工具 / 锤类</div>
+                        </td>
+                        <td>
+                            <div>五金供应有限公司</div>
+                            <div style="font-size: 12px; color: var(--dark-gray);">货物来源: 供应商A</div>
+                        </td>
+                        <td>
+                            <div class="quantity-row">
+                                <div>
+                                    <div style="font-size: 12px; color: var(--dark-gray);">采购</div>
+                                    <div class="quantity-box">20</div>
+                                </div>
+                                <i class="fas fa-arrow-right" style="color: var(--dark-gray); margin: 0 5px;"></i>
+                                <div>
+                                    <div style="font-size: 12px; color: var(--dark-gray);">配送</div>
+                                    <div class="quantity-box">0</div>
+                                </div>
+                                <i class="fas fa-arrow-right" style="color: var(--dark-gray); margin: 0 5px;"></i>
+                                <div>
+                                    <div style="font-size: 12px; color: var(--dark-gray);">合格</div>
+                                    <div class="quantity-box">0</div>
+                                </div>
+                            </div>
+                            <div class="switch-group" style="margin-top: 8px;">
+                                <div class="switch-label">补货:</div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox">
+                                    <span class="slider"></span>
+                                </label>
+                                <div class="switch-label" style="margin-left: 10px;">退货:</div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="status-badge status-pending">待验收</span>
+                        </td>
+                        <td>
+                            <div class="spec-row">
+                                <div class="spec-item">未验收</div>
+                            </div>
+                            <div class="attachment-row">
+                                <div class="attachment-item">
+                                    <i class="fas fa-file-invoice"></i> 路单照片
+                                </div>
+                            </div>
+                        </td>
+                        <td class="actions">
+                            <button class="action-btn view">
+                                <i class="fas fa-eye"></i> 查看
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <!-- 分页 -->
+            <div class="pagination">
+                <button class="page-btn">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button class="page-btn active">1</button>
+                <button class="page-btn">2</button>
+                <button class="page-btn">3</button>
+                <button class="page-btn">4</button>
+                <button class="page-btn">5</button>
+                <button class="page-btn">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 更新当前时间
+        function updateDateTime() {
+            const now = new Date();
+            const date = now.toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' });
+            const time = now.toLocaleTimeString('zh-CN', { hour12: false, hour: '2-digit', minute: '2-digit' });
+            document.getElementById('current-time').textContent = `${date} ${time}`;
+        }
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            updateDateTime();
+            setInterval(updateDateTime, 60000);
+            
+            // 表格行点击效果
+            const tableRows = document.querySelectorAll('.inspection-table tbody tr');
+            tableRows.forEach(row => {
+                row.addEventListener('click', function() {
+                    tableRows.forEach(r => r.classList.remove('selected'));
+                    this.classList.add('selected');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

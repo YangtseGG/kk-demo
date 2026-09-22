@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>物料申请 - 智慧仓储</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            max-width: 100%;
+            overflow: hidden;
+        }
+        
+        /* 头部样式 */
+        .header {
+            background-color: #1890ff;
+            color: white;
+            padding: 15px;
+            position: relative;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+        }
+        
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .back-button {
+            font-size: 24px;
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+        }
+        
+        .page-title {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .status-icons {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .status-icon {
+            font-size: 14px;
+        }
+        
+        /* 主内容区 */
+        .main-content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        /* 施工部位导航栏 */
+        .location-navigation {
+            width: 40%;
+            background: white;
+            overflow-y: auto;
+            border-right: 1px solid #eee;
+            padding: 15px;
+            box-shadow: 1px 0 3px rgba(0,0,0,0.05);
+        }
+        
+        .nav-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+        }
+        
+        .nav-title i {
+            margin-right: 8px;
+        }
+        
+        .tree-nav-item {
+            padding: 12px 15px;
+            border-left: 3px solid transparent;
+            margin-bottom: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            font-size: 15px;
+        }
+        
+        .tree-nav-item.active {
+            background-color: #e6f7ff;
+            border-left: 3px solid #1890ff;
+            color: #1890ff;
+            font-weight: bold;
+        }
+        
+        .tree-nav-item:hover {
+            background-color: #f0f0f0;
+        }
+        
+        .tree-nav-item .children {
+            padding-left: 20px;
+            display: none;
+        }
+        
+        .tree-nav-item.expanded .children {
+            display: block;
+        }
+        
+        .tree-nav-item .expand-icon {
+            position: absolute;
+            right: 10px;
+            transition: transform 0.3s;
+        }
+        
+        .tree-nav-item.expanded .expand-icon {
+            transform: rotate(90deg);
+        }
+        
+        /* 物料申请区域 */
+        .material-application {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            background: #f5f7fa;
+        }
+        
+        .selected-location {
+            background: white;
+            padding: 12px 15px;
+            margin-bottom: 5px;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .selected-location strong {
+            color: #1890ff;
+        }
+        
+        .search-bar {
+            padding: 10px 15px;
+            background: white;
+        }
+        
+        .search-box {
+            display: flex;
+            align-items: center;
+            background: #f5f7fa;
+            border-radius: 18px;
+            padding: 8px 15px;
+            border: 1px solid #eee;
+        }
+        
+        .search-box i {
+            color: #999;
+            margin-right: 8px;
+        }
+        
+        .search-input {
+            flex: 1;
+            border: none;
+            background: none;
+            outline: none;
+            font-size: 15px;
+        }
+        
+        /* 物料列表 */
+        .material-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px 15px;
+        }
+        
+        .material-item {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            border-left: 4px solid #1890ff;
+        }
+        
+        .material-item.yellow-alert {
+            border-left: 4px solid #faad14;
+        }
+        
+        .material-item.red-alert {
+            border-left: 4px solid #f5222d;
+        }
+        
+        .material-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .material-code {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .material-name {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+        
+        .material-category {
+            display: inline-block;
+            padding: 3px 8px;
+            background: #e6f7ff;
+            color: #1890ff;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        .material-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin: 10px 0;
+        }
+        
+        .stat-item {
+            background: #fafafa;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+        
+        .stat-label {
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            font-weight: bold;
+            font-size: 15px;
+        }
+        
+        .alert-value {
+            color: #faad14;
+        }
+        
+        .critical-value {
+            color: #f5222d;
+        }
+        
+        .application-control {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+        
+        .quantity-control {
+            display: flex;
+            align-items: center;
+        }
+        
+        .quantity-btn {
+            width: 30px;
+            height: 30px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 4px;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        
+        .quantity-input {
+            width: 50px;
+            height: 30px;
+            text-align: center;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin: 0 5px;
+            font-size: 15px;
+        }
+        
+        .apply-btn {
+            padding: 8px 15px;
+            background: #1890ff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .apply-btn.yellow {
+            background: #faad14;
+        }
+        
+        .apply-btn.red {
+            background: #f5222d;
+        }
+        
+        /* 底部提交区域 */
+        .submit-area {
+            padding: 15px;
+            background: white;
+            border-top: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .total-info {
+            font-size: 15px;
+        }
+        
+        .total-label {
+            color: #666;
+            margin-right: 5px;
+        }
+        
+        .total-value {
+            font-weight: bold;
+        }
+        
+        .submit-btn {
+            padding: 10px 25px;
+            background: #1890ff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .location-navigation {
+                width: 100%;
+                height: 35%;
+                border-right: none;
+                border-bottom: 1px solid #eee;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 头部导航 -->
+        <div class="header">
+            <div class="header-content">
+                <button class="back-button">←</button>
+                <h1 class="page-title">物料申请</h1>
+                <div class="status-icons">
+                    <span class="status-icon">📶</span>
+                    <span class="status-icon">🔋</span>
+                    <span>9:41</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <!-- 施工部位树状导航 -->
+            <div class="location-navigation">
+                <div class="nav-title">
+                    <i>🏗️</i> 施工部位导航
+                </div>
+                
+                <div class="tree-nav">
+                    <div class="tree-nav-item expanded">
+                        地基与基础
+                        <span class="expand-icon">▶</span>
+                        <div class="children">
+                            <div class="tree-nav-item">
+                                地基
+                                <span class="expand-icon">▶</span>
+                                <div class="children">
+                                    <div class="tree-nav-item">素土地基</div>
+                                    <div class="tree-nav-item">灰土地基</div>
+                                    <div class="tree-nav-item">砂和砂石地基</div>
+                                    <div class="tree-nav-item active">土工合成材料地基</div>
+                                    <div class="tree-nav-item">粉煤灰地基</div>
+                                </div>
+                            </div>
+                            <div class="tree-nav-item">
+                                基础
+                                <span class="expand-icon">▶</span>
+                                <div class="children">
+                                    <div class="tree-nav-item">无筋扩展基础</div>
+                                    <div class="tree-nav-item">钢筋混凝土扩展基础</div>
+                                    <div class="tree-nav-item">筏形与箱形基础</div>
+                                </div>
+                            </div>
+                            <div class="tree-nav-item">
+                                基坑支护
+                                <span class="expand-icon">▶</span>
+                                <div class="children">
+                                    <div class="tree-nav-item">灌注桩排桩围护墙</div>
+                                    <div class="tree-nav-item">板桩围护墙</div>
+                                    <div class="tree-nav-item">咬合桩围护墙</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="tree-nav-item">
+                        主体结构
+                        <span class="expand-icon">▶</span>
+                    </div>
+                    
+                    <div class="tree-nav-item">
+                        屋面工程
+                        <span class="expand-icon">▶</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 物料申请区域 -->
+            <div class="material-application">
+                <!-- 当前选中的施工部位 -->
+                <div class="selected-location">
+                    当前施工部位: <strong>地基与基础 > 地基 > 土工合成材料地基</strong>
+                </div>
+                
+                <!-- 搜索区域 -->
+                <div class="search-bar">
+                    <div class="search-box">
+                        <i>🔍</i>
+                        <input type="text" class="search-input" placeholder="搜索物料名称或编码">
+                    </div>
+                </div>
+                
+                <!-- 物料列表 -->
+                <div class="material-list">
+                    <!-- 物料项 1 -->
+                    <div class="material-item">
+                        <div class="material-header">
+                            <div>
+                                <div class="material-name">土工合成材料</div>
+                                <div class="material-code">TC-XK-0126</div>
+                            </div>
+                            <div class="material-category">地基材料</div>
+                        </div>
+                        
+                        <div class="material-stats">
+                            <div class="stat-item">
+                                <div class="stat-label">预算总量</div>
+                                <div class="stat-value">3500 m²</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">已申请数量</div>
+                                <div class="stat-value">850 m²</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">可申领数量</div>
+                                <div class="stat-value">2650 m²</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">库存数量</div>
+                                <div class="stat-value">3000 m²</div>
+                            </div>
+                        </div>
+                        
+                        <div class="application-control">
+                            <div class="quantity-control">
+                                <button class="quantity-btn">-</button>
+                                <input type="number" class="quantity-input" value="1">
+                                <button class="quantity-btn">+</button>
+                            </div>
+                            <button class="apply-btn">申请</button>
+                        </div>
+                    </div>
+                    
+                    <!-- 物料项 2 (黄色预警) -->
+                    <div class="material-item yellow-alert">
+                        <div class="material-header">
+                            <div>
+                                <div class="material-name">增强型土工格栅</div>
+                                <div class="material-code">TC-GW-4587</div>
+                            </div>
+                            <div class="material-category">地基材料</div>
+                        </div>
+                        
+                        <div class="material-stats">
+                            <div class="stat-item">
+                                <div class="stat-label">预算总量</div>
+                                <div class="stat-value">1200 m²</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">已申请数量</div>
+                                <div class="stat-value">1000 m²</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">可申领数量</div>
+                                <div class="stat-value">200 m²</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">库存数量</div>
+                                <div class="stat-value alert-value">220 m²</div>
+                            </div>
+                        </div>
+                        
+                        <div class="application-control">
+                            <div class="quantity-control">
+                                <button class="quantity-btn">-</button>
+                                <input type="number" class="quantity-input" value="0">
+                                <button class="quantity-btn">+</button>
+                            </div>
+                            <button class="apply-btn yellow">申请</button>
+                        </div>
+                    </div>
+                    
+                    <!-- 物料项 3 (红色预警) -->
+                    <div class="material-item red-alert">
+                        <div class="material-header">
+                            <div>
+                                <div class="material-name">高强土工布</div>
+                                <div class="material-code">TC-BT-3365</div>
+                            </div>
+                            <div class="material-category">地基材料</div>
+                        </div>
+                        
+                        <div class="material-stats">
+                            <div class="stat-item">
+                                <div class="stat-label">预算总量</div>
+                                <div class="stat-value">800 m²</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">已申请数量</div>
+                                <div class="stat-value">750 m²</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">可申领数量</div>
+                                <div class="stat-value">50 m²</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">库存数量</div>
+                                <div class="stat-value critical-value">48 m²</div>
+                            </div>
+                        </div>
+                        
+                        <div class="application-control">
+                            <div class="quantity-control">
+                                <button class="quantity-btn">-</button>
+                                <input type="number" class="quantity-input" value="0">
+                                <button class="quantity-btn">+</button>
+                            </div>
+                            <button class="apply-btn red">申请</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 提交申请区域 -->
+                <div class="submit-area">
+                    <div class="total-info">
+                        <span class="total-label">已选物料:</span>
+                        <span class="total-value">3种</span>
+                    </div>
+                    <button class="submit-btn">提交申请</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 树状导航的展开/折叠功能
+        document.querySelectorAll('.tree-nav-item').forEach(item => {
+            const expandIcon = item.querySelector('.expand-icon');
+            if (expandIcon) {
+                expandIcon.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    item.classList.toggle('expanded');
+                });
+            }
+            
+            // 点击选择施工部位
+            item.addEventListener('click', function(e) {
+                if (item.classList.contains('expanded') || expandIcon) {
+                    // 只处理没有子项的或者主动点击展开图标的情况
+                    if (!e.target.closest('.expand-icon')) {
+                        return;
+                    }
+                }
+                
+                // 移除所有活动状态
+                document.querySelectorAll('.tree-nav-item').forEach(el => {
+                    el.classList.remove('active');
+                });
+                
+                // 给当前项目添加活动状态
+                item.classList.add('active');
+                
+                // 更新顶部施工部位显示
+                if (!expandIcon) { // 只有末级节点才更新
+                    document.querySelector('.selected-location strong').textContent = item.textContent.trim();
+                }
+            });
+        });
+        
+        // 数量控制按钮
+        document.querySelectorAll('.quantity-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const input = this.parentNode.querySelector('.quantity-input');
+                let value = parseInt(input.value) || 0;
+                
+                if (this.textContent === '-') {
+                    value = Math.max(0, value - 1);
+                } else {
+                    value += 1;
+                }
+                
+                input.value = value;
+            });
+        });
+        
+        // 申请按钮点击
+        document.querySelectorAll('.apply-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const item = this.closest('.material-item');
+                const input = item.querySelector('.quantity-input');
+                const value = parseInt(input.value) || 0;
+                
+                if (value > 0) {
+                    item.style.borderLeft = "4px solid #52c41a";
+                    this.textContent = "已申请";
+                    this.style.background = "#52c41a";
+                    this.disabled = true;
+                } else {
+                    alert('请输入申请数量');
+                }
+            });
+        });
+        
+        // 提交申请按钮
+        document.querySelector('.submit-btn').addEventListener('click', function() {
+            alert('申请已提交，等待审批！');
+        });
+    </script>
+</body>
+</html>

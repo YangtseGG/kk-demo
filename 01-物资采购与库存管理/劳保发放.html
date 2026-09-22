@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>劳保物资发放登记</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* 自定义动画 */
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .animate-slide-up { animation: slideUp 0.3s ease-out forwards; }
+        .animate-fade-in { animation: fadeIn 0.2s ease-out forwards; }
+        
+        /* 隐藏滚动条但保持滚动 */
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans text-gray-800 h-screen flex flex-col overflow-hidden max-w-md mx-auto border-x border-gray-200 shadow-2xl">
+
+    <!-- 1. 顶部标题栏 -->
+    <header class="bg-blue-600 text-white p-4 shadow-md z-10 flex justify-between items-center shrink-0">
+        <div>
+            <h1 class="text-lg font-bold">劳保物资发放登记</h1>
+            <p class="text-xs text-blue-100 opacity-80">当前工地：幸福苑二期项目部</p>
+        </div>
+        <div class="bg-blue-700 p-2 rounded-full">
+            <i data-lucide="hard-hat" class="w-5 h-5"></i>
+        </div>
+    </header>
+
+    <!-- 2. 主体内容区域 -->
+    <main class="flex flex-1 overflow-hidden relative">
+        
+        <!-- 左侧：分类侧边栏 -->
+        <nav id="category-list" class="w-24 bg-gray-100 flex flex-col overflow-y-auto border-r border-gray-200 shrink-0">
+            <!-- Categories injected by JS -->
+        </nav>
+
+        <!-- 右侧：物资列表 -->
+        <section id="material-list-container" class="flex-1 overflow-y-auto bg-white pb-24 relative">
+            <div class="p-3">
+                <h2 id="current-category-title" class="text-sm font-bold text-gray-500 mb-3 pl-1">分类名称</h2>
+                <div id="material-list" class="space-y-3">
+                    <!-- Materials injected by JS -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 3. 底部统计栏 (购物车) -->
+    <footer class="bg-white border-t border-gray-200 p-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-20 relative shrink-0">
+        
+        <!-- 明细抽屉 -->
+        <div id="cart-drawer" class="hidden absolute bottom-full left-0 w-full bg-white border-t border-gray-200 shadow-2xl rounded-t-xl p-4 max-h-80 overflow-y-auto animate-slide-up">
+            <div class="flex justify-between items-center mb-3 border-b pb-2">
+                <h3 class="font-bold text-gray-700">已登记清单</h3>
+                <button onclick="clearAllSelections()" class="text-xs text-red-500 flex items-center hover:bg-red-50 p-1 rounded">
+                    <i data-lucide="trash-2" class="w-3 h-3 mr-1"></i> 清空
+                </button>
+            </div>
+            <div id="cart-items" class="space-y-3">
+                <!-- Cart items injected by JS -->
+            </div>
+        </div>
+
+        <!-- 底部操作栏 -->
+        <div class="flex items-center justify-between bg-white relative z-30">
+            <div class="flex items-center flex-1 cursor-pointer" onclick="toggleCartDrawer()">
+                <div class="relative mr-3">
+                    <div id="cart-icon-bg" class="p-3 rounded-full bg-gray-200 text-gray-400 transition-colors">
+                        <i data-lucide="shopping-cart" class="w-6 h-6"></i>
+                    </div>
+                    <span id="cart-badge" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white">0</span>
+                </div>
+                <div>
+                    <div class="text-sm font-bold text-gray-800">
+                        发放总人数: <span id="total-workers-count" class="text-blue-600 text-lg">0</span>
+                    </div>
+                    <div class="text-xs text-gray-500">
+                        涉及 <span id="total-materials-count">0</span> 类物资
+                        <span id="cart-hint" class="hidden ml-1 text-blue-400 text-xs">(点击查看)</span>
+                    </div>
+                </div>
+            </div>
+            
+            <button id="submit-btn" onclick="handleSubmit()" disabled class="px-6 py-3 rounded-lg font-bold text-white shadow-sm transition-all bg-gray-300 cursor-not-allowed">
+                确认登记
+            </button>
+        </div>
+    </footer>
+
+    <!-- 4. 工人选择弹窗 -->
+    <div id="worker-modal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center transition-opacity duration-300">
+        <div class="bg-white w-full max-w-md sm:rounded-lg rounded-t-2xl h-[85vh] flex flex-col shadow-2xl animate-slide-up" onclick="event.stopPropagation()">
+            
+            <!-- 弹窗头部 -->
+            <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50 rounded-t-2xl shrink-0">
+                <div>
+                    <h3 id="modal-title" class="font-bold text-lg">物资名称</h3>
+                    <div class="flex items-center text-xs text-gray-500 mt-1">
+                        <i data-lucide="clock" class="w-3 h-3 mr-1"></i>
+                        发放周期: <span id="modal-cycle" class="text-blue-600 font-bold mx-1">0</span> 天
+                    </div>
+                </div>
+                <div class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-bold">
+                    已选 <span id="modal-selected-count">0</span> 人
+                </div>
+            </div>
+
+            <!-- 搜索栏 -->
+            <div class="p-3 border-b border-gray-100 shrink-0">
+                <div class="relative">
+                    <i data-lucide="search" class="absolute left-3 top-2.5 text-gray-400 w-4 h-4"></i>
+                    <input 
+                        type="text" 
+                        id="worker-search"
+                        oninput="renderWorkerList()"
+                        placeholder="搜索姓名或班组..." 
+                        class="w-full bg-gray-100 rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                </div>
+            </div>
+
+            <!-- 工人列表 -->
+            <div id="worker-list" class="flex-1 overflow-y-auto p-2 space-y-1">
+                <!-- Workers injected by JS -->
+            </div>
+
+            <!-- 弹窗底部操作 -->
+            <div class="p-4 border-t border-gray-100 flex gap-3 shrink-0">
+                <button onclick="closeModal()" class="flex-1 py-3 rounded-lg border border-gray-300 text-gray-600 font-medium active:bg-gray-50">
+                    取消
+                </button>
+                <button onclick="confirmSelection()" class="flex-[2] py-3 rounded-lg bg-blue-600 text-white font-bold shadow-md active:bg-blue-700">
+                    确定 (<span id="modal-confirm-count">0</span>人)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 逻辑脚本 -->
+    <script>
+        // --- 数据定义 ---
+        const CATEGORIES = [
+            { id: 'c1', name: '头部防护' },
+            { id: 'c2', name: '手部防护' },
+            { id: 'c3', name: '足部防护' },
+            { id: 'c4', name: '高空作业' },
+            { id: 'c5', name: '作业工具' },
+        ];
+
+        const MATERIALS = [
+            { id: 'm1', categoryId: 'c1', name: '黄色安全帽', spec: '标准型', unit: '顶', stock: 50, cycleDays: 365 },
+            { id: 'm2', categoryId: 'c1', name: '红色安全帽', spec: '管理型', unit: '顶', stock: 20, cycleDays: 365 },
+            { id: 'm3', categoryId: 'c2', name: '棉纱手套', spec: '加厚', unit: '双', stock: 500, cycleDays: 7 },
+            { id: 'm4', categoryId: 'c2', name: '绝缘手套', spec: '10KV', unit: '双', stock: 30, cycleDays: 30 },
+            { id: 'm5', categoryId: 'c3', name: '防穿刺劳保鞋', spec: '42码', unit: '双', stock: 15, cycleDays: 180 },
+            { id: 'm6', categoryId: 'c3', name: '防穿刺劳保鞋', spec: '43码', unit: '双', stock: 12, cycleDays: 180 },
+            { id: 'm7', categoryId: 'c4', name: '五点式安全带', spec: '国标', unit: '套', stock: 40, cycleDays: 90 },
+            { id: 'm8', categoryId: 'c5', name: '反光背心', spec: '均码', unit: '件', stock: 100, cycleDays: 90 },
+        ];
+
+        const TODAY = new Date();
+        const daysAgo = (days) => {
+            const d = new Date();
+            d.setDate(d.getDate() - days);
+            return d.toISOString().split('T')[0];
+        };
+
+        const WORKERS = [
+            { id: 'w1', name: '张伟', team: '泥工组', history: { 'm1': daysAgo(10), 'm3': daysAgo(8) } },
+            { id: 'w2', name: '李强', team: '泥工组', history: { 'm1': daysAgo(400) } },
+            { id: 'w3', name: '王建国', team: '水电组', history: {} },
+            { id: 'w4', name: '刘洋', team: '水电组', history: { 'm3': daysAgo(2) } },
+            { id: 'w5', name: '赵敏', team: '后勤组', history: { 'm1': daysAgo(200) } },
+            { id: 'w6', name: '孙志', team: '木工组', history: {} },
+            { id: 'w7', name: '周杰', team: '木工组', history: { 'm5': daysAgo(100) } },
+            { id: 'w8', name: '吴刚', team: '钢筋组', history: { 'm3': daysAgo(1) } },
+            { id: 'w9', name: '郑华', team: '钢筋组', history: {} },
+            { id: 'w10', name: '陈平', team: '杂工组', history: {} },
+        ];
+
+        // --- 应用状态 ---
+        let state = {
+            activeCategory: 'c1',
+            selections: {}, // { materialId: [workerId, ...] }
+            currentMaterialId: null,
+            tempSelectedWorkers: new Set(),
+            isDrawerOpen: false
+        };
+
+        // --- 核心逻辑函数 ---
+
+        // 1. 校验资格
+        function checkEligibility(worker, material) {
+            if (!material || !worker.history) return { eligible: true, label: '从未领取', daysLeft: 0 };
+            
+            const lastDateStr = worker.history[material.id];
+            if (!lastDateStr) return { eligible: true, label: '从未领取', daysLeft: 0 };
+
+            const lastDate = new Date(lastDateStr);
+            const diffTime = Math.abs(TODAY - lastDate);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+            
+            if (diffDays < material.cycleDays) {
+                return { 
+                    eligible: false, 
+                    label: `上次: ${lastDateStr}`, 
+                    daysLeft: material.cycleDays - diffDays 
+                };
+            }
+
+            return { 
+                eligible: true, 
+                label: `上次: ${lastDateStr}`, 
+                daysLeft: 0 
+            };
+        }
+
+        // --- 渲染函数 ---
+
+        function init() {
+            renderCategories();
+            renderMaterials();
+            updateCartUI();
+            lucide.createIcons();
+        }
+
+        // 渲染左侧分类
+        function renderCategories() {
+            const container = document.getElementById('category-list');
+            container.innerHTML = CATEGORIES.map(cat => `
+                <button onclick="changeCategory('${cat.id}')" 
+                    class="p-4 text-sm font-medium text-left relative transition-colors w-full
+                    ${state.activeCategory === cat.id ? 'bg-white text-blue-600' : 'text-gray-500 hover:bg-gray-200'}">
+                    ${state.activeCategory === cat.id ? '<div class="absolute left-0 top-0 bottom-0 w-1 bg-blue-600"></div>' : ''}
+                    ${cat.name}
+                </button>
+            `).join('');
+        }
+
+        // 渲染右侧物资列表
+        function renderMaterials() {
+            const category = CATEGORIES.find(c => c.id === state.activeCategory);
+            document.getElementById('current-category-title').innerText = category.name;
+
+            const filteredMaterials = MATERIALS.filter(m => m.categoryId === state.activeCategory);
+            const container = document.getElementById('material-list');
+
+            container.innerHTML = filteredMaterials.map(item => {
+                const selectedCount = (state.selections[item.id] || []).length;
+                
+                return `
+                <div class="flex flex-col border border-gray-100 rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow">
+                     <div class="flex justify-between items-start mb-2">
+                       <div>
+                         <h3 class="font-bold text-gray-800">${item.name}</h3>
+                         <div class="flex items-center text-xs text-gray-400 mt-0.5">
+                           <span class="mr-2">规格: ${item.spec}</span>
+                           <span class="mr-2">|</span>
+                           <span class="flex items-center text-blue-500 bg-blue-50 px-1.5 rounded">
+                              <i data-lucide="clock" class="w-3 h-3 mr-1"></i> ${item.cycleDays}天/次
+                           </span>
+                         </div>
+                       </div>
+                       ${selectedCount > 0 ? `
+                         <span class="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full font-bold">
+                           已选 ${selectedCount} 人
+                         </span>
+                       ` : ''}
+                     </div>
+                     
+                     <button onclick="openModal('${item.id}')" 
+                       class="mt-1 w-full py-2 px-3 rounded-md flex items-center justify-center text-sm font-medium transition-colors
+                         ${selectedCount > 0 ? 'bg-blue-50 text-blue-600 border border-blue-200' : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200'}">
+                       ${selectedCount > 0 ? `
+                           <i data-lucide="users" class="w-4 h-4 mr-2"></i> 修改发放名单
+                       ` : `
+                           <span class="mr-1 text-lg leading-none">+</span> 选择发放工人
+                       `}
+                     </button>
+                   </div>
+                `;
+            }).join('');
+            
+            lucide.createIcons();
+        }
+
+        // 渲染工人弹窗列表
+        function renderWorkerList() {
+            const material = MATERIALS.find(m => m.id === state.currentMaterialId);
+            if (!material) return;
+
+            const searchVal = document.getElementById('worker-search').value.toLowerCase();
+            const container = document.getElementById('worker-list');
+
+            const filteredWorkers = WORKERS.filter(w => 
+                w.name.toLowerCase().includes(searchVal) || 
+                w.team.toLowerCase().includes(searchVal)
+            );
+
+            container.innerHTML = filteredWorkers.map(worker => {
+                const isSelected = state.tempSelectedWorkers.has(worker.id);
+                const { eligible, label, daysLeft } = checkEligibility(worker, material);
+
+                // 样式类名构建
+                const wrapperClass = `flex items-center justify-between p-3 rounded-lg border transition-all relative overflow-hidden mb-1
+                    ${eligible ? 'cursor-pointer' : 'cursor-not-allowed bg-gray-50 opacity-80'}
+                    ${isSelected ? 'bg-blue-50 border-blue-500 shadow-sm' : 'border-transparent hover:bg-gray-50 border-gray-100'}
+                `;
+
+                const avatarClass = `w-10 h-10 rounded-full flex items-center justify-center mr-3 text-sm font-bold shrink-0
+                    ${isSelected ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-500'}`;
+
+                const checkboxClass = `w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 ml-2
+                    ${eligible ? (isSelected ? 'bg-blue-500 border-blue-500' : 'border-gray-300') : 'border-gray-200 bg-gray-100'}`;
+
+                return `
+                <div onclick="toggleWorker('${worker.id}', ${eligible})" class="${wrapperClass}">
+                    <div class="flex items-center flex-1">
+                        <div class="${avatarClass}">${worker.name[0]}</div>
+                        <div class="flex-1">
+                            <div class="flex items-center">
+                                <div class="font-medium ${isSelected ? 'text-blue-700' : 'text-gray-800'}">${worker.name}</div>
+                                <span class="ml-2 text-xs px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded">${worker.team}</span>
+                            </div>
+                            <div class="text-xs mt-1 flex items-center">
+                                ${eligible ? `
+                                    <span class="text-green-600 flex items-center">
+                                        <i data-lucide="check" class="w-3 h-3 mr-1"></i> ${label}
+                                    </span>
+                                ` : `
+                                    <span class="text-orange-500 font-medium flex items-center">
+                                        <i data-lucide="alert-circle" class="w-3 h-3 mr-1"></i> 还需等待 ${daysLeft} 天
+                                    </span>
+                                `}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="${checkboxClass}">
+                        ${isSelected ? '<i data-lucide="check" class="w-3 h-3 text-white"></i>' : ''}
+                        ${!eligible ? '<span class="text-gray-300 text-xs">×</span>' : ''}
+                    </div>
+                </div>
+                `;
+            }).join('');
+            
+            // 更新计数
+            const count = state.tempSelectedWorkers.size;
+            document.getElementById('modal-selected-count').innerText = count;
+            document.getElementById('modal-confirm-count').innerText = count;
+
+            lucide.createIcons();
+        }
+
+        // 渲染底部购物车UI
+        function updateCartUI() {
+            let materialCount = 0;
+            let totalWorkers = 0;
+            const ids = Object.keys(state.selections);
+
+            ids.forEach(id => {
+                const workers = state.selections[id];
+                if (workers && workers.length > 0) {
+                    materialCount++;
+                    totalWorkers += workers.length;
+                }
+            });
+
+            // UI Updates
+            const cartIconBg = document.getElementById('cart-icon-bg');
+            const cartBadge = document.getElementById('cart-badge');
+            const submitBtn = document.getElementById('submit-btn');
+            const cartHint = document.getElementById('cart-hint');
+
+            document.getElementById('total-workers-count').innerText = totalWorkers;
+            document.getElementById('total-materials-count').innerText = materialCount;
+
+            if (materialCount > 0) {
+                cartIconBg.classList.remove('bg-gray-200', 'text-gray-400');
+                cartIconBg.classList.add('bg-blue-600', 'text-white');
+                cartBadge.innerText = materialCount;
+                cartBadge.classList.remove('hidden');
+                
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('bg-gray-300', 'cursor-not-allowed');
+                submitBtn.classList.add('bg-gray-900', 'active:scale-95', 'cursor-pointer');
+                
+                cartHint.classList.remove('hidden');
+            } else {
+                cartIconBg.classList.add('bg-gray-200', 'text-gray-400');
+                cartIconBg.classList.remove('bg-blue-600', 'text-white');
+                cartBadge.classList.add('hidden');
+                
+                submitBtn.disabled = true;
+                submitBtn.classList.add('bg-gray-300', 'cursor-not-allowed');
+                submitBtn.classList.remove('bg-gray-900', 'active:scale-95', 'cursor-pointer');
+                
+                cartHint.classList.add('hidden');
+                
+                // 如果购物车清空了，强制关闭drawer
+                if (state.isDrawerOpen) toggleCartDrawer();
+            }
+        }
+
+        function renderCartDetails() {
+            const container = document.getElementById('cart-items');
+            const ids = Object.keys(state.selections);
+            
+            if (ids.length === 0) {
+                container.innerHTML = '<div class="text-center text-gray-400 text-sm py-4">暂无登记物资</div>';
+                return;
+            }
+
+            container.innerHTML = ids.map(mid => {
+                const material = MATERIALS.find(m => m.id === mid);
+                const workerIds = state.selections[mid];
+                if (!workerIds || workerIds.length === 0) return '';
+
+                const workerNames = workerIds.map(wid => WORKERS.find(w => w.id === wid)?.name).join(', ');
+
+                return `
+                <div class="flex justify-between items-center text-sm">
+                    <div class="flex-1">
+                      <div class="font-medium">${material.name}</div>
+                      <div class="text-xs text-gray-500 truncate w-48">发放给: ${workerNames}</div>
+                    </div>
+                    <div class="flex items-center">
+                      <span class="font-bold mx-2 text-blue-600">x ${workerIds.length}</span>
+                      <button onclick="removeMaterialSelection('${mid}')" class="text-gray-400 p-1 hover:text-red-500">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                      </button>
+                    </div>
+                </div>
+                `;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        // --- 交互事件处理 ---
+
+        function changeCategory(catId) {
+            state.activeCategory = catId;
+            renderCategories();
+            renderMaterials();
+        }
+
+        function openModal(materialId) {
+            state.currentMaterialId = materialId;
+            const material = MATERIALS.find(m => m.id === materialId);
+            
+            // 初始化临时选择状态
+            const existing = state.selections[materialId] || [];
+            state.tempSelectedWorkers = new Set(existing);
+
+            // 填充Modal静态信息
+            document.getElementById('modal-title').innerText = material.name;
+            document.getElementById('modal-cycle').innerText = material.cycleDays;
+            document.getElementById('worker-search').value = ''; // 清空搜索
+
+            // 显示Modal
+            const modal = document.getElementById('worker-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('animate-fade-in');
+
+            renderWorkerList();
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('worker-modal');
+            modal.classList.add('hidden');
+            state.currentMaterialId = null;
+        }
+
+        function toggleWorker(workerId, isEligible) {
+            if (!isEligible) return;
+            
+            if (state.tempSelectedWorkers.has(workerId)) {
+                state.tempSelectedWorkers.delete(workerId);
+            } else {
+                state.tempSelectedWorkers.add(workerId);
+            }
+            renderWorkerList();
+        }
+
+        function confirmSelection() {
+            state.selections[state.currentMaterialId] = Array.from(state.tempSelectedWorkers);
+            closeModal();
+            renderMaterials(); // 更新列表上的已选状态
+            updateCartUI();
+            if (state.isDrawerOpen) renderCartDetails(); // 如果抽屉开着，实时更新
+        }
+
+        function toggleCartDrawer() {
+            if (Object.keys(state.selections).length === 0) return;
+
+            const drawer = document.getElementById('cart-drawer');
+            state.isDrawerOpen = !state.isDrawerOpen;
+            
+            if (state.isDrawerOpen) {
+                drawer.classList.remove('hidden');
+                renderCartDetails();
+            } else {
+                drawer.classList.add('hidden');
+            }
+        }
+
+        function removeMaterialSelection(mid) {
+            delete state.selections[mid];
+            updateCartUI();
+            renderMaterials(); // 列表状态也要更新
+            renderCartDetails();
+            
+            // 如果删空了，关掉drawer
+            let hasData = false;
+            for(let k in state.selections) {
+                if(state.selections[k].length > 0) hasData = true;
+            }
+            if (!hasData) toggleCartDrawer();
+        }
+
+        function clearAllSelections() {
+            state.selections = {};
+            updateCartUI();
+            renderMaterials();
+            toggleCartDrawer(); // 关闭
+        }
+
+        function handleSubmit() {
+            alert(`登记成功！\n涉及物资：${document.getElementById('total-materials-count').innerText} 类\n发放人次：${document.getElementById('total-workers-count').innerText}`);
+            clearAllSelections();
+        }
+
+        // 初始化
+        init();
+    </script>
+</body>
+</html>
